@@ -8,37 +8,60 @@
             background-color: #1a1a1a;
             color: #00ffcc;
             font-family: 'Courier New', monospace;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
         }
-        h1, h2 {
+        nav {
+            background-color: #0d0d0d;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #ff007a
+        }
+        nav ul{
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+        nav ul li a{
+            color: #00ffcc;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 10px;
+        }
+        nav ul li a:hover {
             color: #ff007a;
             text-shadow: 0 0 5px #ff007a;
         }
-        p {
-            line-height: 1.6;
-        }
-        .warning {
-            color: #ffcc00;
-            font-style: italic;
+        .content {
+            padding: 20px;
         }
     </style>
 </head>
 <body>
-    <h1> 
-        Welcome to 18gi0n's Tech Lair
-    </h1>
-    <p>
-        A digital sandbox for my projects, code, musings.
-    </p>
+    <!-- Nav Bar -->
+     <nav>
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#red">Red</a></li>
+            <li><a href="#blue">Blue</a></li>
+            <li><a href="#code">Code</a></li>
+            <li><a href="#boxes">Boxes</a></li>
+        </ul>
+     </nav>
 
-    <h2>Who's Behind the Terminal?</h2>
-    <p>
-        I'm a Cyber Secuyirty Engineer by day and a skid by night, just a passion for breaking things responsibly.
-    </p>
-
-    <h2>Site status: Under Construnction</h2>
-    <p class="warning">
-        Warning: This Site is a work-in-progress. Bear with my raw, unpolished web design skills—I’m hand-coding this beast from scratch, no frameworks allowed. Expect glitches, 404s, and a lot of updates.
-    </p> 
+     <!-- Main Content -->
+      <div class="content">
+        <h1> 
+            Welcome to 18gi0n's Tech Lair
+        </h1>
+        <p>
+            A hub for red team ops, blue team defenses, code experiments, and HTB victories. 
+            Stick around—things are about to get technical.
+        </p>
+      </div>
 </body>
 </html>
