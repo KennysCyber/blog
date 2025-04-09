@@ -1,0 +1,45 @@
+/* styles.css */
+body {
+    background-color: #1a1a1a;
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    padding: 0;
+}
+
+nav {
+    background-color: #0d0d0d;
+    padding: 15px;
+    position: sticky;
+    top: 0;
+    border-bottom: 2px solid #ff007a;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+nav ul li a {
+    color: #00ffcc;
+    text-decoration: none;
+    font-size: 18px;
+    padding: 10px;
+}
+
+nav ul li a:hover {
+    color: #ff007a;
+    text-shadow: 0 0 5px #ff007a;
+}
+
+.content {
+    padding: 20px;
+}
+
+h1 {
+    color: #ff007a;
+    text-shadow: 0 0 5px #ff007a;
+}
