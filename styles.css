@@ -36,10 +36,24 @@ nav ul li a:hover {
 }
 
 .content {
+    max-width: 800px; /* Limits width for readability */
+    margin: 0 auto; /* Centers the content */
     padding: 20px;
+    text-align: center; /* Centers text */
 }
 
 h1 {
     color: #ff007a;
     text-shadow: 0 0 5px #ff007a;
+}
+
+p {
+    line-height: 1.6;
+}
+
+img, video {
+    max-width: 100%; /* Ensures media doesn’t overflow */
+    display: block; /* Centers images/videos with margin */
+    margin: 20px auto; /* Adds space and centers */
+    border: 1px solid #ff007a; /* Adds a themed border */
 }
