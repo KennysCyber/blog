@@ -3,6 +3,7 @@ body {
     background-color: #1a1a1a;
     color: #00ffcc;
     font-family: 'Courier New', monospace;
+    font-size: clamp(15px, 1.2vw, 17px);;
     margin: 0;
     padding: 0;
 }
@@ -33,6 +34,7 @@ nav ul li a {
 nav ul li a:hover {
     color: #ff007a;
     text-shadow: 0 0 5px #ff007a;
+    font-size: clamp(14px, 1.2vw, 18px);
 }
 
 .content {
@@ -45,10 +47,12 @@ nav ul li a:hover {
 h1 {
     color: #ff007a;
     text-shadow: 0 0 5px #ff007a;
+    font-size: clamp(28px, 4vw, 40px);;
 }
 
 p {
     line-height: 1.6;
+    font-size: clamp(14px, 1vw, 16px);
 }
 
 img, video {
@@ -56,4 +60,15 @@ img, video {
     display: block; /* Centers images/videos with margin */
     margin: 20px auto; /* Adds space and centers */
     border: 1px solid #ff007a; /* Adds a themed border */
+}
+/* 404-specific styles */
+h1.error {
+    font-size: 2.5em;
+    animation: glitch 1s infinite;
+}
+
+@keyframes glitch {
+    0% { text-shadow: 0 0 5px #ff007a; }
+    50% { text-shadow: 0 0 10px #00ffcc; }
+    100% { text-shadow: 0 0 5px #ff007a; }
 }
