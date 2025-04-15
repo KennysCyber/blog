@@ -105,7 +105,7 @@ h1.error {
     width: 200px; /* Fixed width */
     height: 200px; /* Fixed height */
     object-fit: cover; /* Crops image to fit without distortion */
-    border: 2px solid #ff007a; /* Border now on the image */
+    border: 2px solid #001a33; /* Border now on the image */
     margin: 0; /* Removes extra margin */
 }
 
