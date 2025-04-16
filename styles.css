@@ -190,5 +190,8 @@ h1.error {
     .project-text h3,
     .project-text p {
         text-align: center; /* Center text for mobile */
+        color: #ffffff; /* White text for dark theme */
+        font-size: 14px;
+        margin: 0;
     }
 }
