@@ -81,6 +81,7 @@ h1.error {
     100% { text-shadow: 0 0 5px #ff007a; }
 }
 
+/* Home featured-specific styles */   
 .featured-posts {
     display: flex;
     justify-content: space-between; /* Changed from space-around for tighter spacing */
@@ -110,7 +111,84 @@ h1.error {
 }
 
 .featured-box h3 {
-    color: #00ffcc;
+    color: #ff0000;
     font-size: 16px;
     margin: 10px 0;
     text-align: center;}
+
+
+/* Project-specific styles */
+.project-posts {
+    display: flex;
+    flex-direction: column; /* Stack boxes vertically */
+    width: 100%; /* Full width of parent container */
+    max-width: 800px; /* Accommodate image + text */
+    margin: 20px auto; /* Center within .content */
+    padding: 0 10px; /* Prevent overflow on small screens */
+}
+
+.project-box {
+    display: flex; /* Image and text side by side */
+    flex-direction: row; /* Image on left, text on right */
+    align-items: center; /* Vertically center content */
+    justify-content: flex-start; /* Start content from left */
+    margin: 15px 0; /* Vertical spacing between boxes */
+    text-decoration: none;
+    transition: transform 0.3s ease;
+    width: 100%; /* Full width for responsiveness */
+}
+
+.project-box:hover {
+    transform: scale(1.02); /* Subtle scale on hover */
+    box-shadow: 0 0 10px #ff007a;
+}
+
+.project-box img {
+    width: 150px; /* Fixed width, adjustable */
+    height: 150px; /* Fixed height */
+    object-fit: cover; /* Crop image to fit */
+    border: 2px solid #001a33; /* Retain border */
+    margin: 0 20px 0 0; /* Right margin only */
+    flex-shrink: 0; /* Prevent image shrinking */
+    align-self: flex-start; /* Ensure top-left alignment */
+}
+
+.project-text {
+    flex-grow: 1; /* Take remaining space */
+    display: flex;
+    flex-direction: column; /* Stack h3 and p vertically */
+    justify-content: center; /* Center text vertically */
+}
+
+.project-text h3 {
+    color: #ff0000;
+    font-size: 16px;
+    margin: 0 0 5px 0; /* Tighten spacing */
+    text-align: left; /* Align left for consistency */
+}
+
+.project-text p {
+    color: #ffffff; /* White text for dark theme */
+    font-size: 14px;
+    margin: 0;
+    text-align: left; /* Align left for consistency */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .project-box {
+        flex-direction: column; /* Stack image and text on small screens */
+        align-items: center; /* Center content for mobile */
+    }
+
+    .project-box img {
+        width: 100%; /* Full width on small screens */
+        height: auto; /* Maintain aspect ratio */
+        margin: 0 0 10px 0; /* Bottom margin only */
+    }
+
+    .project-text h3,
+    .project-text p {
+        text-align: center; /* Center text for mobile */
+    }
+}
