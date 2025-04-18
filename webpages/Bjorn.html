@@ -6,9 +6,18 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6); /* Semi-opaque dark background for readability */
+            position: absolute;
+            top: 50px; /* Start below nav bar (approx height from styles.css) */
+            left: 0;
+            width: 100%; /* Full viewport width */
+            min-height: 100vh; /* Cover full page height */
+            z-index: 1; /* Behind content but above body background */
+        }
         .content {
-            background-color: rgba(13, 13, 13, 0.6); /* Semi-opaque dark background to improve readability */
-            border-radius: 5px; /* Slight rounding for aesthetics */
+            position: relative; /* Ensure content stays above opaque-bg */
+            z-index: 2; /* Above opaque-bg */
         }
         .content .left-aligned-content {
             text-align: left !important;
@@ -25,7 +34,7 @@
             text-align: left !important; /* Override centering for all text elements */
         }
         .content .left-aligned-content a {
-            color: #ff9933 !important; /* Match body text color for readability */
+            color: #ff9933 !important; /* Match your edited link color */
             text-decoration: underline; /* Distinguish links */
         }
         .content .left-aligned-content a:hover {
@@ -57,6 +66,7 @@
     </nav>
 
     <!-- Main Content -->
+    <div class="opaque-bg"></div>
     <div class="content">
         <div class="left-aligned-content">
             <h1>BJORN : Network Scanning Tool on Raspberry Pi</h1>
