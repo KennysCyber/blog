@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BJORN Project - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
+    <style>
+        .content {
+            background-color: rgba(13, 13, 13, 0.6); /* Semi-opaque dark background to improve readability */
+            border-radius: 5px; /* Slight rounding for aesthetics */
+        }
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important; /* Small left/right margin for padding */
+            padding: 20px 0 !important; /* Vertical padding only */
+        }
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important; /* Override centering for all text elements */
+        }
+        .content .left-aligned-content a {
+            color: #ff9933 !important; /* Match body text color for readability */
+            text-decoration: underline; /* Distinguish links */
+        }
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important; /* Match nav bar hover color */
+            text-shadow: 0 0 5px #ff007a; /* Match nav bar hover effect */
+        }
+        .content .left-aligned-content img {
+            margin: 20px 0 !important; /* Align images left, remove auto-centering */
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important; /* Smaller margin on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="code.html">Code & Tools</a></li>
+            <li><a href="ctf.html">CTFs/HTB</a></li>
+            <li><a href="research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>BJORN : Network Scanning Tool on Raspberry Pi</h1>
+    
+
+            <h2>1. Project Overview</h2>
+            <img src="/assets/images/Bjorn/bjorn.JPG" alt="main">
+                </li>
+            <p>
+                This project involves building BJORN, a network scanning and offensive security tool, on a Raspberry Pi Zero 2 W with a Waveshare 2.13-inch e-Paper HAT. BJORN autonomously scans networks to identify open ports, exposed services, and vulnerabilities, supporting features like brute force attacks and custom scripts in a portable, Tamagotchi-like device.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Create a compact pentesting device for network security testing.</li>
+                <li><strong>Hardware Used:</strong> Raspberry Pi Zero 2 W, Waveshare 2.13-inch e-Paper HAT, Class 10 MicroSD card.</li>
+                <li><strong>Software Used:</strong> BJORN software, Python, Raspberry Pi OS Lite (32-bit, Debian Bookworm).</li>
+                <li><strong>Skills Learned:</strong> Raspberry Pi configuration, Python dependency management, e-Paper display setup.</li>
+                <a href="https://a.co/d/4FATZQj">Amazon Link for Hardware used</a>
+            </ul>
+
+            <h2>2. Resources and References</h2>
+            <p>The following resources were essential for setting up BJORN:</p>
+            <ul>
+                <li>
+                    <strong>Resource 1:</strong><br>
+                    Title: <a href="https://www.youtube.com/watch?v=0Z9Lg38fPFg">Bjorn - The Cyber Viking - Installation and Demo</a><br>
+                    Usage: Provided a visual guide for hardware assembly and running the automated installation script.
+                </li>
+                <li>
+                    <strong>Resource 2:</strong><br>
+                    Title: <a href="https://github.com/infinition/Bjorn">BJORN GitHub Repository</a><br>
+                    Usage: Supplied the official installation script and documentation for software configuration and troubleshooting.
+                </li>
+            </ul>
+            <p><strong>Additional Notes:</strong> The YouTube video offered practical setup visuals, while the GitHub README provided detailed command-line instructions, making them complementary resources.</p>
+
+            <h2>3. Steps Taken</h2>
+            <p>The step-by-step process to build and deploy BJORN is outlined below:</p>
+            <ol>
+                <li>
+                    <strong>Step 1: Hardware Assembly</strong><br>
+                    Description: Connected the Waveshare 2.13-inch e-Paper HAT to the Raspberry Pi Zero 2 W using GPIO pins.<br>
+                    Challenges: Ensured correct pin alignment and avoided pushing pins too far into the e-Paper HAT to prevent damage.<br>
+                    <img src="/assets/images/Bjorn/bjorn3.JPG" alt="Raspberry Pi Zero 2 W with e-Paper HAT assembled">
+                </li>
+                <li>
+                    <strong>Step 2: OS Installation</strong><br>
+                    Description: Flashed Raspberry Pi OS Lite (32-bit, Debian Bookworm) onto a Class 10 MicroSD card using Raspberry Pi Imager. Configured settings in Imager: set hostname to "bjorn," defined username and password, and added Wi-Fi credentials (SSID and password) for automatic LAN connectivity.<br>
+                    Challenges: Verified OS compatibility and ensured Wi-Fi settings were correctly applied to enable SSH access in the next step.<br>
+                    <img src="/assets/images/Bjorn/bjorn_setup.png" alt="Flashing Raspberry Pi OS onto MicroSD card">
+                    <img src="/assets/images/Bjorn/bjorn_setup2.png" alt="Configuring image settings">
+                </li>
+                <li>
+                    <strong>Step 3: BJORN Software Installation</strong><br>
+                    Description: Identified the Pi’s IP address on the Wi-Fi network, then used SSH (with the username and password set in Step 2) to connect. Executed commands to download and run the automated installation script (<code>install_bjorn.sh</code>) from the GitHub repository, which installed dependencies and BJORN software.<br>
+                    Challenges: Confirmed stable network connectivity before running the script to avoid interruptions.<br>
+                    <img src="/assets/images/Bjorn/bjorn_setup3.png" alt="Terminal output during BJORN installation">
+                </li>
+                <li>
+                    <strong>Step 4: Configuration and Testing</strong><br>
+                    Description: Configured the e-Paper display by selecting screen version 3 in <code>shared_config.json</code> during installation. Ran the full installation, rebooted, and validated setup by accessing the web UI at <code>[Pi’s IP]:8000</code> in a browser on the same Wi-Fi network. Tested BJORN’s network scanning on a local network.<br>
+                    Challenges: Adjusted SPI settings to stabilize the e-Paper display output.<br>
+                    <img src="/assets/images/Bjorn/bjorn2.JPG" alt="BJORN web UI showing scan results">
+                </li>
+            </ol>
+
+            <h2>5. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from the project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Use a Class 10 MicroSD card to ensure reliable performance during installation and operation.</li>
+                <li><strong>Tip 2:</strong> Configure Wi-Fi and hostname settings in Raspberry Pi Imager before flashing to enable automatic LAN connectivity.</li>
+                <li><strong>Tip 3:</strong> Select the correct e-Paper screen version (e.g., version 3) during installation to avoid display issues.</li>
+                <li><strong>Tip 4:</strong> Access the web UI at <code>[Pi’s IP]:8000</code> while on the same Wi-Fi network to validate setup.</li>
+                <li><strong>Lesson Learned:</strong> Precise configuration of the e-Paper HAT is critical to prevent display errors.</li>
+                <li><strong>Future Improvements:</strong> Add an external antenna to improve Wi-Fi range for broader network scanning.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>
+                BJORN was successfully set up and tested, autonomously scanning a local network and displaying results on the e-Paper HAT and web interface. This project enhanced my understanding of Raspberry Pi-based pentesting tools and network security. Future plans include exploring custom attack scripts to expand BJORN’s functionality.
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The YouTube video was invaluable for visualizing the hardware assembly process.</li>
+                <li>The GitHub repository’s <code>TROUBLESHOOTING.md</code> file helped resolve SPI-related display errors.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
