@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>P4wnP1 A.L.O.A. Project - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6); /* Semi-opaque dark background for readability */
+            position: absolute;
+            top: 50px; /* Start below nav bar (approx height from styles.css) */
+            left: 0;
+            width: 100%; /* Full viewport width */
+            min-height: 600vh; /* Cover full page height */
+            z-index: 1; /* Behind content but above body background */
+        }
+        .content {
+            position: relative; /* Ensure content stays above opaque-bg */
+            z-index: 2; /* Above opaque-bg */
+        }
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important; /* Small left/right margin for padding */
+            padding: 20px 0 !important; /* Vertical padding only */
+        }
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important; /* Override centering for all text elements */
+        }
+        .content .left-aligned-content a {
+            color: #ff9933 !important; /* Match edited link color */
+            text-decoration: underline; /* Distinguish links */
+        }
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important; /* Match nav bar hover color */
+            text-shadow: 0 0 5px #ff007a; /* Match nav bar hover effect */
+        }
+        .content .left-aligned-content img {
+            margin: 20px 0 !important; /* Align images left, remove auto-centering */
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important; /* Smaller margin on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">CTFs/HTB</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>P4wnP1 A.L.O.A. on Raspberry Pi Zero 2W</h1>
+            
+
+            <h2>1. Project Overview</h2>
+            <p>
+                This project involves building P4wnP1 A.L.O.A. (A Little Offensive Application), a flexible USB attack platform, on a Raspberry Pi Zero 2W. P4wnP1 A.L.O.A. transforms the Pi into a pentesting tool capable of USB-based attacks, such as keystroke injection and network attacks, without a screen or battery, housed in a compact case for portability.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Create a low-cost, stealthy USB attack device for red teaming and pentesting.</li>
+                <li><strong>Hardware Used:</strong> Raspberry Pi Zero 2W, Class 10 MicroSD card, aluminum alloy case with heatsink, OTG cable, HDMI adapter, power switch cable.</li>
+                <li><strong>Software Used:</strong> P4wnP1 A.L.O.A. image (custom fork for Zero 2W), Kali Linux-based.</li>
+                <li><strong>Skills Learned:</strong> Raspberry Pi Zero 2W configuration, USB attack payload setup, network interface management.</li>
+                <li><a href="https://a.co/d/fZOaz0X">Amazon Link for Hardware used</a></li>
+            </ul>
+
+            <h2>2. Resources and References</h2>
+            <p>The following resources were essential for setting up P4wnP1 A.L.O.A.:</p>
+            <ul>
+                <li>
+                    <strong>Resource 1:</strong><br>
+                    Title: <a href="https://youtu.be/km81ph7pZz8?si=tiLXW8XVA8c93-7W">P4wnP1 A.L.O.A. on Raspberry Pi Zero 2W - Installation Guide</a><br>
+                    Usage: Followed this video for flashing the P4wnP1 A.L.O.A. image and initial configuration steps.
+                </li>
+                <li>
+                    <strong>Resource 2:</strong><br>
+                    Title: <a href="https://github.com/joaquimgrc/P4wnP1_aloa">P4wnP1_aloa GitHub Repository (Zero 2W Fork)</a><br>
+                    Usage: Downloaded the custom P4wnP1 A.L.O.A. image for Raspberry Pi Zero 2W and referenced setup instructions.
+                </li>
+                <li>
+                    <strong>Resource 3:</strong><br>
+                    Title: <a href="https://a.co/d/fZOaz0X">Raspberry Pi Zero 2 Case Kit</a><br>
+                    Usage: Purchased the aluminum alloy case kit with heatsink, OTG cable, HDMI adapter, and power switch for housing the Pi.
+                </li>
+            </ul>
+            <p><strong>Additional Notes:</strong> The YouTube video provided a clear visual guide, while the GitHub fork offered a Zero 2W-compatible image, addressing compatibility issues noted in other sources. The Amazon kit ensured proper hardware protection and connectivity.</p>
+
+            <h2>3. Steps Taken</h2>
+            <p>The step-by-step process to build and deploy P4wnP1 A.L.O.A. is outlined below:</p>
+            <ol>
+                <li>
+                    <strong>Step 1: Hardware Assembly</strong><br>
+                    Description: Assembled the Raspberry Pi Zero 2W into the aluminum alloy case, attaching the included heatsink to manage heat dissipation. Connected the OTG cable for USB connectivity and the power switch cable for operation.<br>
+                    Challenges: Ensured proper alignment of the Pi in the case to avoid loose connections; the case’s GPIO cutout required careful handling. Make sure to apply the thermal tape to top of processor prior to closing lid.<br>
+                    <img src="/assets/images/P4wnP1/image1.jpg" alt="Raspberry Pi Zero 2W in aluminum case">
+                </li>
+                <li>
+                    <strong>Step 2: Image Flashing</strong><br>
+                    Description: Downloaded the P4wnP1 A.L.O.A. image for Raspberry Pi Zero 2W from the GitHub fork. Flashed the image onto a Class 10 MicroSD card using Raspberry Pi Imager, chose custom OS, and then selected the SD card to write to.<br>
+                    Challenges: Verified the correct image version to ensure Zero 2W compatibility, as standard P4wnP1 images don’t support it.<br>
+                    <img src="/assets/images/P4wnP1/image2.jpg" alt="Flashing P4wnP1 A.L.O.A. image in Raspberry Pi Imager">
+                </li>
+                <li>
+                    <strong>Step 3: Initial Boot and Connectivity</strong><br>
+                    Description: Inserted the MicroSD card into the Pi and powered it via the OTG cable connected to a computer. Connected to the default P4wnP1 Wi-Fi access point (MaMe82-P4wnP1, password: MaMe82-P4wnP1) to access the web interface at http://172.24.0.1:8000.<br>
+                    Challenges: Connected to the device to configure with a different device than the one used for instructions, as you will lose internet connection once you connect.<br>
+                    <img src="/assets/images/P4wnP1/image3.jpg" alt="Connecting to P4wnP1 Wi-Fi or web interface">
+                </li>
+                <li>
+                    <strong>Step 4: Configuration and Testing</strong><br>
+                    Description: Accessed the web interface to configure USB settings (e.g., HID keyboard mode) and tested a basic payload, such as a keystroke injection script, on a target computer. Validated functionality by observing the Pi’s LED and payload execution.<br>
+                    Challenges: Adjusted USB settings in the web interface to ensure reliable detection by the host computer.<br>
+                    <img src="/assets/images/P4wnP1/image4.jpg" alt="P4wnP1 web interface or payload test">
+                </li>
+            </ol>
+
+            <h2>4. Images</h2>
+            <p>Images to visually document the project, with captions for clarity:</p>
+            <ul>
+                <li>Image 1: Raspberry Pi Zero 2W assembled in aluminum alloy case with heatsink.</li>
+                <li>Image 2: Flashing P4wnP1 A.L.O.A. image onto MicroSD card using Raspberry Pi Imager.</li>
+                <li>Image 3: Connecting to P4wnP1’s default Wi-Fi network or accessing web interface.</li>
+                <li>Image 4: P4wnP1 web interface or successful payload test on target.</li>
+            </ul>
+            <p><em>Note:</em> Images are embedded above in their respective steps. Replace placeholder paths with actual image files. Optimize images (e.g., compress to under 500KB using TinyPNG) to reduce load times.</p>
+
+            <h2>5. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from the project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Use a Class 10 MicroSD card to prevent performance issues during image flashing and operation.</li>
+                <li><strong>Tip 2:</strong> Double-check the GitHub fork for the Zero 2W-specific image, as standard P4wnP1 images are incompatible.</li>
+                <li><strong>Tip 3:</strong> Connect to the P4wnP1 Wi-Fi network immediately after booting to streamline configuration via the web interface.</li>
+                <li><strong>Tip 4:</strong> Test payloads on a safe, controlled environment before deployment to avoid unintended consequences.</li>
+                <li><strong>Lesson Learned:</strong> The Raspberry Pi Zero 2W requires specific firmware support, making forked images essential for projects like P4wnP1 A.L.O.A.</li>
+                <li><strong>Future Improvements:</strong> Explore adding a small OLED display for status feedback or integrating a battery for standalone operation.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>
+                P4wnP1 A.L.O.A. was successfully set up on the Raspberry Pi Zero 2W, functioning as a compact USB attack platform for pentesting. The project deepened my understanding of USB-based attack vectors and Raspberry Pi configuration. Future plans include developing custom payloads to enhance its capabilities for red team engagements.
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The YouTube guide was crucial for visualizing the flashing process, especially for Zero 2W compatibility.</li>
+                <li>The GitHub fork by joaquimgrc provided a reliable image, overcoming limitations of the original P4wnP1 project.</li>
+                <li>The Amazon case kit was cost-effective and provided essential accessories like the OTG cable and heatsink.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
