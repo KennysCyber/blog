@@ -7,31 +7,31 @@
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
         html, body {
-            height: 100%;
             margin: 0;
             padding: 0;
+            height: 100%; /* Ensure parent stretches */
         }
 
         body {
-            position: relative; /* Ensure body is a positioning context */
-            min-height: 100vh; /* At least viewport height */
+            position: relative;
+            min-height: 100vh;
         }
 
         .opaque-bg {
             background-color: rgba(13, 13, 13, 0.6);
-            position: absolute;
-            top: 50px;
+            position: fixed; /* Fixed to stay in viewport */
+            top: 50px; /* Below nav bar */
             left: 0;
             width: 100%;
-            min-height: calc(100% - 50px); /* Full height minus nav bar */
+            height: 100%; /* Initially viewport height */
             z-index: 1;
         }
 
         .content {
             position: relative;
             z-index: 2;
-            min-height: calc(100vh - 50px); /* Ensure content pushes body height */
-            padding-bottom: 20px; /* Prevent content from touching bottom */
+            min-height: 100vh; /* Ensure content pushes body */
+            padding-bottom: 20px;
         }
 
         .content .left-aligned-content {
@@ -86,7 +86,7 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="opaque-bg"></div>
+    <div class="opaque-bg" id="opaqueBg"></div>
     <div class="content">
         <div class="left-aligned-content">
             <h1>BJORN : Network Scanning Tool on Raspberry Pi</h1>
@@ -173,5 +173,26 @@
             </ul>
         </div>
     </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
+        }
+
+        // Run on page load
+        window.addEventListener('load', setOpaqueBgHeight);
+        // Update on resize or content change
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
 </body>
 </html>

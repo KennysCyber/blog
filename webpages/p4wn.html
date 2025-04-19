@@ -7,56 +7,67 @@
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
         html, body {
-            height: 100%; /* Ensure parent elements stretch to full height */
-            margin: 0; /* Remove default margins */
+            margin: 0;
             padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
         }
 
         .opaque-bg {
             background-color: rgba(13, 13, 13, 0.6);
-            position: absolute;
-            top: 50px; /* Start below nav bar */
+            position: fixed; /* Fixed to stay in viewport */
+            top: 50px; /* Below nav bar */
             left: 0;
             width: 100%;
-            min-height: 100%; /* Stretch to at least the viewport height */
-            height: auto; /* Allow it to grow with content */
+            height: 100%; /* Initially viewport height */
             z-index: 1;
         }
 
         .content {
             position: relative;
             z-index: 2;
-            min-height: 100%; /* Ensure content stretches to full height */
+            min-height: 100vh;
+            padding-bottom: 20px;
         }
+
         .content .left-aligned-content {
             text-align: left !important;
             max-width: 800px;
-            margin: 0 20px !important; /* Small left/right margin for padding */
-            padding: 20px 0 !important; /* Vertical padding only */
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
         }
+
         .content .left-aligned-content h1,
         .content .left-aligned-content h2,
         .content .left-aligned-content p,
         .content .left-aligned-content ul,
         .content .left-aligned-content ol,
         .content .left-aligned-content li {
-            text-align: left !important; /* Override centering for all text elements */
+            text-align: left !important;
         }
+
         .content .left-aligned-content a {
-            color: #ff9933 !important; /* Match edited link color */
-            text-decoration: underline; /* Distinguish links */
+            color: #ff9933 !important;
+            text-decoration: underline;
         }
+
         .content .left-aligned-content a:hover {
-            color: #ff007a !important; /* Match nav bar hover color */
-            text-shadow: 0 0 5px #ff007a; /* Match nav bar hover effect */
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
         }
+
         .content .left-aligned-content img {
-            margin: 20px 0 !important; /* Align images left, remove auto-centering */
+            margin: 20px 0 !important;
             display: block;
         }
+
         @media (max-width: 600px) {
             .content .left-aligned-content {
-                margin: 0 10px !important; /* Smaller margin on mobile */
+                margin: 0 10px !important;
             }
         }
     </style>
@@ -75,11 +86,10 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="opaque-bg"></div>
+    <div class="opaque-bg" id="opaqueBg"></div>
     <div class="content">
         <div class="left-aligned-content">
             <h1>P4wnP1 A.L.O.A. on Raspberry Pi Zero 2W</h1>
-            
 
             <h2>1. Project Overview</h2>
             <p>
@@ -140,9 +150,7 @@
                 </li>
                 <li>
                     <strong>Step 4: Configuration and Testing</strong><br>
-                    Description: Accessed the web interface to configure USB settings (e.g., HID keyboard mode) and tested a basic payload, such as a keystroke injection script, on a target computer. Validated functionality by observing the Pi’s LED and payload execution.Below demonstrates a quick HID command that opens up a weblink via the Run box and plays a video executed from P4wn.
-                    
-                    <br>
+                    Description: Accessed the web interface to configure USB settings (e.g., HID keyboard mode) and tested a basic payload, such as a keystroke injection script, on a target computer. Validated functionality by observing the Pi’s LED and payload execution. Below demonstrates a quick HID command that opens up a weblink via the Run box and plays a video executed from P4wn.<br>
                     Challenges: Adjusted USB settings in the web interface to ensure reliable detection by the host computer.<br>
                     <img src="/assets/images/aloa/hid2.png" alt="hid script">
                     <img src="/assets/images/aloa/hid1.png" alt="cmd">
@@ -150,11 +158,9 @@
                 </li>
             </ol>
 
-
             <h2>5. Tips and Lessons Learned</h2>
             <p>Practical advice and insights gained from the project:</p>
             <ul>
-            
                 <li><strong>Tip 1:</strong> Double-check the GitHub fork for the Zero 2W-specific image, as standard P4wnP1 images are incompatible.</li>
                 <li><strong>Tip 2:</strong> Test payloads on a safe, controlled environment before deployment to avoid unintended consequences.</li>
                 <li><strong>Lesson Learned:</strong> The Raspberry Pi Zero 2W requires specific firmware support, making forked images essential for projects like P4wnP1 A.L.O.A.</li>
@@ -174,5 +180,26 @@
             </ul>
         </div>
     </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
+        }
+
+        // Run on page load
+        window.addEventListener('load', setOpaqueBgHeight);
+        // Update on resize or content change
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
 </body>
 </html>
