@@ -7,56 +7,67 @@
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
         html, body {
-            height: 100%; /* Ensure parent elements stretch to full height */
-            margin: 0; /* Remove default margins */
+            height: 100%;
+            margin: 0;
             padding: 0;
+        }
+
+        body {
+            position: relative; /* Ensure body is a positioning context */
+            min-height: 100vh; /* At least viewport height */
         }
 
         .opaque-bg {
             background-color: rgba(13, 13, 13, 0.6);
             position: absolute;
-            top: 50px; /* Start below nav bar */
+            top: 50px;
             left: 0;
             width: 100%;
-            min-height: 100%; /* Stretch to at least the viewport height */
-            height: auto; /* Allow it to grow with content */
+            min-height: calc(100% - 50px); /* Full height minus nav bar */
             z-index: 1;
         }
 
         .content {
             position: relative;
             z-index: 2;
-            min-height: 100%; /* Ensure content stretches to full height */
+            min-height: calc(100vh - 50px); /* Ensure content pushes body height */
+            padding-bottom: 20px; /* Prevent content from touching bottom */
         }
+
         .content .left-aligned-content {
             text-align: left !important;
             max-width: 800px;
-            margin: 0 20px !important; /* Small left/right margin for padding */
-            padding: 20px 0 !important; /* Vertical padding only */
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
         }
+
         .content .left-aligned-content h1,
         .content .left-aligned-content h2,
         .content .left-aligned-content p,
         .content .left-aligned-content ul,
         .content .left-aligned-content ol,
         .content .left-aligned-content li {
-            text-align: left !important; /* Override centering for all text elements */
+            text-align: left !important;
         }
+
         .content .left-aligned-content a {
-            color: #ff9933 !important; /* Match your edited link color */
-            text-decoration: underline; /* Distinguish links */
+            color: #ff9933 !important;
+            text-decoration: underline;
         }
+
         .content .left-aligned-content a:hover {
-            color: #ff007a !important; /* Match nav bar hover color */
-            text-shadow: 0 0 5px #ff007a; /* Match nav bar hover effect */
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
         }
+
         .content .left-aligned-content img {
-            margin: 20px 0 !important; /* Align images left, remove auto-centering */
+            margin: 20px 0 !important;
             display: block;
         }
+
         @media (max-width: 600px) {
             .content .left-aligned-content {
-                margin: 0 10px !important; /* Smaller margin on mobile */
+                margin: 0 10px !important;
             }
         }
     </style>
@@ -79,11 +90,9 @@
     <div class="content">
         <div class="left-aligned-content">
             <h1>BJORN : Network Scanning Tool on Raspberry Pi</h1>
-    
 
             <h2>1. Project Overview</h2>
             <img src="/assets/images/Bjorn/bjorn.JPG" alt="main">
-                </li>
             <p>
                 This project involves building BJORN, a network scanning and offensive security tool, on a Raspberry Pi Zero 2 W with a Waveshare 2.13-inch e-Paper HAT. BJORN autonomously scans networks to identify open ports, exposed services, and vulnerabilities, supporting features like brute force attacks and custom scripts in a portable, Tamagotchi-like device.
             </p>
