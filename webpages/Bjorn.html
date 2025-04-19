@@ -6,18 +6,27 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
-        .opaque-bg {
-            background-color: rgba(13, 13, 13, 0.6); /* Semi-opaque dark background for readability */
-            position: absolute;
-            top: 50px; /* Start below nav bar (approx height from styles.css) */
-            left: 0;
-            width: 100%; /* Full viewport width */
-            min-height: 900vh; /* Cover full page height */
-            z-index: 1; /* Behind content but above body background */
+        html, body {
+            height: 100%; /* Ensure parent elements stretch to full height */
+            margin: 0; /* Remove default margins */
+            padding: 0;
         }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: absolute;
+            top: 50px; /* Start below nav bar */
+            left: 0;
+            width: 100%;
+            min-height: 100%; /* Stretch to at least the viewport height */
+            height: auto; /* Allow it to grow with content */
+            z-index: 1;
+        }
+
         .content {
-            position: relative; /* Ensure content stays above opaque-bg */
-            z-index: 2; /* Above opaque-bg */
+            position: relative;
+            z-index: 2;
+            min-height: 100%; /* Ensure content stretches to full height */
         }
         .content .left-aligned-content {
             text-align: left !important;
