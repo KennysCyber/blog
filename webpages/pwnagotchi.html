@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pwnagotchi Project - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">CTFs/HTB</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Pwnagotchi: Wi-Fi Handshake Capture Tool on Raspberry Pi</h1>
+            
+            <h2>1. Project Overview</h2>
+            <img src="/assets/images/pwnagotchi/pwna_cover.JPG" alt="Pwnagotchi cover">
+            <p>
+                This project involves building a Pwnagotchi, a Wi-Fi handshake capture tool, on a Raspberry Pi Zero W with a Waveshare 2.13-inch e-Paper display. Pwnagotchi autonomously captures Wi-Fi handshakes for penetration testing, using machine learning to optimize its performance in a portable, Tamagotchi-like device.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Create a compact Wi-Fi security testing device for capturing handshakes.</li>
+                <li><strong>Hardware Used:</strong> Raspberry Pi Zero W, Waveshare 2.13-inch e-Paper display, Class 10 MicroSD card.</li>
+                <li><strong>Software Used:</strong> Pwnagotchi software, Python, Raspberry Pi OS Lite (32-bit, Debian Bookworm).</li>
+                <li><strong>Skills Learned:</strong> Raspberry Pi setup, Linux configuration, e-Paper display integration, Wi-Fi monitoring.</li>
+                <a href="https://a.co/d/3V160Mk">Amazon Link for Hardware used</a>
+            </ul>
+
+            <h2>2. Resources and References</h2>
+            <p>The following resources were critical for setting up the Pwnagotchi:</p>
+            <ul>
+                <li>
+                    <strong>Resource 1:</strong><br>
+                    Title: <a href="https://pwnagotchi.ai/">Pwnagotchi Official Website</a><br>
+                    Usage: Provided detailed installation instructions and configuration guidelines.
+                </li>
+                <li>
+                    <strong>Resource 2:</strong><br>
+                    Title: <a href="https://github.com/jayofelony/pwnagotchi">Pwnagotchi GitHub Repository</a><br>
+                    Usage: Offered the official source code, installation scripts, and community-driven troubleshooting.
+                </li>
+                <li>
+                    <strong>Resource 3:</strong><br>
+                    Title: <a href="https://www.youtube.com/watch?v=km81ph7pZz8&t=551s">Pwnagotchi Setup Guide</a><br>
+                    Usage: Delivered a visual walkthrough of hardware assembly and software installation.
+                </li>
+            </ul>
+            <p><strong>Additional Notes:</strong> The official website and GitHub provided technical details, while the YouTube video offered practical setup visuals, making them complementary resources.</p>
+
+            <h2>3. Steps Taken</h2>
+            <p>The step-by-step process to build and deploy the Pwnagotchi is outlined below:</p>
+            <ol>
+                <li>
+                    <strong>Step 1: Hardware Assembly</strong><br>
+                    Description: Connected the Waveshare 2.13-inch e-Paper display to the Raspberry Pi Zero W using GPIO pins.<br>
+                    Challenges: Ensured proper pin alignment to avoid damaging the display or Pi.<br>
+                    <img src="/assets/images/pwnagotchi/rpi_setup.JPG" alt="Raspberry Pi Zero W with e-Paper display assembled">
+                </li>
+                <li>
+                    <strong>Step 2: OS and Pwnagotchi Image Installation</strong><br>
+                    Description: Downloaded the Pwnagotchi image from the official website and flashed it onto a Class 10 MicroSD card using Raspberry Pi Imager. Configured settings in <code>config.toml</code> (whitelist home SSID, setup web ui) to enable automatic connectivity.<br>
+                    Challenges: Verified image integrity and ensured correct configuration to enable SSH access.<br>
+                    <img src="/assets/images/pwnagotchi/pwn3.png" alt="Flashing Pwnagotchi image onto MicroSD card">
+                    <img src="/assets/images/pwnagotchi/conf.toml.png" alt="config.toml">
+                    <img src="/assets/images/pwnagotchi/conf_settings.png" alt="config.toml settings">
+                </li>
+                <li>
+                    <strong>Step 3: Initial Boot and Configuration</strong><br>
+                    Description: Inserted the MicroSD card, powered on the Raspberry Pi, and connected it to a laptop via a micro-USB cable. Navigated to the network adapter settings to locate the "RNDIS Gadget" adapter. Right-clicked to access properties, then configured the IPv4 settings to use a static IP address as outlined below. This setup enabled access to the Pwnagotchi web UI for further configuration.
+                    Challenges: Ensured the correct identification of the "RNDIS Gadget" adapter and verified the static IP configuration to establish a stable connection to the web UI.<br>
+                    <img src="/assets/images/pwnagotchi/ethernet.png" alt="ethernet">
+                    <img src="/assets/images/pwnagotchi/ipv4.png" alt="ipv4">
+                    <img src="/assets/images/pwnagotchi/staticip.png" alt="settings">
+                </li>
+                <li>
+                    <strong>Step 4: Testing and Validation</strong><br>
+                    Description: Rebooted the Pi and verified the e-Paper display showed the Pwnagotchi’s status (e.g., “SAD,” “HAPPY”). Tested handshake capture by placing the device near Wi-Fi networks and checked captured files via the web UI at <code>[10.0.0.2]:8080</code>.<br>
+                    Challenges: Adjusted display settings to resolve refresh issues and ensured monitor mode was active for Wi-Fi scanning.<br>
+                    <img src="/assets/images/pwnagotchi/weburl.png" alt="url">
+                    <img src="/assets/images/pwnagotchi/webui.png" alt="ui">
+                </li>
+            </ol>
+
+            <h2>4. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from the project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Use a high-quality Class 10 MicroSD card to avoid performance bottlenecks.</li>
+                <li><strong>Tip 2:</strong> Pre-configure <code>config.toml</code> with Wi-Fi credentials and Webui settings to simplify initial setup.</li>
+                <li><strong>Tip 3:</strong> Verify monitor mode compatibility for the Pi’s Wi-Fi chip to ensure handshake capture works.</li>
+                <li><strong>Tip 4:</strong> Access the web UI at <code>[Pi’s IP]:8080</code> to monitor progress and download captured handshakes.</li>
+                <li><strong>Lesson Learned:</strong> Proper e-Paper display configuration is essential for reliable status updates.</li>
+                <li><strong>Future Improvements:</strong> Add a battery pack for portability and explore plugins to enhance functionality.</li>
+            </ul>
+
+            <h2>5. Conclusion</h2>
+            <p>
+                The Pwnagotchi was successfully assembled and tested, capturing Wi-Fi handshakes and displaying status on the e-Paper display and web interface. This project deepened my understanding of Wi-Fi security and Raspberry Pi-based tools. Future plans include integrating additional plugins and improving portability.
+            </p>
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>The YouTube video was crucial for visualizing the assembly and initial boot process.</li>
+                <li>The GitHub repository’s community discussions helped troubleshoot display and Wi-Fi issues.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
+        }
+
+        // Run on page load
+        window.addEventListener('load', setOpaqueBgHeight);
+        // Update on resize or content change
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
