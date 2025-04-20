@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>PowerShell Forensics Script - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block;
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a;
+        }
+
+        .content .left-aligned-content .copy-btn:focus {
+            outline: 2px solid #ff007a;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">CTFs/HTB</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>PowerShell Forensics Script: Non-Privileged Evidence Capture</h1>
+            <img src="/assets/images/Code/windowsf/windowsf.png" alt="windowsf cover">
+            <h2>1. Project Overview</h2>
+            <strong>~This idea came from an incident I handled where a suspicious USB was found plugged into an endpoint we had physical access to. Forensics’ first move was to capture memory and disk images, but that takes time, and we needed to correlate what was happening now with our logs. To bypass LAPS and get actionable info fast, I researched what data would be useful to grab and which directories are accessible by default to non-privileged accounts. And so, this approach was born! Feel free to tweak it for your environment—it’ll need some tuning to fit your setup.~
+            </p>
+            </strong>
+                This project involves creating a PowerShell script designed for digital forensics, capable of capturing critical system information without requiring administrative privileges. The script collects data such as command history, scheduled tasks, startup items, running processes, network connections, DNS queries, and recently modified files, saving them to a timestamped folder on the user's desktop for analysis by a Security Operations Center (SOC) team.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Develop a lightweight forensics tool for evidence collection in environments with restricted permissions.</li>
+                <li><strong>Requirements:</strong> Windows workstation, PowerShell enabled for standard user. (THIS WILL NOT WORK FOR EVERYONE'S ENVIRONMENT; IT IS MEANT AS A TEMPLATE FOR YOU TO WORK FROM)!!!!</li>
+                <li><strong>Hardware Used:</strong> Windows-based system (tested on Windows 10/11).</li>
+                <li><strong>Software Used:</strong> PowerShell 5.1 or later, Windows Command Prompt.</li>
+                <li><strong>Skills Learned:</strong> PowerShell scripting, forensic data collection, error handling, log generation.</li>
+            </ul>
+
+            <h2>2. Script Breakdown and Forensic Relevance</h2>
+            <p><strong>Security Note:</strong> Always review code before executing. Verify integrity with the SHA256 hash provided for the full script below.</p>
+
+            <h3>2.1 Setup and Logging</h3>
+            <p>
+                <strong>Relevance:</strong> Creating a timestamped output directory ensures all collected evidence is organized and traceable to the time of capture, which is critical for maintaining the chain of custody in forensic investigations. Logging all actions provides an audit trail, documenting what was captured or any errors encountered, which is essential for validating the integrity of the collected data.
+            </p>
+            <pre><code id="code1"># Get the current user and their desktop path
+$currentUser = $env:USERNAME
+$desktopPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath('Desktop'), "SystemCapture_$(Get-Date -Format 'yyyyMMdd_HHmmss')")
+
+# Create the output directory on the desktop
+try {
+    New-Item -Path $desktopPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
+    Write-Host "Created output directory: $desktopPath" -ForegroundColor Green
+}
+catch {
+    Write-Host "Error creating output directory: $_" -ForegroundColor Red
+    exit 1
+}
+
+# Function to log messages
+function Write-Log {
+    param($Message)
+    $logMessage = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - $Message"
+    Add-Content -Path "$desktopPath\CaptureLog.txt" -Value $logMessage
+    Write-Host $logMessage
+}</code><button class="copy-btn" onclick="copyCode('code1')" tabindex="0">Copy</button></pre>
+
+            <h3>2.2 PowerShell Command History</h3>
+            <p>
+                <strong>Relevance:</strong> The PowerShell command history can reveal commands executed by the user or an attacker, such as file manipulations, network operations, or malicious scripts. This is critical for reconstructing the timeline of an incident and identifying unauthorized activities.
+            </p>
+            <pre><code id="code2"># Capture PowerShell Command History
+try {
+    $psHistoryPath = "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+    if (Test-Path $psHistoryPath) {
+        Copy-Item -Path $psHistoryPath -Destination "$desktopPath\PowerShell_History.txt" -ErrorAction Stop
+        Write-Log "Captured PowerShell command history"
+    } else {
+        Write-Log "PowerShell command history file not found"
+    }
+}
+catch {
+    Write-Log "Error capturing PowerShell command history: $_"
+}</code><button class="copy-btn" onclick="copyCode('code2')" tabindex="0">Copy</button></pre>
+
+            <h3>2.3 Scheduled Tasks</h3>
+            <p>
+                <strong>Relevance:</strong> Scheduled tasks can be used by attackers to execute malicious code at specific times or intervals, ensuring persistence. Capturing this data helps investigators identify unauthorized tasks that may indicate malware or backdoors.
+            </p>
+            <pre><code id="code3"># Capture Scheduled Tasks
+try {
+    schtasks /query /fo LIST /v | Out-File "$desktopPath\Scheduled_Tasks.txt"
+    Write-Log "Captured scheduled tasks"
+}
+catch {
+    Write-Log "Error capturing scheduled tasks: $_"
+}</code><button class="copy-btn" onclick="copyCode('code3')" tabindex="0">Copy</button></pre>
+
+            <h3>2.4 Startup Items</h3>
+            <p>
+                <strong>Relevance:</strong> Startup items, including those in the startup folder and registry autorun keys, can reveal programs set to run automatically, which is a common persistence mechanism for malware. This data helps identify suspicious applications that may require further analysis.
+            </p>
+            <pre><code id="code4"># Capture Startup Items
+try {
+    # Startup folder
+    $startupFolder = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+    if (Test-Path $startupFolder) {
+        dir $startupFolder | Out-File "$desktopPath\Startup_Folder.txt"
+    } else {
+        Write-Log "Startup folder not found"
+    }
+
+    # Registry autorun entries
+    reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run | Out-File "$desktopPath\Autorun_HKLM.txt"
+    reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run | Out-File "$desktopPath\Autorun_HKCU.txt"
+    Write-Log "Captured startup items"
+}
+catch {
+    Write-Log "Error capturing startup items: $_"
+}</code><button class="copy-btn" onclick="copyCode('code4')" tabindex="0">Copy</button></pre>
+
+            <h3>2.5 Running Processes</h3>
+            <p>
+                <strong>Relevance:</strong> A snapshot of running processes can uncover malicious or unrecognized applications, such as remote access tools or cryptominers. Details like process names, IDs, and file paths aid in correlating processes with potential threats.
+            </p>
+            <pre><code id="code5"># Capture Running Processes
+try {
+    Get-Process | Select-Object Name, Id, Path, Company, Description | Export-Csv -Path "$desktopPath\Processes.csv" -NoTypeInformation
+    Write-Log "Captured running processes"
+}
+catch {
+    Write-Log "Error capturing processes: $_"
+}</code><button class="copy-btn" onclick="copyCode('code5')" tabindex="0">Copy</button></pre>
+
+            <h3>2.6 Network Connections</h3>
+            <p>
+                <strong>Relevance:</strong> Network connections reveal active communications, including connections to command-and-control servers or data exfiltration endpoints. Capturing this data with process IDs helps trace suspicious activity to specific applications.
+            </p>
+            <pre><code id="code6"># Capture Network Connections (netstat)
+try {
+    netstat -ano | Out-File "$desktopPath\Netstat.txt"
+    Write-Log "Captured network connections"
+}
+catch {
+    Write-Log "Error capturing network connections: $_"
+}</code><button class="copy-btn" onclick="copyCode('code6')" tabindex="0">Copy</button></pre>
+
+            <h3>2.7 DNS Queries</h3>
+            <p>
+                <strong>Relevance:</strong> The DNS cache can reveal domains accessed by the system, which may include malicious or phishing sites. This data is crucial for identifying potential command-and-control communications or unauthorized web activity.
+            </p>
+            <pre><code id="code7"># Capture DNS Queries
+try {
+    ipconfig /displaydns | Out-File "$desktopPath\DNS_Queries.txt"
+    Write-Log "Captured DNS queries"
+}
+catch {
+    Write-Log "Error capturing DNS queries: $_"
+}</code><button class="copy-btn" onclick="copyCode('code7')" tabindex="0">Copy</button></pre>
+
+            <h3>2.8 Recently Modified Files</h3>
+            <p>
+                <strong>Relevance:</strong> Recently modified files in key directories like Temp and AppData can indicate malicious activity, such as temporary files created by malware or attacker scripts. Sorting by modification time helps prioritize files for further investigation.
+            </p>
+            <pre><code id="code8"># Capture Recently Modified Files in Key Directories
+try {
+    $dirsToCheck = @(
+        "$env:LOCALAPPDATA\Temp",
+        "$env:APPDATA"
+    )
+
+    foreach ($dir in $dirsToCheck) {
+        if (Test-Path $dir) {
+            $dirName = [System.IO.Path]::GetFileName($dir)
+            dir $dir -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 50 | Out-File "$desktopPath\RecentFiles_$dirName.txt"
+        }
+    }
+    Write-Log "Captured recently modified files in key directories"
+}
+catch {
+    Write-Log "Error capturing recently modified files: $_"
+}</code><button class="copy-btn" onclick="copyCode('code8')" tabindex="0">Copy</button></pre>
+
+            <h2>3. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from developing the script:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Run the script in at user level by copy and pasting into shell not running as a .PS1 to avoid permission issues and execution policy, as it is designed for "non-privileged environments".</li>
+                <li><strong>Tip 2:</strong> Review the log file (<code>CaptureLog.txt</code>) to identify any errors during execution.</li>
+                <li><strong>Tip 3:</strong> Zip the output folder before sending to the SOC team to preserve file integrity.</li>
+                <li><strong>Lesson Learned:</strong> Error handling is critical to ensure the script continues running even if certain data cannot be captured.</li>
+                <li><strong>Future Improvements:</strong> Add support for capturing browser history or clipboard contents to enhance evidence collection.</li>
+            </ul>
+
+            <h2>4. Conclusion</h2>
+            <p>
+                The PowerShell forensics script successfully captures critical system information without requiring administrative privileges, making it suitable for rapid evidence collection in restricted environments. The script enhances forensic investigations by providing structured, timestamped data for SOC analysis. Future enhancements may include additional data sources and automated analysis features.
+            </p>
+
+            <h2>5. Full Code</h2>
+            <p>
+                <strong>Security Note:</strong> Always review code before executing. Verify integrity with SHA256 Hash: 88D59DF2D0CC066896E34234BE974F729D8570701D5DAD648AB1FDE854FCAA51.
+            </p>
+            <pre><code id="fullCode"># Script to capture specific system information for forensic analysis
+# Purpose: Collects evidence without requiring admin privileges for incident response
+# Date: April 07, 2025
+
+# Get the current user and their desktop path
+# Retrieves the username of the logged-in user from the environment variable
+$currentUser = $env:USERNAME
+# Creates a timestamped folder name (e.g., SystemCapture_20250407_121530) on the desktop
+$desktopPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath('Desktop'), "SystemCapture_$(Get-Date -Format 'yyyyMMdd_HHmmss')")
+
+# Create the output directory on the desktop
+# Uses try-catch to handle potential errors (e.g., permission issues)
+try {
+    # Creates the timestamped directory, -Force overwrites if it exists, -ErrorAction Stop ensures errors are caught
+    New-Item -Path $desktopPath -ItemType Directory -Force -ErrorAction Stop | Out-Null
+    # Notifies user of successful directory creation in green text
+    Write-Host "Created output directory: $desktopPath" -ForegroundColor Green
+}
+catch {
+    # Displays error message in red if directory creation fails and exits script
+    Write-Host "Error creating output directory: $_" -ForegroundColor Red
+    exit 1
+}
+
+# Function to log messages
+# Defines a reusable function to log actions to a file and console
+function Write-Log {
+    # Accepts a message parameter to log
+    param($Message)
+    # Formats the log entry with a timestamp (e.g., 2025-04-07 12:15:30 - Action completed)
+    $logMessage = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - $Message"
+    # Appends the log entry to CaptureLog.txt in the output directory
+    Add-Content -Path "$desktopPath\CaptureLog.txt" -Value $logMessage
+    # Displays the log message in the console for real-time feedback
+    Write-Host $logMessage
+}
+
+# Start logging
+# Logs the start of the evidence collection process, including the current user
+Write-Log "Starting system information capture for user: $currentUser"
+
+# 1. Capture PowerShell Command History
+# Attempts to collect the user's PowerShell command history for forensic analysis
+try {
+    # Defines the path to the PowerShell history file (stored in PSReadLine)
+    $psHistoryPath = "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+    # Checks if the history file exists
+    if (Test-Path $psHistoryPath) {
+        # Copies the history file to the output directory for preservation
+        Copy-Item -Path $psHistoryPath -Destination "$desktopPath\PowerShell_History.txt" -ErrorAction Stop
+        # Logs successful capture
+        Write-Log "Captured PowerShell command history"
+    } else {
+        # Logs if the history file is not found (e.g., PSReadLine disabled)
+        Write-Log "PowerShell command history file not found"
+    }
+}
+catch {
+    # Logs any errors encountered during history capture (e.g., access denied)
+    Write-Log "Error capturing PowerShell command history: $_"
+}
+
+# 2. Capture Scheduled Tasks
+# Collects information about scheduled tasks, which could indicate malicious persistence
+try {
+    # Runs schtasks with /query /fo LIST /v to get detailed task information and saves to a file
+    schtasks /query /fo LIST /v | Out-File "$desktopPath\Scheduled_Tasks.txt"
+    # Logs successful capture
+    Write-Log "Captured scheduled tasks"
+}
+catch {
+    # Logs any errors (e.g., command execution failure)
+    Write-Log "Error capturing scheduled tasks: $_"
+}
+
+# 3. Capture Startup Items
+# Collects programs set to run at startup, a common malware persistence mechanism
+try {
+    # Defines the path to the user's startup folder
+    $startupFolder = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+    # Checks if the startup folder exists
+    if (Test-Path $startupFolder) {
+        # Lists contents of the startup folder and saves to a file
+        dir $startupFolder | Out-File "$desktopPath\Startup_Folder.txt"
+    } else {
+        # Logs if the startup folder is not found
+        Write-Log "Startup folder not found"
+    }
+
+    # Queries the HKLM registry for system-wide autorun entries and saves to a file
+    reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run | Out-File "$desktopPath\Autorun_HKLM.txt"
+    # Queries the HKCU registry for user-specific autorun entries and saves to a file
+    reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run | Out-File "$desktopPath\Autorun_HKCU.txt"
+    # Logs successful capture
+    Write-Log "Captured startup items"
+}
+catch {
+    # Logs any errors (e.g., registry access issues)
+    Write-Log "Error capturing startup items: $_"
+}
+
+# 4. Capture Running Processes
+# Collects a list of running processes to identify potential malicious applications
+try {
+    # Uses Get-Process to retrieve process details (Name, ID, Path, Company, Description)
+    # Exports to a CSV file for easy analysis, -NoTypeInformation removes extra metadata
+    Get-Process | Select-Object Name, Id, Path, Company, Description | Export-Csv -Path "$desktopPath\Processes.csv" -NoTypeInformation
+    # Logs successful capture
+    Write-Log "Captured running processes"
+}
+catch {
+    # Logs any errors (e.g., access restrictions)
+    Write-Log "Error capturing processes: $_"
+}
+
+# 5. Capture Network Connections (netstat)
+# Collects active network connections to detect unauthorized communications
+try {
+    # Runs netstat -ano to list connections with process IDs and saves to a file
+    netstat -ano | Out-File "$desktopPath\Netstat.txt"
+    # Logs successful capture
+    Write-Log "Captured network connections"
+}
+catch {
+    # Logs any errors (e.g., command execution failure)
+    Write-Log "Error capturing network connections: $_"
+}
+
+# 6. Capture DNS Queries
+# Collects the DNS cache to identify accessed domains, which may include malicious ones
+try {
+    # Runs ipconfig /displaydns to list cached DNS entries and saves to a file
+    ipconfig /displaydns | Out-File "$desktopPath\DNS_Queries.txt"
+    # Logs successful capture
+    Write-Log "Captured DNS queries"
+}
+catch {
+    # Logs any errors (e.g., command execution failure)
+    Write-Log "Error capturing DNS queries: $_"
+}
+
+# 7. Capture Recently Modified Files in Key Directories
+# Collects recently modified files in Temp and AppData to detect suspicious activity
+try {
+    # Defines directories to check (common locations for temporary or malicious files)
+    $dirsToCheck = @(
+        "$env:LOCALAPPDATA\Temp",
+        "$env:APPDATA"
+    )
+
+    # Iterates through each directory
+    foreach ($dir in $dirsToCheck) {
+        # Checks if the directory exists
+        if (Test-Path $dir) {
+            # Gets the directory name for the output file
+            $dirName = [System.IO.Path]::GetFileName($dir)
+            # Lists files recursively, sorts by LastWriteTime, takes the top 50, and saves to a file
+            dir $dir -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 50 | Out-File "$desktopPath\RecentFiles_$dirName.txt"
+        }
+    }
+    # Logs successful capture
+    Write-Log "Captured recently modified files in key directories"
+}
+catch {
+    # Logs any errors (e.g., access issues or directory traversal errors)
+    Write-Log "Error capturing recently modified files: $_"
+}
+
+# Finalize
+# Logs the completion of the evidence collection process
+Write-Log "System information capture completed. All files saved to: $desktopPath"
+# Instructs the user to send the output folder to the SOC team for analysis
+Write-Host "Capture completed. Please send the folder $desktopPath to your local SOC team for analysis." -ForegroundColor Green</code><button class="copy-btn" onclick="copyCode('fullCode')" tabindex="0">Copy</button></pre>
+        </div>
+    </div>
+
+    <script>
+        // Encapsulated JavaScript to prevent tampering
+        (function() {
+            // Secure copy function with content validation
+            window.copyCode = function(elementId) {
+                const codeElement = document.getElementById(elementId);
+                if (!codeElement) {
+                    alert('Error: Code block not found.');
+                    return;
+                }
+                const code = codeElement.textContent;
+                // Validate content to block suspicious patterns
+                if (/http[s]?:\/\/|Invoke-Expression|DownloadString/i.test(code)) {
+                    alert('Copy blocked: Suspicious content detected.');
+                    return;
+                }
+                navigator.clipboard.writeText(code).then(() => {
+                    const button = event.target;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => button.textContent = 'Copy', 2000);
+                }).catch(() => {
+                    alert('Failed to copy code. Please select and copy manually.');
+                });
+            };
+
+            // Dynamically set the height of opaque-bg to match the document height
+            function setOpaqueBgHeight() {
+                const opaqueBg = document.getElementById('opaqueBg');
+                const docHeight = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.offsetHeight,
+                    document.body.clientHeight,
+                    document.documentElement.clientHeight
+                );
+                opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
+            }
+
+            // Run on page load
+            window.addEventListener('load', setOpaqueBgHeight);
+            // Update on resize or content change
+            window.addEventListener('resize', setOpaqueBgHeight);
+        })();
+    </script>
+</body>
+</html>
