@@ -181,7 +181,8 @@ with open("passwords.txt", "r") as p_file:
     passwords = p_file.read().splitlines()
 with open("cmds.txt", "r") as cmd_file:
     cmds = cmd_file.read().splitlines()</code><button class="copy-btn" onclick="copyCode('code2')" tabindex="0">Copy</button></pre>
-
+    <img src="/assets/images/creder/files_dir.png" alt="file dir">
+    <img src="/assets/images/creder/cmd_file.png" alt="cmd file">
             <h3>2.3 Interactive Prompt with Autocomplete</h3>
             <p>
                 <strong>Relevance:</strong> The interactive prompt with autocomplete speeds up command selection by allowing testers to quickly navigate large lists of credentials and commands, reducing errors and improving efficiency during testing.
@@ -202,7 +203,9 @@ session = PromptSession(key_bindings=bindings)
 cmd_choice = session.prompt("Pick cmd (Tab for list of options): ", completer=cmd_completer)
 u_choice = session.prompt("Pick username (Tab for list of options): ", completer=u_completer)
 p_choice = session.prompt("Pick password (Tab for list of options): ", completer=p_completer)</code><button class="copy-btn" onclick="copyCode('code3')" tabindex="0">Copy</button></pre>
-<img src="/assets/images/Code/credr/credr2.png" alt="prompt shot">
+<img src="/assets/images/creder/cmd_select.png" alt="cmd select">
+<img src="/assets/images/creder/username.png" alt="user select">
+<img src="/assets/images/creder/pwd_select.png" alt="pwd select">
 
             <h3>2.4 Command Generation and Clipboard Copy</h3>
             <p>
@@ -215,8 +218,7 @@ print("Your command:", final_cmd)
 # Copies cmd to clipboard
 pyperclip.copy(final_cmd)
 print("Command copied to clipboard!")</code><button class="copy-btn" onclick="copyCode('code4')" tabindex="0">Copy</button></pre>
-
-            <h2>3. Tips and Lessons Learned</h2>
+<img src="/assets/images/creder/final.png" alt="final
             <p>Practical advice and insights gained from developing the script:</p>
             <ul>
                 <li><strong>Tip 1:</strong> Ensure text files (usernames.txt, passwords.txt, cmds.txt) are in the same directory as the script to avoid file not found errors.</li>
