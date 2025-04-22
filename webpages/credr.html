@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>CREDR: Credential Testing Automation Script - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block;
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a;
+        }
+
+        .content .left-aligned-content .copy-btn:focus {
+            outline: 2px solid #ff007a;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">CTFs/HTB</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>CREDR: Credential Testing Automation Script</h1>
+            <img src="/assets/images/creder/credr_cover.jpg" alt="credr cover">
+            <h2>1. Project Overview</h2>
+            <p><strong>~I built CREDR during a penetration test when I stumbled across a credential list and found myself manually typing the same command repeatedly to test each username and password combination. It was tedious, so I whipped up this Python script to automate the process, making credential testing faster and less error-prone. It’s a simple tool, but it saved me hours—hope it helps you too! Adjust it to fit your needs, and let me know if you add any cool features.~</strong></p>
+            <p>
+                CREDR is a Python script designed to streamline credential testing during penetration testing. It reads usernames, passwords, and command templates from text files, provides an interactive interface with autocomplete, and generates formatted commands for testing credentials. The final command is copied to the clipboard for easy pasting into a terminal, saving time and reducing manual errors.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Automate the process of testing credentials by generating formatted commands from predefined lists.</li>
+                <li><strong>Requirements:</strong> Python 3.6+, text files with usernames, passwords, and command templates.</li>
+                <li><strong>Hardware Used:</strong> Any system running Python (tested on Linux and Windows).</li>
+                <li><strong>Software Used:</strong> Python, libraries: prompt_toolkit, pyperclip.</li>
+                <li><strong>Skills Learned:</strong> Python scripting, library installation automation, interactive CLI design, clipboard integration.</li>
+            </ul>
+
+            <h2>2. Script Breakdown and Penetration Testing Relevance</h2>
+            <p><strong>Security Note:</strong> Always review code before executing. Verify integrity with the SHA256 hash provided for the full script below.</p>
+
+            <h3>2.1 Library Installation</h3>
+            <p>
+                <strong>Relevance:</strong> Ensuring required libraries are installed automatically makes the script portable and user-friendly, especially during time-sensitive penetration tests where setting up dependencies manually can be a bottleneck.
+            </p>
+            <pre><code id="code1"># Function to check and install a library if it’s missing
+def install_if_missing(package):
+    try:
+        importlib.import_module(package)
+    except ImportError:
+        print(f"{package} not found. Installing...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            print(f"{package} installed successfully!")
+        except subprocess.CalledProcessError:
+            print(f"Failed to install {package}. Please run 'pip install {package}' manually.")
+            sys.exit(1)
+
+# List of required packages to check and install
+required_packages = ["prompt_toolkit", "pyperclip"]
+
+# Check and install all required packages
+for package in required_packages:
+    install_if_missing(package)</code><button class="copy-btn" onclick="copyCode('code1')" tabindex="0">Copy</button></pre>
+
+            <h3>2.2 File Input Handling</h3>
+            <p>
+                <strong>Relevance:</strong> Reading usernames, passwords, and command templates from external files allows testers to use large credential lists (e.g., from a breach dump) and customize commands for specific tools or protocols, making the script flexible for various testing scenarios.
+            </p>
+            <pre><code id="code2"># Reads each file and formats correctly as *_file
+with open("usernames.txt", "r") as u_file:
+    usernames = u_file.read().splitlines()
+with open("passwords.txt", "r") as p_file:
+    passwords = p_file.read().splitlines()
+with open("cmds.txt", "r") as cmd_file:
+    cmds = cmd_file.read().splitlines()</code><button class="copy-btn" onclick="copyCode('code2')" tabindex="0">Copy</button></pre>
+
+            <h3>2.3 Interactive Prompt with Autocomplete</h3>
+            <p>
+                <strong>Relevance:</strong> The interactive prompt with autocomplete speeds up command selection by allowing testers to quickly navigate large lists of credentials and commands, reducing errors and improving efficiency during testing.
+            </p>
+            <pre><code id="code3"># Adds list options to each file
+u_completer = WordCompleter(usernames)
+p_completer = WordCompleter(passwords)
+cmd_completer = WordCompleter(cmds)
+
+# Binds the list function to tab key
+bindings = KeyBindings()
+@bindings.add('l')
+def _(event):
+    event.app.current_buffer.complete_next()
+
+# Shows prompts for input
+session = PromptSession(key_bindings=bindings)
+cmd_choice = session.prompt("Pick cmd (Tab for list of options): ", completer=cmd_completer)
+u_choice = session.prompt("Pick username (Tab for list of options): ", completer=u_completer)
+p_choice = session.prompt("Pick password (Tab for list of options): ", completer=p_completer)</code><button class="copy-btn" onclick="copyCode('code3')" tabindex="0">Copy</button></pre>
+<img src="/assets/images/Code/credr/credr2.png" alt="prompt shot">
+
+            <h3>2.4 Command Generation and Clipboard Copy</h3>
+            <p>
+                <strong>Relevance:</strong> Generating a formatted command and copying it to the clipboard allows testers to quickly paste and execute commands in a terminal, streamlining the credential testing process and minimizing manual typing errors.
+            </p>
+            <pre><code id="code4"># Outputs final cmd
+final_cmd = cmd_choice.replace("<username>", u_choice).replace("<password>", p_choice)
+print("Your command:", final_cmd)
+
+# Copies cmd to clipboard
+pyperclip.copy(final_cmd)
+print("Command copied to clipboard!")</code><button class="copy-btn" onclick="copyCode('code4')" tabindex="0">Copy</button></pre>
+
+            <h2>3. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from developing the script:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Ensure text files (usernames.txt, passwords.txt, cmds.txt) are in the same directory as the script to avoid file not found errors.</li>
+                <li><strong>Tip 2:</strong> Use command templates with <username> and <password> placeholders to match your testing tool’s syntax (e.g., "smbclient -U <username>%<password> //target/share").</li>
+                <li><strong>Tip 3:</strong> Test the script with a small credential list first to verify command formatting before running large-scale tests.</li>
+                <li><strong>Lesson Learned:</strong> Automating library installation simplifies deployment but requires error handling to handle network or permission issues.</li>
+                <li><strong>Future Improvements:</strong> Add support for looping through credential combinations automatically or integrating with tools like Hydra for direct execution.</li>
+            </ul>
+
+            <h2>4. Conclusion</h2>
+            <p>
+                CREDR simplifies credential testing by automating command generation, making it an invaluable tool for penetration testers dealing with large credential lists. Its interactive interface and clipboard integration enhance efficiency, while its flexibility allows customization for various testing scenarios. Future enhancements could include automated testing loops or integration with other pentesting tools.
+            </p>
+
+            <h2>5. Full Code</h2>
+            <p>
+                <strong>Security Note:</strong> Always review code before executing. Verify integrity with SHA256 Hash: 056C55F45DD8FCE05D95FB995C089E92CF8379FC62E5D9B27DAFC30B7D00D2D7.
+            </p>
+            <pre><code id="fullCode"># Import built-in tools to check and install libraries
+import importlib
+import subprocess
+import sys
+
+# Function to check and install a library if it’s missing
+def install_if_missing(package):
+    try:
+        # Try to import the package
+        importlib.import_module(package)
+    except ImportError:
+        # If it fails, install it using pip
+        print(f"{package} not found. Installing...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            print(f"{package} installed successfully!")
+        except subprocess.CalledProcessError:
+            print(f"Failed to install {package}. Please run 'pip install {package}' manually.")
+            sys.exit(1)  # Exit the script if installation fails
+
+# List of required packages to check and install
+required_packages = ["prompt_toolkit", "pyperclip"]
+
+# Check and install all required packages before proceeding
+for package in required_packages:
+    install_if_missing(package)
+
+# Now import the libraries—they should be available after the checks
+from prompt_toolkit import PromptSession    # For interactive prompts
+from prompt_toolkit.completion import WordCompleter  # For dropdown suggestions
+from prompt_toolkit.key_binding import KeyBindings   # For key bindings like Tab
+import pyperclip                            # For clipboard copying
+
+# Display ASCII art and instructions at the start of every run
+print("                                          ")  # add space
+print("                                          ")  # add space
+print("  ██████  ██████  ██████  ██████  ██████  ")  # Line 1 of "CREDR" art
+print(" ██       ██   ██ ██      ██   ██ ██   ██ ")  # Line 2
+print(" ██       ██████  █████   ██   ██ ██████  ")  # Line 3
+print(" ██       ██   ██ ██      ██   ██ ██   ██ ")  # Line 4
+print("  ██████  ██   ██ ███████ ██████  ██   ██ ")  # Line 5
+print("                                          ")  # add space
+print("                                          ")  # add space
+
+# Reads each file and formats correctly as *_file
+with open("usernames.txt", "r") as u_file:
+    usernames = u_file.read().splitlines()
+with open("passwords.txt", "r") as p_file:
+    passwords = p_file.read().splitlines()
+with open("cmds.txt", "r") as cmd_file:
+    cmds = cmd_file.read().splitlines()
+
+# Adds list options to each file
+u_completer = WordCompleter(usernames)
+p_completer = WordCompleter(passwords)
+cmd_completer = WordCompleter(cmds)
+
+# Binds the list function to tab key
+bindings = KeyBindings()
+@bindings.add('l')
+def _(event):
+    event.app.current_buffer.complete_next()
+
+# Shows prompts for input
+session = PromptSession(key_bindings=bindings)
+cmd_choice = session.prompt("Pick cmd (Tab for list of options): ", completer=cmd_completer)
+u_choice = session.prompt("Pick username (Tab for list of options): ", completer=u_completer)
+p_choice = session.prompt("Pick password (Tab for list of options): ", completer=p_completer)
+
+# Outputs final cmd
+final_cmd = cmd_choice.replace("<username>", u_choice).replace("<password>", p_choice)
+print("Your command:", final_cmd)
+
+# Copies cmd to clipboard
+pyperclip.copy(final_cmd)
+print("Command copied to clipboard!")</code><button class="copy-btn" onclick="copyCode('fullCode')" tabindex="0">Copy</button></pre>
+        </div>
+    </div>
+
+    <script>
+        // Encapsulated JavaScript to prevent tampering
+        (function() {
+            // Secure copy function with content validation
+            window.copyCode = function(elementId) {
+                const codeElement = document.getElementById(elementId);
+                if (!codeElement) {
+                    alert('Error: Code block not found.');
+                    return;
+                }
+                const code = codeElement.textContent;
+                // Validate content to block suspicious patterns
+                if (/http[s]?:\/\/|Invoke-Expression|DownloadString/i.test(code)) {
+                    alert('Copy blocked: Suspicious content detected.');
+                    return;
+                }
+                navigator.clipboard.writeText(code).then(() => {
+                    const button = event.target;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => button.textContent = 'Copy', 2000);
+                }).catch(() => {
+                    alert('Failed to copy code. Please select and copy manually.');
+                });
+            };
+
+            // Dynamically set the height of opaque-bg to match the document height
+            function setOpaqueBgHeight() {
+                const opaqueBg = document.getElementById('opaqueBg');
+                const docHeight = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.offsetHeight,
+                    document.body.clientHeight,
+                    document.documentElement.clientHeight
+                );
+                opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
+            }
+
+            // Run on page load
+            window.addEventListener('load', setOpaqueBgHeight);
+            // Update on resize or content change
+            window.addEventListener('resize', setOpaqueBgHeight);
+        })();
+    </script>
+</body>
+</html>
