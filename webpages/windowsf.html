@@ -171,7 +171,7 @@ function Write-Log {
     $logMessage = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - $Message"
     Add-Content -Path "$desktopPath\CaptureLog.txt" -Value $logMessage
     Write-Host $logMessage
-}</code><button class="copy-btn" onclick="copyCode('code1')" tabindex="0">Copy</button></pre>
+}</code></pre>
 <img src="/assets/images/Code/windowsf/windowsf2.png" alt="dir shot">
             <h3>2.2 PowerShell Command History</h3>
             <p>
@@ -189,7 +189,7 @@ try {
 }
 catch {
     Write-Log "Error capturing PowerShell command history: $_"
-}</code><button class="copy-btn" onclick="copyCode('code2')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h3>2.3 Scheduled Tasks</h3>
             <p>
@@ -202,7 +202,7 @@ try {
 }
 catch {
     Write-Log "Error capturing scheduled tasks: $_"
-}</code><button class="copy-btn" onclick="copyCode('code3')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h3>2.4 Startup Items</h3>
             <p>
@@ -225,7 +225,7 @@ try {
 }
 catch {
     Write-Log "Error capturing startup items: $_"
-}</code><button class="copy-btn" onclick="copyCode('code4')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h3>2.5 Running Processes</h3>
             <p>
@@ -238,7 +238,7 @@ try {
 }
 catch {
     Write-Log "Error capturing processes: $_"
-}</code><button class="copy-btn" onclick="copyCode('code5')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h3>2.6 Network Connections</h3>
             <p>
@@ -251,7 +251,7 @@ try {
 }
 catch {
     Write-Log "Error capturing network connections: $_"
-}</code><button class="copy-btn" onclick="copyCode('code6')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h3>2.7 DNS Queries</h3>
             <p>
@@ -264,7 +264,7 @@ try {
 }
 catch {
     Write-Log "Error capturing DNS queries: $_"
-}</code><button class="copy-btn" onclick="copyCode('code7')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h3>2.8 Recently Modified Files</h3>
             <p>
@@ -287,7 +287,7 @@ try {
 }
 catch {
     Write-Log "Error capturing recently modified files: $_"
-}</code><button class="copy-btn" onclick="copyCode('code8')" tabindex="0">Copy</button></pre>
+}</code></pre>
 
             <h2>3. Tips and Lessons Learned</h2>
             <p>Practical advice and insights gained from developing the script:</p>
@@ -479,54 +479,8 @@ catch {
 # Logs the completion of the evidence collection process
 Write-Log "System information capture completed. All files saved to: $desktopPath"
 # Instructs the user to send the output folder to the SOC team for analysis
-Write-Host "Capture completed. Please send the folder $desktopPath to your local SOC team for analysis." -ForegroundColor Green</code><button class="copy-btn" onclick="copyCode('fullCode')" tabindex="0">Copy</button></pre>
+Write-Host "Capture completed. Please send the folder $desktopPath to your local SOC team for analysis." -ForegroundColor Green</code></pre>
         </div>
     </div>
-
-    <script>
-        // Encapsulated JavaScript to prevent tampering
-        (function() {
-            // Secure copy function with content validation
-            window.copyCode = function(elementId) {
-                const codeElement = document.getElementById(elementId);
-                if (!codeElement) {
-                    alert('Error: Code block not found.');
-                    return;
-                }
-                const code = codeElement.textContent;
-                // Validate content to block suspicious patterns
-                if (/http[s]?:\/\/|Invoke-Expression|DownloadString/i.test(code)) {
-                    alert('Copy blocked: Suspicious content detected.');
-                    return;
-                }
-                navigator.clipboard.writeText(code).then(() => {
-                    const button = event.target;
-                    button.textContent = 'Copied!';
-                    setTimeout(() => button.textContent = 'Copy', 2000);
-                }).catch(() => {
-                    alert('Failed to copy code. Please select and copy manually.');
-                });
-            };
-
-            // Dynamically set the height of opaque-bg to match the document height
-            function setOpaqueBgHeight() {
-                const opaqueBg = document.getElementById('opaqueBg');
-                const docHeight = Math.max(
-                    document.body.scrollHeight,
-                    document.documentElement.scrollHeight,
-                    document.body.offsetHeight,
-                    document.documentElement.offsetHeight,
-                    document.body.clientHeight,
-                    document.documentElement.clientHeight
-                );
-                opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
-            }
-
-            // Run on page load
-            window.addEventListener('load', setOpaqueBgHeight);
-            // Update on resize or content change
-            window.addEventListener('resize', setOpaqueBgHeight);
-        })();
-    </script>
 </body>
 </html>
