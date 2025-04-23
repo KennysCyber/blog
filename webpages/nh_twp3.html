@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kali NetHunter on TicWatch Pro 3 - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">CTFs/HTB</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Sideloading Kali NetHunter on TicWatch Pro 3</h1>
+            <img src="/assets/images/Nethunter/nh_cover.jpg" alt="cover">
+            <h2>1. Project Overview</h2>
+            <p>
+                This project focuses on sideloading Kali NetHunter, a mobile penetration testing platform, onto the TicWatch Pro 3 running Wear OS. This process was incredibly challenging and required precise steps, custom hardware modifications, and persistence due to the watch's unique constraints, such as the lack of a data cable in its default packaging.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Install Kali NetHunter on the TicWatch Pro 3 to enable portable pentesting capabilities on a wearable device.</li>
+                <li><strong>Hardware Used:</strong> TicWatch Pro 3, modified GoPro data cable (cut and repurposed for data transfer), computer for ADB and Fastboot operations.</li>
+                <li><strong>Software Used:</strong> Kali NetHunter 2024.4 (TicWatch Pro 3 Wear OS rootfs nano), Magisk v24.3, vbmeta.img, rubyfish_recovery.img, disabler.zip, RUBYFISH_STOCK_PMRB.220703.001.zip.</li>
+                <li><strong>Skills Learned:</strong> ADB and Fastboot usage, Wear OS rooting, Magisk configuration, NetHunter setup on constrained devices.</li>
+            </ul>
+
+            <h2>2. Resources and References</h2>
+            <p>The following resources were critical for completing this project:</p>
+            <ul>
+                <li>
+                    <strong>Resource 1:</strong><br>
+                    Title: <a href="https://www.kali.org/docs/nethunter/installing-nethunter-on-the-ticwatch-pro-3/">Kali NetHunter TicWatch Pro 3 Installation Guide</a><br>
+                    Usage: Official guide for installing NetHunter on the TicWatch Pro 3, provided baseline steps.
+                </li>
+                <li>
+                    <strong>Resource 2:</strong><br>
+                    Title: <a href="https://xdaforums.com/t/rom-official-kali-nethunter-for-the-ticwatch-pro-wearos.4456527/">Kali NetHunter for TicWatch Pro Wear OS (XDA Forums)</a><br>
+                    Usage: Referenced for community insights and troubleshooting tips specific to Wear OS.
+                </li>
+                <li>
+                    <strong>Resource 3:</strong><br>
+                    Title: <a href="https://github.com/BeeHiveSafety/KnowledgeBase/blob/web/operating-systems/kali-linux/kali-nethunter/installing-nethunter-on-the-ticwatch-pro.md">BeeHiveSafety KnowledgeBase - NetHunter on TicWatch Pro</a><br>
+                    Usage: Detailed alternative guide with additional context for the installation process.
+                </li>
+                <li>
+                    <strong>Resource 4:</strong><br>
+                    Title: <a href="https://youtu.be/ScyVP-TO6gw?si=NaSSbEkrqY1fC2Ea">YouTube Video - Installing NetHunter on Wear OS</a><br>
+                    Usage: Provided visual guidance, though not specific to TicWatch Pro 3, helped with general process understanding.
+                </li>
+            </ul>
+            <p><strong>Additional Notes:</strong> The official Kali guide and XDA thread were the most reliable, but the YouTube video helped visualize the process despite not being an exact match for the TicWatch Pro 3. The BeeHiveSafety guide filled in gaps for specific steps.</p>
+            <p><strong>Files I ended up using.:</strong><img src="/assets/images/Nethunter/filesystem.png" alt="files used"> </p>
+
+            <h2>3. Reset Steps (If Something Goes Wrong)</h2>
+            <p>If the installation fails or the device becomes unstable, follow these steps to reset the TicWatch Pro 3:</p>
+            <ol>
+                <li><strong>Step 1:</strong> Reboot into recovery mode.</li>
+                <li><strong>Step 2:</strong> Use ADB to push the stock firmware: <code>adb push RUBYFISH_STOCK_PMRB.220703.001.zip /sdcard/</code>.</li>
+                <li><strong>Step 3:</strong> Install the stock firmware (stock_PMRB.zip) via recovery.</li>
+                <li><strong>Step 4:</strong> Reboot to system.</li>
+                <li><strong>Step 5:</strong> Reboot to recovery again.</li>
+                <li>
+                    <strong>Step 6:</strong> If "no command" appears:<br>
+                    - Hold the top button and swipe up.<br>
+                    - Select "wipe data and factory reset," then confirm with "yes."
+                </li>
+                <li><strong>Step 7:</strong> Select "reboot system now" to complete the reset.</li>
+            </ol>
+
+            <h2>4. Installation Steps</h2>
+            <p>The installation process is highly specific and must be followed in this exact order. This was not a simple task and required significant trial and error:</p>
+            <ol>
+                <li>
+                    <strong>Step 1: Enable Developer Options</strong><br>
+                    Description: Plug the TicWatch Pro 3 into a computer using a modified GoPro data cable (the watch ships with a power-only cable, so I had to cut and repurpose a GoPro cable for data transfer). Enable ADB in Developer Options.<br>
+                    Challenges: Sourcing a data-capable cable was a major hurdle since the TicWatch Pro 3 does not include one.
+                </li>
+                <img src="/assets/images/Nethunter/cable.jpg" alt="cable">
+                <img src="/assets/images/Nethunter/cable_connect.jpg" alt="cable connect">
+                <img src="/assets/images/Nethunter/dev1.jpg" alt="dev1">
+                <img src="/assets/images/Nethunter/dev2.jpg" alt="dev2">
+                <li><strong>Step 2:</strong> Reboot into bootloader: <code>adb reboot bootloader</code>.</li>
+                <img src="/assets/images/Nethunter/recovery.jpg" alt="recovery1">
+                <img src="/assets/images/Nethunter/boot_recovery.jpg" alt="recovery2">
+                <li><strong>Step 3:</strong> Disable verity and verification, then flash vbmeta: <code>fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img</code>.</li>
+                <li><strong>Step 4:</strong> Flash the custom recovery: <code>fastboot flash recovery rubyfish_recovery.img</code>.</li>
+                <li><strong>Step 5:</strong> Reboot into recovery: <code>adb reboot recovery</code>.</li>
+                <img src="/assets/images/Nethunter/boot_recovery.jpg" alt="recovery2">
+                <li><strong>Step 6:</strong> In recovery, go to wipe > next page > format data > confirm with "yes."</li>
+                <li>
+                <img src="/assets/images/Nethunter/file system options.jpg" alt="format">
+                    <strong>Step 7:</strong> Reboot into recovery again, then wipe Dalvik and cache via the ADB sideload option.
+                </li>
+                <img src="/assets/images/Nethunter/wipe cache_adb.jpg" alt="cache wipe">
+                <li><strong>Step 8:</strong> Sideload Magisk: <code>adb sideload Magisk-v24.3b.zip</code>.</li>
+                <img src="/assets/images/Nethunter/install.jpg" alt="sideload">
+                <li><strong>Step 9:</strong> Push the disabler zip: <code>adb push disabler.zip /sdcard/</code>, then install it via the "Install zip" option in recovery.
+                </li>
+                <img src="/assets/images/Nethunter/install.jpg" alt="install">
+                <li><strong>Step 10:</strong> Reboot and complete the initial setup again.</li>
+                <li><strong>Step 11:</strong> Re-enable ADB in Developer Options.</li>
+                <img src="/assets/images/Nethunter/dev2.jpg" alt="dev tools">
+                <li><strong>Step 12:</strong> Install the Magisk APK: <code>adb install Magisk-v24.3.apk</code>.</li>
+                <li><strong>Step 13:</strong> Reboot into recovery: <code>adb reboot recovery</code>.</li>
+                <img src="/assets/images/Nethunter/boot_recovery.jpg" alt="recovery">
+                <li>
+                    <strong>Step 14:</strong> In recovery, go to wipe > next page > file system options > select system > resize.
+                </li>
+                <img src="/assets/images/Nethunter/file system options.jpg" alt="file systmem">
+                <li><strong>Step 15:</strong> Reboot to system.</li>
+                <li>
+                    <strong>Step 16:</strong> Open Magisk and configure:<br>
+                    - Disable "check-update."<br>
+                    - Set "prompt in auto response."<br>
+                    - Disable "toast notification."
+                </li>
+                <li><strong>Step 17:</strong> Reboot into recovery: <code>adb reboot recovery</code>.</li>
+                <li>
+                    <img src="/assets/images/Nethunter/boot_recovery.jpg" alt="sideload">
+                    <strong>Step 18:</strong> In recovery, go to next page > Mount > enable system, CACHE, and DATA.
+                </li>
+
+                <li><strong>Step 19:</strong> Push the NetHunter zip: <code>adb push kali-nethunter-2024.4-ticwatchpro3-wearos-rootfs-nano.zip /sdcard/</code>.</li>
+                <li><strong>Step 20:</strong> Reboot into recovery again.</li>
+                <li><strong>Step 21:</strong> Install the NetHunter zip via the "Install zip" option, then reboot to system.</li>
+                <img src="/assets/images/Nethunter/install.jpg" alt="install">
+                <li>
+                    <strong>Step 22:</strong> In Magisk, grant superuser access to the NetHunter app.
+                </li>
+                <img src="/assets/images/Nethunter/super user.jpg" alt="super">
+                <li>
+                    <strong>Step 23:</strong> Open the NetHunter app:<br>
+                    - Allow popups.<br>
+                    - Start the Kali Chroot.
+                </li>
+                <img src="/assets/images/Nethunter/chroot.jpg" alt="chroot1">
+                <img src="/assets/images/Nethunter/chroot_action.jpg" alt="chroot 2">
+            </ol>
+
+            <h2>5. Tips and Lessons Learned</h2>
+            <p>Key takeaways and advice from this challenging project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Ensure you have a working data cable—cutting and modifying a GoPro cable was necessary in my case, as the TicWatch Pro 3 ships with a power-only cable.</li>
+                <li><strong>Tip 2:</strong> Follow the steps exactly in order; deviations can lead to boot loops or bricked devices.</li>
+                <li><strong>Lesson Learned:</strong> Sideloading on Wear OS devices like the TicWatch Pro 3 requires patience and hardware improvisation due to limited official support.</li>
+                <li><strong>Future Improvements:</strong> Explore automating parts of the process or finding a more reliable data cable solution.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>
+                Successfully sideloading Kali NetHunter on the TicWatch Pro 3 was a difficult but rewarding endeavor. The process turned the wearable into a powerful, portable pentesting tool. Despite the challenges—like modifying a GoPro cable for data transfer and navigating the precise installation steps—I gained a deeper understanding of Wear OS rooting and NetHunter deployment. Future plans include testing NetHunter’s capabilities in real-world pentesting scenarios.
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The official Kali guide and XDA thread were indispensable for understanding the process, though they required adaptation for my specific setup.</li>
+                <li>The YouTube video, while not perfectly aligned with the TicWatch Pro 3, provided helpful visual context for the general process.</li>
+                <li>The BeeHiveSafety guide offered additional clarity on certain steps, making it a valuable secondary resource.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
