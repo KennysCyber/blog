@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DC-4 Pentest Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">CTFs/HTB</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>DC-4 Pentest Writeup - OffSec Proving Grounds</h1>
+            <img src="/assets/images/ctf/DC-4/DC-4 Cover.png" alt="DC-4 Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                DC-4 from OffSec Proving Grounds was a challenging yet rewarding pentest lab that I recently tackled. The goal was to exploit a web application login page, gain a shell on the target, and escalate privileges to root by leveraging a misconfiguration in the <code>teehee</code> binary. It tested my skills in enumeration, brute-forcing, command injection, and privilege escalation—a perfect mix for learning real-world pentesting techniques.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate to root, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, brute-forcing with Burp Suite, command injection, SSH brute-forcing, and privilege escalation using sudo misconfigurations.</li>
+                <li><strong>Platform:</strong> OffSec Proving Grounds</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that helped me along the way:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/swisskyrepo/InternalAllTheThings/blob/main/docs/cheatsheets/shell-reverse-cheatsheet.md">Shell Reverse Cheatsheet</a><br>
+                    Usage: Found a Python reverse shell payload for Linux, which I used to gain a foothold on the target.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning DC-4</h2>
+            <p>Here’s a detailed breakdown of how I approached this box, from initial recon to capturing the flags.</p>
+
+            <h3>Starting with Nmap Recon</h3>
+            <p>
+                I kicked things off with an Nmap scan to get a sense of what I was working with. I used the command <code>nmap -sV -T4 -p- --open</code>. I prefer a faster scan with <code>-T4</code> when I’m not too concerned about detection, and I always include <code>-sV</code> to grab service versions—it’s great for spotting potential vulnerabilities or protocols to target. The <code>-p- --open</code> flags ensure I scan all ports but only focus on the open ones, saving me some time during the initial recon.
+            </p>
+            <p>
+                The results showed a linux box with ports 80 and 22 open, running OpenSSH 2.0 and Nginx 1.15.10. That immediately pointed to a Linux box likely hosting a web application on port 80, with SSH on 22 as a potential entry point if I could find credentials.
+            </p>
+            <img src="/assets/images/ctf/DC-4/nmap.png" alt="Nmap scan results">
+
+            <h3>Exploring the Web Application</h3>
+            <p>
+                With port 80 open, I navigated to the target’s IP in my browser to see what was running. It turned out to be an admin login page for an IS system—definitely a promising starting point. To dig deeper, I launched Burp Suite, enabled the proxy, and used the Burp browser to intercept the requests and responses while I interacted with the login page.
+            </p>
+            <img src="/assets/images/ctf/DC-4/login_page.png" alt="login_page">
+            <img src="/assets/images/ctf/DC-4/burp_proxy.png" alt="burp proxy">
+
+            <h3>Brute-Forcing the Login with Burp Intruder</h3>
+            <p>
+                I started by submitting a simple <code>root:root</code> login attempt to capture the request in Burp. When I examined it, I noticed the username and password were sent in plain text—no encryption, which made things easier. I forwarded the request to Intruder to analyze the response. The response didn’t show an error; instead, it redirected from <code>login.php</code> to <code>index.php</code>, suggesting a successful login would take me to <code>index.php</code>.
+            </p>
+            <p>
+                With that in mind, I set up a Sniper attack in Intruder, keeping the username as <code>root</code> and using the rockyou wordlist to brute-force the password field. After some time, I got a match: the credentials <code>root:happy</code> worked, and I gained access to the admin panel.
+            </p>
+            <img src="/assets/images/ctf/DC-4/web_request.png" alt="Login request">
+            <img src="/assets/images/ctf/DC-4/intruder.png" alt="Burp Intruder brute-force">
+            <img src="/assets/images/ctf/DC-4/wordlist.png" alt="wordlist">
+
+            <h3>Discovering Command Injection and Gaining a Shell</h3>
+            <p>
+                Once logged in, I was greeted with a “System Tools” page that allowed me to select commands like listing files, checking free space, or disk usage. I chose “list files” and noticed in the request that it executed <code>ls -al</code> on the backend. That raised a red flag—could this be a command injection vulnerability? To test, I sent the request to Intruder again and injected a simple <code>whoami</code> command. Sure enough, the response came back with <code>www-data</code>. I had command injection!
+            </p>
+            <img src="/assets/images/ctf/DC-4/login_success.png" alt="login successful">
+            <p>
+                My next step was to turn that into a reverse shell for better access. I searched OSINT resources and found a Python reverse shell for Linux on the <a href="https://github.com/swisskyrepo/InternalAllTheThings/blob/main/docs/cheatsheets/shell-reverse-cheatsheet.md">Shell Reverse Cheatsheet</a>. I sent the request to Repeater, replaced the command injection point with the reverse shell payload, but I had to tweak it slightly—replacing spaces with <code>+</code> to ensure it executed properly.
+            </p>
+            <img src="/assets/images/ctf/DC-4/shellcheatsheet.png" alt="reverse_shell">
+            <img src="/assets/images/ctf/DC-4/reverseshell.png" alt="reverse_shell">
+            <p>
+                Before sending the payload, I set up a Netcat listener on my attacking machine with <code>nc -lvnp 4242</code>. Then I sent the payload through Repeater, and within seconds, I had a shell! I confirmed with <code>whoami</code> and <code>id</code>—I was logged in as <code>www-data</code>. Now I could start exploring the system.
+            </p>
+
+            <h3>Enumerating Users and Capturing the First Flag</h3>
+            <p>
+                With a shell as <code>www-data</code>, I began enumerating the system. I started by checking <code>/etc/passwd</code> with <code>cat /etc/passwd</code> to see what users were on the box. I found three: Jim, Charles, and Sam. I decided to check Jim’s home directory first, so I navigated to <code>/home/jim</code> to look for anything useful.
+            </p>
+            <img src="/assets/images/ctf/DC-4/oldpwd_jim.png" alt="old passwords">
+            <p>
+                In Jim’s directory, I found a few files and a directory called <code>backups</code>. I moved into <code>backups</code> and discovered a file named <code>old-passwords.bak</code>, which contained a list of potential credentials—I copied that to my machine for later use. In the same directory, I also found <code>local.txt</code>. When I opened it, I was thrilled to see it contained the first flag.
+            </p>
+            <img src="/assets/images/ctf/DC-4/firstflag.png" alt="local.txt">
+
+            <h3>Gaining SSH Access as Jim</h3>
+            <p>
+                Using the password list from <code>old-passwords.bak</code>, I launched Hydra to brute-force SSH access as Jim. I ran <code>hydra -l jim -P passwords.txt ssh://[target]</code>, and after a short while, Hydra found a valid password. I used those credentials to SSH into the box as Jim with <code>ssh jim@[target]</code>. Back in Jim’s home directory, I continued exploring and found a file named <code>mbox</code>. When I viewed it, I realized it was an email, which hinted that I should check <code>/var/mail</code> for more clues.
+            </p>
+            <img src="/assets/images/ctf/DC-4/jim_mbox.png" alt="mbox">
+
+            <h3>Checking Emails and Switching to Charles</h3>
+            <p>
+                I navigated to <code>/var/mail</code> and found two files, including one for Jim. When I opened Jim’s email, I discovered a password at the top, sent from Charles. I noted it down, hoping it would be useful. I first tried using it to elevate to root, but that didn’t work. Then I thought to try switching users, so I ran <code>su charles</code> with the password from the email—and it worked! I was now Charles.
+            </p>
+            <img src="/assets/images/ctf/DC-4/charles pwd mail.png" alt="mbox">
+
+            <h3>Escalating Privileges - A Key Learning Moment</h3>
+            <p>
+                As Charles, I wanted to see if I could escalate to root. I ran <code>sudo -l</code> and found that Charles could execute <code>/usr/bin/teehee</code> as root without a password. I wasn’t familiar with <code>teehee</code>, but after a quick search, I learned it’s similar to <code>tee</code>—it can write to files. That sparked an idea: if I could write to a system file as root, I might be able to create a new root user.
+            </p>
+            <img src="/assets/images/ctf/DC-4/howteeheework_chatgpt.png" alt="help">
+            <p>
+                I decided to append a new user to <code>/etc/passwd</code> by running <code>echo "r00t::0:0:::/bin/bash" | sudo teehee -a /etc/passwd</code>. This created a user named <code>r00t</code> with UID and GID 0, effectively giving it root privileges. Then I ran <code>su r00t</code>, and just like that, I had root access! This technique was new to me—I learned it from a walkthrough (linked below)—and it was a fascinating lesson in how sudo misconfigurations can be exploited.
+            </p>
+            <img src="/assets/images/ctf/DC-4/charles_teehee.png" alt="teehee">
+            <img src="/assets/images/ctf/DC-4/rootonbox.png" alt="root">
+
+            <h3>Securing the Root Flag</h3>
+            <p>
+                With root access, I navigated to <code>/root</code> and found the final flag in a file. I opened it with <code>cat</code>, and that was it—DC-4 was officially conquered! It felt incredibly satisfying to complete the challenge.
+            </p>
+            <img src="/assets/images/ctf/DC-4/flag2.png" alt="proof.txt">
+
+            <h2>5. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from this experience:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Use Nmap with <code>-sV</code> and <code>--open</code> for efficient recon—it quickly identifies open ports and service versions to guide your attack.</li>
+                <li><strong>Tip 2:</strong> Always check <code>/var/mail</code> for emails—they can contain valuable clues like usernames or passwords.</li>
+                <li><strong>Tip 3:</strong> When working with command injection, be prepared to modify payloads (e.g., replacing spaces with <code>+</code>) to ensure they execute correctly.</li>
+                <li><strong>Key Lesson:</strong> The privilege escalation via <code>teehee</code> was a highlight. Learning to use sudo to append a new root user to <code>/etc/passwd</code> opened my eyes to how powerful misconfigurations can be in pentesting.</li>
+                <li><strong>Future Goals:</strong> I’d like to explore automation tools like LinPEAS to streamline enumeration in future challenges.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>
+                DC-4 was an excellent challenge that pushed me to refine my pentesting skills. From brute-forcing a web login with Burp Suite to gaining a shell through command injection, and finally escalating to root with the <code>teehee</code> exploit, each step taught me something new. The privilege escalation technique was particularly eye-opening, and I’m eager to apply it in future engagements. This box was a great learning experience, and I’m looking forward to tackling more like it!
+            </p>
+            <img src="/assets/images/ctf/DC-4/dc-4done.png" alt="finished">
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>For a more detailed guide, I found this walkthrough helpful, especially for the privilege escalation part: <a href="https://github.com/robinpaulpeluri/DC4-Vulnhub-Walkthrough">DC4-Vulnhub-Walkthrough</a>.</li>
+                <li>The reverse shell cheatsheet was a lifesaver for quickly setting up a shell during the initial access phase.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
