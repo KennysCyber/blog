@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DIY WiFi Pineapple Project - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar --> 
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>DIY WiFi Pineapple on OpenWRT Router</h1>
+            <img src="/assets/images/wifipineapple/mango_cover.jpg" alt="cover photo">
+            <h2>1. Project Overview</h2>
+            <p>
+                This project involves building a DIY WiFi Pineapple, a wireless auditing tool, by flashing a compatible router with OpenWRT firmware and a WiFi Pineapple image. The setup enables wireless network penetration testing capabilities, such as rogue access point creation and network scanning, using affordable hardware.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Create a cost-effective wireless auditing platform for penetration testing.</li>
+                <li><strong>Hardware Used:</strong> Compatible OpenWRT router, USB WiFi adapter, LAN cable, power adapter.</li>
+                <li><strong>Software Used:</strong> OpenWRT firmware (version 19.07.7), WiFi Pineapple image (custom fork).</li>
+                <li><strong>Skills Learned:</strong> Router firmware flashing, network interface configuration, wireless auditing setup.</li>
+                <li><a href="https://a.co/d/48oFKt6">Amazon Link for Router</a></li>
+                <li><a href="https://a.co/d/do277Rp">Amazon Link for WiFi Adapter</a></li>
+            </ul>
+
+            <h2>2. Resources and References</h2>
+            <p>The following resources were essential for setting up the DIY WiFi Pineapple:</p>
+            <ul>
+                <li>
+                    <strong>Resource 1:</strong><br>
+                    Title: <a href="https://youtu.be/udnxagkSzoA?si=O35ZQCgnQAmM1MBd">DIY WiFi Pineapple - Installation Guide</a><br>
+                    Usage: Followed this video for step-by-step instructions on flashing OpenWRT and WiFi Pineapple firmware.
+                </li>
+                <li>
+                    <strong>Resource 2:</strong><br>
+                    Title: <a href="https://github.com/xchwarze/wifi-pineapple-cloner">WiFi Pineapple Cloner GitHub Repository</a><br>
+                    Usage: Downloaded the WiFi Pineapple image and referenced setup instructions.
+                </li>
+                <li>
+                    <strong>Resource 3:</strong><br>
+                    Title: <a href="https://firmware-selector.openwrt.org/">OpenWRT Firmware Selector</a><br>
+                    Usage: Used to select and download the correct OpenWRT firmware (version 19.07.7) for the router model.
+                </li>
+            </ul>
+            <p><strong>Additional Notes:</strong> The YouTube video provided clear visual guidance, while the GitHub repository offered the necessary WiFi Pineapple image. The OpenWRT firmware selector ensured compatibility with the router model.</p>
+            <img src="/assets/images/wifipineapple/files needed.png" alt="files needed">
+            <h2>3. Steps Taken</h2>
+            <p>The step-by-step process to build and deploy the DIY WiFi Pineapple is outlined below:</p>
+            <ol>
+                <li>
+                    <strong>Step 1: Download Firmware</strong><br>
+                    Description: Downloaded the OpenWRT firmware (version 19.07.7 if your using same hardware as me) for the specific router model using the OpenWRT Firmware Selector. Selected the sysupgrade image for flashing.<br>
+                    Challenges: Ensured the correct router model and firmware version were selected to avoid bricking the device.<br>
+                    <img src="/assets/images/wifipineapple/githubdownload1.png" alt="github">
+                    <img src="/assets/images/wifipineapple/selectimage.png" alt="select router">
+                    <img src="/assets/images/wifipineapple/imagedownload.png" alt="git download">
+                </li>
+                <li>
+                    <strong>Step 2: Boot to Recovery Mode</strong><br>
+                    Description: Connected the router via a LAN cable to a computer. Pressed and held the reset button while plugging in the power, holding until the lights became solid to enter recovery mode.<br>
+                    Challenges: Timing the reset button press correctly was critical to successfully enter recovery mode.(LAN>RESET>POWER)<br>
+                    <img src="/assets/images/wifipineapple/Lan reset 2.png" alt="lan reset">
+                </li>
+                <li>
+                    <strong>Step 3: Flashing OpenWRT</strong><br>
+                    Description: Disabled WiFi on the computer, connected to the router via LAN, and set a static IPv4 address (private IP) in the network interface settings. Accessed the router’s IP via a web browser, selected the OpenWRT firmware, and updated it (process took approximately 2.5 minutes) you know its done when lights go steady..<br>
+                    Challenges: Setting the static IP correctly and ensuring a stable LAN connection were essential for successful flashing.<br>
+                    <img src="/assets/images/wifipineapple/static ip.png" alt="static assignment">
+                    <img src="/assets/images/wifipineapple/flashimagebutton.png" alt="button">
+                    <img src="/assets/images/wifipineapple/upload image.png" alt="firmware">
+                    <img src="/assets/images/wifipineapple/openwrtflashinpro.png" alt="loading firmware">
+                </li>
+                <li>
+                    <strong>Step 4: Flashing WiFi Pineapple Image</strong><br>
+                    Description: Ignored the update spinning wheel, refreshed the browser, and set a password in the OpenWRT interface. Navigated to System > Backup/Flash Firmware > Flash Image, selected the WiFi Pineapple image, and uploaded it. Unchecked the "Keep Settings" option and waited approximately 3 minutes for all three LEDs to flash steadily.<br>
+                    Challenges: Ensuring the correct image was uploaded and waiting for the LEDs to indicate completion required patience.<br>
+                    <img src="/assets/images/wifipineapple/wifipinapple_homescreen.png" alt="homescreen">
+                    <img src="/assets/images/wifipineapple/flashimage.png" alt="flash options">
+                    <img src="/assets/images/wifipineapple/uncheckbox.png" alt="uncheck">
+                    <img src="/assets/images/wifipineapple/flashingimageinpro.png" alt="flashimage">
+                </li>
+                <li>
+                    <strong>Step 5: Initial Setup</strong><br>
+                    Description: Reverted the computer’s network interface to DHCP from manual. Accessed the WiFi Pineapple interface at http://172.16.42.1:1471, continued through the setup message, once prompted with "Secure Setup: Disable Wifi" attached the WiFi adapter, and pressed the reset button once. Set the root password and saved settings.<br>
+                    Challenges: Ensure to reenable DHCP and Auto DNS, as well as to plug in wifi adapter prior to clicking through "secure setup" prompt.<br>
+                    <img src="/assets/images/wifipineapple/switchipv4back.png" alt="revert IPv4">
+                    <img src="/assets/images/wifipineapple/pluginadapter.png" alt="adapter">
+                    <img src="/assets/images/wifipineapple/Post Setup login pineapple.png" alt="login">
+                </li>
+                <li>
+                    <strong>Step 6: Testing WiFi Adapter</strong><br>
+                    Description: Navigated to the PineAP module in the interface, started a scan, stopped it, and loaded the results. Confirmed the WiFi adapter was working if scan results were visible.<br>
+                    Challenges: Ensuring the WiFi adapter was compatible and properly detected by the router.<br>
+                    <img src="/assets/images/wifipineapple/starttest.png" alt="ap test">
+                    <img src="/assets/images/wifipineapple/loadresults.png" alt="ap results">
+                </li>
+                <li>
+                    <strong>Step 7: Setup Wireless Management SSID</strong><br>
+                    Description: In the Network tab, configured the management SSID by setting a custom SSID name and password, then clicked Update. Rebooted the router via the power icon in the interface. After reboot, connected to the management SSID wirelessly and accessed the same IP and port (172.16.42.1:1471) for wireless configuration access.<br>
+                    Challenges: Verifying the management SSID appeared in the WiFi list and ensuring stable wireless access to the interface.<br>
+                    <img src="/assets/images/wifipineapple/setup management wifi.png" alt="mangeSSID">
+                </li>
+            </ol>
+
+            <h2>4. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from the project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Verify router model compatibility with OpenWRT and the WiFi Pineapple image before starting to avoid bricking.</li>
+                <li><strong>Tip 2:</strong> Ensure you have mutiple device to follow along and be able to switch between networking interfaces as you go.</li>
+                <li><strong>Tip 3:</strong> Dont relay on the screen to tell you when the images are done flashing go off the lights as per the video.</li>
+                <li><strong>Lesson Learned:</strong> Even though you click update when confiuring management SSID you still have to reboot before it will show up.</li>
+                <li><strong>Future Improvements:</strong> Explore additional modules for the WiFi Pineapple to enhance auditing capabilities.</li>
+            </ul>
+
+            <h2>5. Conclusion</h2>
+            <p>
+                The DIY WiFi Pineapple was successfully set up on a compatible router, providing a powerful wireless auditing platform for penetration testing. The project enhanced my understanding of router firmware flashing, network configuration, and wireless security testing. Future plans include experimenting with advanced PineAP modules and custom scripts.
+            </p>
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>The YouTube guide was invaluable for visualizing the flashing and setup process.</li>
+                <li>The GitHub repository by xchwarze provided a reliable WiFi Pineapple image tailored for OpenWRT routers.</li>
+                <li>The OpenWRT Firmware Selector simplified the process of finding the correct firmware version for the router.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`; // Subtract nav bar height
+        }
+
+        // Run on page load
+        window.addEventListener('load', setOpaqueBgHeight);
+        // Update on resize or content change
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
