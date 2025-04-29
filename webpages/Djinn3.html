@@ -148,7 +148,7 @@
             </p>
             <img src="/assets/images/ctf/Djin3/SSTI fail.png" alt="fail">
             <p>
-                The URL test didn’t yield much, so I tried the same payload in the description field of a new ticket. This time, it worked—the output showed <code>2</code>, confirming SSTI. I attempted various commands, but only mathematical operations succeeded initially. After some trial and error, I found a payload that allowed command execution: <code>{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}</code>. This executed the <code>id</code> command, confirming I could run Linux commands on the server.
+                The URL test didn’t yield much, so I tried the same payload in the description field of a new ticket. This time, it worked—the output showed <code>4</code>, confirming SSTI. I attempted various commands, but only mathematical operations succeeded initially. After some trial and error, I found a payload that allowed command execution: <code>{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}</code>. This executed the <code>id</code> command, confirming I could run Linux commands on the server.
             </p>
             <img src="/assets/images/ctf/Djin3/SSTI.png" alt="cmd">
             <img src="/assets/images/ctf/Djin3/SSTI results.png" alt="results">
@@ -210,7 +210,6 @@
 
             <h2>8. Additional Notes</h2>
             <ul>
-                <li>I referenced a detailed walkthrough for additional insights on SSTI exploitation: <a href="https://github.com/robinpaulpeluri/DC4-Vulnhub-Walkthrough">DC4-Vulnhub-Walkthrough</a>.</li>
                 <li>The ASVS Writeups guide on SSTI was crucial for understanding how to craft effective payloads.</li>
             </ul>
         </div>
