@@ -2,36 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>HTB Lame Writeup - 18gi0n's Tech Lair</title>
+    <title>Projects - 18gi0n's Tech Lair</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
 </head>
 <body>
-    <!-- Nav Bar -->
-    <nav>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="projects.html">Projects</a></li>
-            <li><a href="code.html">Code & Tools</a></li>
-            <li><a href="ctf.html">Write-ups</a></li>
-            <li><a href="research.html">Research</a></li>
-        </ul>
-     </nav>
+   <!-- Nav Bar -->
+   <nav>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="code.html">Code & Tools</a></li>
+        <li><a href="ctf.html">Write-ups</a></li>
+        <li><a href="research.html">Research</a></li>
+    </ul>
+ </nav>
 
     <div class="content">
-        <h1>HTB Lame Writeup</h1>
+        <h1>Research</h1>
         <p>
-            Lame is a beginner-friendly Hack The Box machine that’s great for learning basic enumeration and exploitation. Here’s how I pwned it.
+            I'll try to keep this updated as often as I can, but like most devs my projects likes to move faster than my documentation sometimes... 
         </p>
-        <img src="assets/images/lame-nmap.png" alt="Nmap scan results for Lame">
-        <p>
-            Started with an Nmap scan to find open ports. Found SMB and SSH—classic combo. The SMB version had a known vuln, so I fired up Metasploit.
-        </p>
-        <video src="assets/videos/lame-exploit.mp4" controls></video>
-        <p>
-            Lessons learned: Always check for outdated software, and don’t overcomplicate things. Lame was, well, kinda lame but a fun start!
-        </p>
+        <!-- Project Posts Section -->
+        
+        <div class="project-posts">
+            <a href="/webpages/" class="project-box">
+                <img src="/assets/images/research/cve1.jpg" alt="">
+                <div class="project-text">
+                    <h3>CVE POC Links</h3>
+                    <p>This Section is for quick links to vulnerabilities proof of concepts Ive used and want to keep for quick refernce with notes.</p>
+                </div>
+            </a>
+            <a href="/webpages/" class="project-box">
+                <img src="/assets/images/research/rev1.jpg" alt="">
+                <div class="project-text">
+                    <h3>Reverse Engineering</h3>
+                    <p>This section covers my malware reversing attempts and findings. Feel free to roast...</p>
+                </div>
+            </a>
+            <a href="/webpages/" class="project-box">
+                <img src="/assets/images/research/blue team.jpg" alt="">
+                <div class="project-text">
+                    <h3>Blue Team Queries</h3>
+                    <p>This section is another quick links for blue team detection engineering queries Ive found useful. With the understanding they will need to be tailored to your enviroment. KQL/SPL/ES|QL</p>
+                </div>
+            </a>
+            <a href="/webpages/" class="project-box">
+                <img src="/assets/images/research/cyber engineering.jpg" alt="">
+                <div class="project-text">
+                    <h3>Cyber Engineering</h3>
+                    <p>This section is to hold my engineering projects to include automation, stacks, and more.</p>
+                </div>
+            </a>
+            <!--<a href="/webpages/" class="project-box">
+                <img src="/assets/images/" alt="">
+                <div class="project-text">
+                    <h3>title</h3>
+                    <p>body</p>
+                </div>
+            </a> -->
+        </div>
     </div>
 </body>
 </html>
