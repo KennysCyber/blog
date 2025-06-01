@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>Linux Forensics Script - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block;
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a;
+        }
+
+        .content .left-aligned-content .copy-btn:focus {
+            outline: 2px solid #ff007a;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Linux Forensics Script: Evidence Capture</h1>
+            <img src="/assets/images/Code/linuxf/linkfcover.jpg" alt="linuxf cover" width="400" height="300">
+            <h2>1. Project Overview</h2>
+
+            <p>
+                This project involves creating a Bash script for digital forensics on Linux systems, capable of collecting critical system information with minimal privileges. The script gathers data such as network connections, running processes, recent files, system logs, user information, and system details, saving them to a timestamped folder for analysis by a Security Operations Center (SOC) team.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Develop a lightweight forensics tool for evidence collection in Linux environments with restricted permissions.</li>
+                <li><strong>Requirements:</strong> Linux system (tested on Ubuntu, CentOS, Debian), Bash shell. (This is a template; adapt it for your specific environment).</li>
+                <li><strong>Hardware Used:</strong> Linux-based system (tested on various distributions).</li>
+                <li><strong>Software Used:</strong> Bash, standard Linux utilities (netstat, ss, ps, find, etc.).</li>
+                <li><strong>Skills Learned:</strong> Bash scripting, forensic data collection, error handling, cross-distribution compatibility.</li>
+            </ul>
+
+            <h2>2. Script Breakdown and Forensic Relevance</h2>
+            <p><strong>Security Note:</strong> Always review code before executing. Verify integrity with the SHA256 hash provided for the full script below.</p>
+
+            <h3>2.1 Setup and Output Directory</h3>
+            <p>
+                <strong>Relevance:</strong> A timestamped output directory organizes evidence and ensures traceability, critical for maintaining the chain of custody. The script checks for writable directories and sufficient disk space to avoid failures during evidence collection.
+            </p>
+            <pre><code id="code1">
+# Default settings
+OUTPUT_DIR="/tmp"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+EVIDENCE_DIR="${OUTPUT_DIR}/evidence_${TIMESTAMP}"
+
+# Validate output directory
+if [[ ! -d "$OUTPUT_DIR" || ! -w "$OUTPUT_DIR" ]]; then
+    echo "Error: Output directory '$OUTPUT_DIR' is not writable"
+    exit 1
+fi
+
+# Check disk space (require at least 100MB)
+if ! df -m "$OUTPUT_DIR" | tail -1 | awk '{if ($4 < 100) exit 1}'; then
+    echo "Error: Insufficient disk space in $OUTPUT_DIR"
+    exit 1
+fi
+
+# Create evidence directory with restrictive permissions
+mkdir -m 700 -p "$EVIDENCE_DIR" || { echo "Error: Failed to create $EVIDENCE_DIR"; exit 1; }
+echo "Collecting evidence in $EVIDENCE_DIR..."
+            </code></pre>
+            <img src="/assets/images/Code/linuxf/linuxf.png" alt="evidence dir shot">
+
+            <h3>2.2 Network Information</h3>
+            <p>
+                <strong>Relevance:</strong> Capturing network connections and firewall rules can reveal active communications with command-and-control servers or unauthorized services, aiding in the identification of compromised systems.
+            </p>
+            <pre><code id="code2">
+# Network Information
+command_exists netstat && {
+    save_output "netstat_listening" "netstat -tulnp"
+    save_output "netstat_all" "netstat -nap"
+}
+save_output "ss_listening" "ss -tulnp"
+save_output "ss_all" "ss -nap"
+command_exists iptables && save_output "iptables" "iptables -L -v -n"
+command_exists nft && save_output "nftables" "nft list ruleset"
+save_output "network_interfaces" "ip addr show"
+save_output "routing_table" "ip route show"
+            </code></pre>
+
+            <h3>2.3 Process Information</h3>
+            <p>
+                <strong>Relevance:</strong> A snapshot of running processes and services can uncover malicious applications or unauthorized cron jobs, providing insights into potential persistence mechanisms.
+            </p>
+            <pre><code id="code3">
+# Process Information
+save_output "processes" "ps aux"
+save_output "top_snapshot" "top -b -n 1"
+if command_exists systemctl; then
+    save_output "systemd_services" "systemctl list-units --type=service"
+else
+    save_output "services" "service --status-all 2>/dev/null || ls /etc/init.d/"
+fi
+save_output "cron_jobs" "cat /etc/crontab 2>/dev/null; ls -l /etc/cron.* 2>/dev/null; crontab -l 2>/dev/null"
+            </code></pre>
+
+            <h3>2.4 File System Information</h3>
+            <p>
+                <strong>Relevance:</strong> Recent files and SUID binaries can indicate malicious activity, such as temporary files created by attackers or exploitable binaries. Disk usage data helps assess system impact.
+            </p>
+            <pre><code id="code4">
+# File System Information
+save_output "recent_files" "find /home /etc /var -mtime -7 -ls 2>/dev/null"
+save_output "suid_binaries" "find / -perm -u=s -type f 2>/dev/null"
+save_output "tmp_files" "ls -la /tmp /var/tmp /dev/shm 2>/dev/null"
+save_output "disk_usage" "df -h; du -sh /home /etc /var 2>/dev/null"
+            </code></pre>
+
+            <h3>2.5 Logs</h3>
+            <p>
+                <strong>Relevance:</strong> System and authentication logs can reveal unauthorized access attempts or system changes, critical for reconstructing the timeline of an incident.
+            </p>
+            <pre><code id="code5">
+# Logs
+collect_logs "/var/log/auth.log" "/var/log/secure"
+collect_logs "/var/log/syslog" "/var/log/messages"
+save_output "dmesg" "dmesg"
+[[ -r "/var/log/audit/audit.log" ]] && save_output "audit_log" "cat /var/log/audit/audit.log"
+            </code></pre>
+
+            <h3>2.6 User Information</h3>
+            <p>
+                <strong>Relevance:</strong> User accounts, SSH keys, and login history can uncover unauthorized accounts or access, helping identify compromised credentials or backdoors.
+            </p>
+            <pre><code id="code6">
+# User Information
+save_output "users" "cat /etc/passwd"
+[[ -r "/etc/sudoers" ]] && save_output "sudoers" "cat /etc/sudoers"
+save_output "ssh_keys" "find /home /root -name authorized_keys -exec cat {} \; 2>/dev/null"
+save_output "last_logins" "last -a"
+            </code></pre>
+
+            <h3>2.7 System Information</h3>
+            <p>
+                <strong>Relevance:</strong> System details like kernel version, CPU, memory, and loaded modules provide context for vulnerabilities or anomalies, aiding in forensic analysis.
+            </p>
+            <pre><code id="code7">
+# System Information
+save_output "system_info" "uname -a; lscpu; cat /proc/meminfo"
+save_output "uptime" "uptime"
+command_exists sensors && save_output "sensors" "sensors"
+save_output "loaded_modules" "lsmod"
+            </code></pre>
+
+            <h2>3. Tips and Lessons Learned</h2>
+            <p>Practical advice and insights gained from developing the script:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Run the script as a standard user to avoid permission issues; root access enhances data collection but isn’t required.</li>
+                <li><strong>Tip 2:</strong> Use the <code>-t</code> flag to collect specific evidence types, reducing runtime and output size.</li>
+                <li><strong>Tip 3:</strong> Verify the integrity of the compressed output using <code>hashes.txt</code> before sharing with the SOC team.</li>
+                <li><strong>Lesson Learned:</strong> Cross-distribution compatibility requires checking for command availability and log file locations.</li>
+                <li><strong>Future Improvements:</strong> Add support for capturing browser history or volatile memory artifacts.</li>
+            </ul>
+
+            <h2>4. Conclusion</h2>
+            <p>
+                The Linux forensics script provides a robust solution for collecting critical system information with minimal privileges, ideal for rapid incident response in restricted environments. Its modular design and compatibility across distributions make it a valuable tool for SOC teams. Future enhancements could include additional evidence types and automated analysis features.
+            </p>
+
+            <h2>5. Full Code</h2>
+            <p>
+                <strong>Security Note:</strong> Always review code before executing. Verify integrity with SHA256 Hash: 30213F9D371F25399C6F59B7276D6D541F6DE42026E6C6CD70520951E5216169.
+            </p>
+            <pre><code id="fullCode">
+#!/bin/bash
+
+# Script to collect forensic evidence from Linux devices
+# Compatible across distributions, handles errors, and consolidates output
+# Usage: ./collect_evidence.sh [-o output_dir] [-t type] [-h]
+
+# Default settings
+OUTPUT_DIR="/tmp"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+EVIDENCE_DIR="${OUTPUT_DIR}/evidence_${TIMESTAMP}"
+COLLECT_TYPES="all" # Options: all, network, processes, filesystem, logs, users, system
+COMPRESS=true
+CLEANUP=false
+JSON_OUTPUT=false
+
+# Help message
+usage() {
+    echo "Usage: $0 [-o output_dir] [-t type] [-j] [-n] [-c] [-h]"
+    echo "  -o  Output directory (default: /tmp)"
+    echo "  -t  Evidence type: all, network, processes, filesystem, logs, users, system"
+    echo "  -j  Output in JSON format"
+    echo "  -n  No compression"
+    echo "  -c  Clean up evidence directory after compression"
+    echo "  -h  Show this help"
+    exit 1
+}
+
+# Parse arguments
+while getopts "o:t:jnc" opt; do
+    case $opt in
+        o) OUTPUT_DIR="$OPTARG" ;;
+        t) COLLECT_TYPES="$OPTARG" ;;
+        j) JSON_OUTPUT=true ;;
+        n) COMPRESS=false ;;
+        c) CLEANUP=true ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+
+# Validate output directory
+if [[ ! -d "$OUTPUT_DIR" || ! -w "$OUTPUT_DIR" ]]; then
+    echo "Error: Output directory '$OUTPUT_DIR' is not writable"
+    exit 1
+fi
+
+# Check disk space (require at least 100MB)
+if ! df -m "$OUTPUT_DIR" | tail -1 | awk '{if ($4 < 100) exit 1}'; then
+    echo "Error: Insufficient disk space in $OUTPUT_DIR"
+    exit 1
+fi
+
+# Create evidence directory with restrictive permissions
+mkdir -m 700 -p "$EVIDENCE_DIR" || { echo "Error: Failed to create $EVIDENCE_DIR"; exit 1; }
+echo "Collecting evidence in $EVIDENCE_DIR..."
+
+# Check if running as root
+if [[ $EUID -ne 0 ]]; then
+    echo "Warning: Running as non-root user; some commands may fail"
+fi
+
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to save command output
+save_output() {
+    local cmd_name="$1"
+    local cmd="$2"
+    local output_file="${EVIDENCE_DIR}/${cmd_name}.txt"
+    local json_entry=""
+
+    # Check if command is available
+    local cmd_bin=$(echo "$cmd" | awk '{print $1}')
+    if ! command_exists "$cmd_bin"; then
+        echo "Warning: $cmd_bin not found, skipping $cmd_name" >&2
+        echo "Error: $cmd_bin not installed" > "$output_file"
+        return 1
+    fi
+
+    echo "Running $cmd_name..." >&2
+    {
+        echo "Command: $cmd"
+        echo "Timestamp: $(date)"
+        echo "----------------------------------------"
+        if ! eval "$cmd" 2>/tmp/err.log; then
+            echo "Error: Command failed or insufficient permissions"
+            cat /tmp/err.log
+        fi
+    } > "$output_file" 2>/dev/null
+
+    # Compute hash
+    if [[ -s "$output_file" ]]; then
+        sha256sum "$output_file" >> "${EVIDENCE_DIR}/hashes.txt"
+    fi
+
+    # JSON output
+    if [[ "$JSON_OUTPUT" = true ]]; then
+        json_entry=$(jq -n --arg cmd "$cmd" --arg file "$output_file" \
+            --arg time "$(date)" '{command: $cmd, file: $file, timestamp: $time}')
+        echo "$json_entry" >> "${EVIDENCE_DIR}/evidence.json"
+    fi
+}
+
+# Function to collect logs with fallbacks
+collect_logs() {
+    local log_file="$1"
+    local alt_file="$2"
+    if [[ -r "$log_file" ]]; then
+        save_output "$(basename "$log_file")" "cat $log_file"
+    elif [[ -n "$alt_file" && -r "$alt_file" ]]; then
+        save_output "$(basename "$alt_file")" "cat $alt_file"
+    elif command_exists journalctl; then
+        save_output "journalctl" "journalctl -n 1000"
+    else
+        echo "Warning: No log files accessible and journalctl unavailable" >&2
+    fi
+}
+
+# Collect evidence based on type
+collect_evidence() {
+    case $COLLECT_TYPES in
+        all|network)
+            # Network Information
+            command_exists netstat && {
+                save_output "netstat_listening" "netstat -tulnp"
+                save_output "netstat_all" "netstat -nap"
+            }
+            save_output "ss_listening" "ss -tulnp"
+            save_output "ss_all" "ss -nap"
+            command_exists iptables && save_output "iptables" "iptables -L -v -n"
+            command_exists nft && save_output "nftables" "nft list ruleset"
+            save_output "network_interfaces" "ip addr show"
+            save_output "routing_table" "ip route show"
+            ;;
+    esac
+
+    case $COLLECT_TYPES in
+        all|processes)
+            # Process Information
+            save_output "processes" "ps aux"
+            save_output "top_snapshot" "top -b -n 1"
+            if command_exists systemctl; then
+                save_output "systemd_services" "systemctl list-units --type=service"
+            else
+                save_output "services" "service --status-all 2>/dev/null || ls /etc/init.d/"
+            fi
+            save_output "cron_jobs" "cat /etc/crontab 2>/dev/null; ls -l /etc/cron.* 2>/dev/null; crontab -l 2>/dev/null"
+            ;;
+    esac
+
+    case $COLLECT_TYPES in
+        all|filesystem)
+            # File System Information
+            save_output "recent_files" "find /home /etc /var -mtime -7 -ls 2>/dev/null"
+            save_output "suid_binaries" "find / -perm -u=s -type f 2>/dev/null"
+            save_output "tmp_files" "ls -la /tmp /var/tmp /dev/shm 2>/dev/null"
+            save_output "disk_usage" "df -h; du -sh /home /etc /var 2>/dev/null"
+            ;;
+    esac
+
+    case $COLLECT_TYPES in
+        all|logs)
+            # Logs
+            collect_logs "/var/log/auth.log" "/var/log/secure"
+            collect_logs "/var/log/syslog" "/var/log/messages"
+            save_output "dmesg" "dmesg"
+            [[ -r "/var/log/audit/audit.log" ]] && save_output "audit_log" "cat /var/log/audit/audit.log"
+            ;;
+    esac
+
+    case $COLLECT_TYPES in
+        all|users)
+            # User Information
+            save_output "users" "cat /etc/passwd"
+            [[ -r "/etc/sudoers" ]] && save_output "sudoers" "cat /etc/sudoers"
+            save_output "ssh_keys" "find /home /root -name authorized_keys -exec cat {} \; 2>/dev/null"
+            save_output "last_logins" "last -a"
+            ;;
+    esac
+
+    case $COLLECT_TYPES in
+        all|system)
+            # System Information
+            save_output "system_info" "uname -a; lscpu; cat /proc/meminfo"
+            save_output "uptime" "uptime"
+            command_exists sensors && save_output "sensors" "sensors"
+            save_output "loaded_modules" "lsmod"
+            ;;
+    esac
+}
+
+# Initialize JSON output
+if [[ "$JSON_OUTPUT" = true ]]; then
+    echo "[]" > "${EVIDENCE_DIR}/evidence.json"
+fi
+
+# Run evidence collection
+collect_evidence
+
+# Compress evidence
+if [[ "$COMPRESS" = true ]]; then
+    tar -czf "${OUTPUT_DIR}/evidence_${TIMESTAMP}.tar.gz" -C "$OUTPUT_DIR" "evidence_${TIMESTAMP}" || {
+        echo "Error: Failed to compress evidence"
+        exit 1
+    }
+    sha256sum "${OUTPUT_DIR}/evidence_${TIMESTAMP}.tar.gz" >> "${EVIDENCE_DIR}/hashes.txt"
+    echo "Evidence compressed to ${OUTPUT_DIR}/evidence_${TIMESTAMP}.tar.gz"
+fi
+
+# Cleanup
+if [[ "$CLEANUP" = true && "$COMPRESS" = true ]]; then
+    rm -rf "$EVIDENCE_DIR"
+    echo "Evidence directory cleaned up"
+fi
+
+# Instructions
+echo "To analyze, copy ${OUTPUT_DIR}/evidence_${TIMESTAMP}.tar.gz to a secure system and extract it."
+echo "Verify integrity using ${EVIDENCE_DIR}/hashes.txt (if not cleaned up)."
+echo "Review each .txt file for signs of compromise."
+            </code></pre>
+        </div>
+    </div>
+</body>
+</html>
