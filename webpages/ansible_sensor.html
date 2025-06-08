@@ -156,6 +156,7 @@
             <p>
                 <strong>Relevance:</strong> Ensures Zeek, a network analysis framework, is running to provide continuous traffic monitoring and protocol analysis.
             </p>
+            <img src="/assets/images/Code/ansibleHS/ansibleSH1.png" alt="start status output">
             <pre><code id="code1">
 - name: Check Zeek service status
   ansible.builtin.systemd:
@@ -173,7 +174,7 @@
     msg: "Zeek is {{ 'running' if zeek_status.status.ActiveState == 'active' else 'not running' }}"
   when: zeek_status.status is defined
             </code></pre>
-            <img src="/assets/images/Code/sensor/zeek_status.png" alt="Zeek status output">
+            <img src="/assets/images/Code/ansibleHS/ansiblesh2.png" alt="Zeek status output">
 
             <h3>2.2 Tcpdump Service Check</h3>
             <p>
@@ -196,6 +197,7 @@
     msg: "Tcpdump is {{ 'running' if tcpdump_status.status.ActiveState == 'active' else 'not running' }}"
   when: tcpdump_status.status is defined
             </code></pre>
+            <img src="/assets/images/Code/ansibleHS/anisblesh3.png" alt="TCPdump status output">
 
             <h3>2.3 Snort Service Check</h3>
             <p>
@@ -218,6 +220,7 @@
     msg: "Snort is {{ 'running' if snort_status.status.ActiveState == 'active' else 'not running' }}"
   when: snort_status.status is defined
             </code></pre>
+            <img src="/assets/images/Code/ansibleHS/ansiblesh4.png" alt="Snort status output">
 
             <h3>2.4 Disk Usage Monitoring</h3>
             <p>
@@ -260,6 +263,8 @@
   loop: "{{ large_files.stdout_lines }}"
   when: large_files.stdout_lines is defined and full_disks | length > 0
             </code></pre>
+            <img src="/assets/images/Code/ansibleHS/anisblesh5.png" alt="filesystem status output">
+            <img src="/assets/images/Code/ansibleHS/ansiblesh6.png" alt="Large File status output">
 
             <h2>3. Tips and Lessons Learned</h2>
             <p>Practical advice and insights gained from developing the playbook:</p>
