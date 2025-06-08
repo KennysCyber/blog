@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Router & Jellyfin Server - Your Tech Projects</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/router.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/writeups.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Travel Router with VPN & Jellyfin Media Server</h1>
+            <img src="/assets/images/small_trouter/Covertrouter.jpg" alt="Travel router and Jellyfin setup">
+            <h2>1. Project Overview</h2>
+            <p>
+                This project creates a portable travel router using a Raspberry Pi 5, routing traffic through a VPN via RaspAP and hosting a Jellyfin media server for offline movie streaming. The setup provides secure internet access and entertainment in a compact device.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Build a secure VPN router and offline media server for travel.</li>
+                <li><strong>Hardware Used:</strong> Raspberry Pi 5, external WiFi adapter, M.2 SSD, case with riser board, heat sink, fan.</li>
+                <li><strong>Software Used:</strong> RaspAP (VPN and WiFi AP), Jellyfin (media server), Raspberry Pi OS.</li>
+                <li><strong>Skills Learned:</strong> Raspberry Pi configuration, VPN setup, media server management, iptables, VNC setup.</li>
+            </ul>
+
+            <h2>2. Resources and References</h2>
+            <p>Essential resources for the project:</p>
+            <ul>
+                <li>
+                    <strong>Resource 1:</strong><br>
+                    Title: <a href="https://youtu.be/TWvL2C95FEg?si=gA1FfriahcSfuAF4">RaspAP Setup Guide</a><br>
+                    Usage: Guided RaspAP installation for WiFi AP and VPN configuration.
+                </li>
+                <li>
+                    <strong>Resource 2:</strong><br>
+                    Title: <a href="https://youtu.be/_s9w3k5Lrxw?si=NNMSGtwniu-_tMKk">Jellyfin on Raspberry Pi</a><br>
+                    Usage: Provided steps for installing and configuring Jellyfin.
+                </li>
+            </ul>
+            <p><strong>Additional Notes:</strong> The YouTube tutorials were critical for clear, visual setup instructions.</p>
+
+            <h2>3. Steps Taken</h2>
+            <p>Detailed steps to build and configure the travel router and media server:</p>
+            <ol>
+                <li>
+                    <strong>Step 1: Assemble Hardware</strong><br>
+                    Description: Set up the Raspberry Pi 5 with the case, riser board, M.2 SSD, heat sink, and fan. Connected the external WiFi adapter.<br>
+                    Challenges: Properly installing the heat sink to ensure adequate cooling.<br>
+                    <img src="/assets/images/small_trouter/heatsink_.jpg" alt="Heat sink installation">
+                </li>
+                <li>
+                    <strong>Step 2: Install Raspberry Pi OS and Configure RaspAP</strong><br>
+                    Description: Configured the Raspberry Pi OS and set up RaspAP for VPN and WiFi hotspot functionality.<br>
+                    Challenges: Ensuring WiFi adapter compatibility and resolving VNC display issues.<br>
+                    <ul>
+                        <li>Used Raspberry Pi Imager to flash Raspberry Pi OS onto a microSD card and booted the Pi.<br>
+                            <img src="/assets/images/small_trouter/imager.png" alt="Raspberry Pi Imager">
+                        </li>
+                        <li>Enabled SSH for remote access and verified WiFi adapter (wlan1) functionality.<br>
+                            
+                        </li>
+                        <li>Enabled VNC via terminal with <code>sudo raspi-config</code>, navigated to Interface Options, and turned on VNC.<br>
+                            <img src="/assets/images/small_trouter/interfacevnc enable.png" alt="Enable VNC in raspi-config">
+                        </li>
+                        <li>Installed RaspAP by running <code>"curl -sL https://install.raspap.com | bash"</code> from <a href="https://raspap.com">raspap.com</a>. Accepted most defaults, carefully reviewing the last few prompts.<br>
+                        </li>
+                        <li>Plugged in the external WiFi adapter (wlan1).<br>
+                            
+                        </li>
+                        <li>Accessed RaspAP web interface at default credentials (admin/secret), configured hotspot SSID, password, and country code.<br>
+                            <img src="/assets/images/small_trouter/raspaploginscreen.png" alt="RaspAP web login">
+                        </li>
+                        <li>Removed preconfigured network connection with <code>"sudo rm /etc/networkmanager/system-connections/preconfigured.nmconnection"</code> in terminal and rebooted.<br>
+                            <img src="/assets/images/small_trouter/rmpreconfig.png" alt="Remove NetworkManager connection">
+                        </li>
+                        <li>Connected to the RaspAP hotspot and accessed the Pi via the default gateway LAN address.<br>
+                            <img src="/assets/images/small_trouter/raspaploginscreen.png" alt="Connect to RaspAP hotspot">
+                        </li>
+                        <li>Connected to an external network (e.g., hotel WiFi) via RaspAP’s WiFi client, entering SSID and password.<br>
+                            <img src="/assets/images/small_trouter/connect to outside net.png" alt="Connect to external WiFi">
+                        </li>
+                        <li>Reinstalled UI packages to fix VNC grey screen with <code>"sudo apt install --reinstall raspberrypi-ui-mods lxsession"</code> and rebooted.<br>
+                            
+                        </li>
+                        <li>Set up VNC client (e.g., RealVNC Viewer) using SSH credentials to bypass captive portals via VNC session and web browser.<br>
+                            <img src="/assets/images/small_trouter/vncviewer (1).png" alt="VNC captive portal bypass">
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Step 3: Format and Mount M.2 SSD</strong><br>
+                    Description: Formatted and mounted the M.2 SSD for movie storage.<br>
+                    Challenges: Ensuring the correct device path to avoid data loss during formatting.<br>
+                    <ul>
+                        <li>Connected the M.2 SSD via the riser board. Ran <code>lsblk</code> to identify the SSD (e.g., /dev/nvme0n1). Formatted it with <code>sudo mkfs.ext4 /dev/nvme0n1</code>.<br>
+                            
+                        </li>
+                        <li>Created a mount point with <code>sudo mkdir /mnt/ssd</code> and mounted it with <code>sudo mount /dev/nvme0n1 /mnt/ssd</code>. Edited <code>/etc/fstab</code> to auto-mount on boot by adding <code>/dev/nvme0n1 /mnt/ssd ext4 defaults 0 2</code>. Copied movies to /mnt/ssd/movies.<br>
+                            
+                        </li>
+                    </ul>
+                </li>
+                <img src="/assets/images/small_trouter/jellyfin/jellyfinlogo.png" alt="Jelly Fin logo">
+                <li>
+                    
+                    <strong>Step 4: Install and Configure Jellyfin</strong><br>
+                    Description: Installed and configured Jellyfin for offline movie streaming.<br>
+                    Challenges: Securing Jellyfin to allow only local LAN access.<br>
+                    <ul>
+                        <li>Booted the Pi and opened a VNC session.<br>
+                            <img src="/assets/images/small_trouter/vncviewer (1).png" alt="VNC session">
+                        </li>
+                        <li>Visited the Jellyfin website, selected Linux server install, and ran <code>curl https://repo.jellyfin.org/install-debuntu.sh | sudo bash</code> in terminal.<br>
+                            <img src="/assets/images/small_trouter/jellyfin/install jellyfin.png" alt="Jellyfin installation">
+                        </li>
+                        <li>Copied the post-install URL (e.g., <code>http://localhost:8096</code>) from terminal to a web browser in the VNC session.<br>
+                            <img src="/assets/images/small_trouter/jellyfin/local host.png" alt="Jellyfin web setup">
+                        </li>
+                        <li>Followed Jellyfin web setup, configured security and default settings.<br>
+                        </li>
+                        <li>Set permissions on the movie directory with <code>chmod 777 /mnt/ssd/movies</code>.<br>
+                            <img src="/assets/images/small_trouter/jellyfin/chmod.png" alt="Set movie directory permissions">
+                        </li>
+                        <li>Added /mnt/ssd/movies as a media library in Jellyfin.<br>
+                        </li>
+                        <li>In Jellyfin settings, under Networking, bound to the local address and set a static IP to restrict access to internal LAN (wlan0), blocking wlan1 (external WiFi) traffic.<br>
+                            <img src="/assets/images/small_trouter/jellyfin/bind address.png" alt="Jellyfin networking settings">
+                            <img src="/assets/images/small_trouter/jellyfin/final server.png" alt="Jellyfin networking settings">
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h2>4. Tips and Lessons Learned</h2>
+            <p>Key insights from the project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Buy the fastest, driver-compatible external WiFi adapter for reliable performance.</li>
+                <li><strong>Tip 2:</strong> Use iptables to block external network access to Jellyfin, ensuring only local LAN access.</li>
+                <li><strong>Tip 3:</strong> A heat sink and fan are mandatory for the Raspberry Pi 5 to prevent overheating.</li>
+                <li><strong>Tip 4:</strong> A large M.2 SSD allows for more movie storage.</li>
+                <li><strong>Lesson Learned:</strong> Reinstalling UI packages is critical to avoid VNC grey screen issues.</li>
+                <li><strong>Future Improvements:</strong> Add multiple VPN provider support and optimize Jellyfin for hardware acceleration.</li>
+            </ul>
+
+            <h2>5. Hardware Links</h2>
+            <ul>
+                <li><a href="https://a.co/d/1nRk02g">Raspberry Pi 5</a></li>
+                <li><a href="https://a.co/d/1R5Kts3">Case with Riser Board</a></li>
+                <li><a href="https://a.co/d/hJoBKVC">M.2 SSD</a></li>
+                <li><a href="https://a.co/d/3kypwaQ">External WiFi Adapter</a></li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>
+                The travel router and Jellyfin server project successfully delivered a portable device for secure VPN routing and offline movie streaming. The Raspberry Pi 5, with RaspAP and Jellyfin, offers robust functionality for travelers. This project enhanced skills in system configuration, network security, and media server management. Future plans include performance optimizations and additional features.
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The RaspAP and Jellyfin YouTube guides were invaluable for step-by-step guidance.</li>
+                <li>Proper cooling and a high-capacity M.2 SSD significantly improved performance and storage.</li>
+                <li>VNC setup was key for bypassing captive portals in external networks.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
