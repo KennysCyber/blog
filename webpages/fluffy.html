@@ -133,7 +133,7 @@
 <p>
     <strong>Why:</strong> Nmap’s faster timing (<code>-T4</code>) with version detection (<code>-sV</code>) and default scripts (<code>-sC</code>) focuses on open ports (<code>--open</code>) to efficiently identify services. The scan revealed ports such as 445 (SMB), 3268/3269 (LDAP Global Catalog), 5985 (WinRM), and 593 (RPC), along with the domain (<code>FLUFFY.HTB</code>) and DC (<code>DC01.FLUFFY.HTB</code>). This highlighted SMB as a potential entry point, leveraging the provided credentials.
 </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 1.png" alt="Nmap scan results">
+            <img src="/assets/images/ctf/fluffy/user/used/step 1.png" alt="Nmap scan results">
 
             <h3>Step 2: Synchronizing Time with ntpdate</h3>
             <p>
@@ -144,7 +144,7 @@
             <p>
                 <strong>Why:</strong> Kerberos authentication fails if the time difference between the client and DC exceeds 5 minutes. Running <code>ntpdate</code> ensures smooth communication for later steps involving Kerberos tickets. I installed <code>ntpdate</code> and ran it to sync with the DC’s time. If your system clock keeps reverting after running commnad run "systemctl set-ntp off" then run ntpdate command.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step2.png" alt="ntpdate sync">
+            <img src="/assets/images/ctf/fluffy/user/used/step2.png" alt="ntpdate sync">
 
             <h3>Step 3: Enumerating SMB Shares</h3>
             <p>
@@ -155,7 +155,7 @@
             <p>
                 <strong>Why:</strong> SMB shares often hold sensitive data or allow file uploads. <code>smbclient</code> lists shares accessible with the given credentials. The <code>IT</code> share contained <code>Upgrade_Notice.pdf</code>, which listed CVEs, including <code>CVE-2025-24071</code> with a PoC, suggesting an exploit path.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 3.png" alt="SMB share listing">
+            <img src="/assets/images/ctf/fluffy/user/used/step 3.png" alt="SMB share listing">
 
             <h3>Step 4: Accessing the IT Share</h3>
             <p>
@@ -166,7 +166,7 @@
             <p>
                 <strong>Why:</strong> Accessing the share allows downloading files for analysis. The PDF revealed <code>CVE-2025-24071</code>, a vulnerability exploitable via file upload to the <code>IT</code> share, which I confirmed was writable. This set the stage for hash capture.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 4.png" alt="IT share contents">
+            <img src="/assets/images/ctf/fluffy/user/used/step 4.png" alt="IT share contents">
 
             <h3>Step 5: Exploiting CVE-2025-24071 for NTLMv2 Hashes</h3>
             <p>
@@ -180,10 +180,10 @@
             <p>
                 <strong>Why:</strong> The PoC exploits <code>CVE-2025-24071</code> to trigger authentication attempts via user interaction with drop playload that prompts user to authicate to IT share therefore leaking their NTLMv2 hashes. Responder captures these hashes when a user or service interacts with the file. This yielded a hash for <code>p.agila</code>, expanding our access.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 5.png" alt="CVEupdate">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 5 b.png" alt="step 5 b">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 5 a.png" alt="step 5 a">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 5 c.png" alt="step 5 c">
+            <img src="/assets/images/ctf/fluffy/user/used/step 5.png" alt="CVEupdate">
+            <img src="/assets/images/ctf/fluffy/user/used/step 5 b.png" alt="step 5 b">
+            <img src="/assets/images/ctf/fluffy/user/used/step 5 a.png" alt="step 5 a">
+            <img src="/assets/images/ctf/fluffy/user/used/step 5 c.png" alt="step 5 c">
 
             <h3>Step 6: Cracking the NTLMv2 Hash</h3>
             <p>
@@ -194,7 +194,7 @@
             <p>
                 <strong>Why:</strong> NTLMv2 hashes are crackable if the password is weak. Hashcat’s <code>-m 5600</code> mode targets NTLMv2, and the rockyou wordlist is effective for common passwords. The cracked password (<code>prometheusx-303</code>) gave me a new set of credentials.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 6.png" alt="Hashcat cracking">
+            <img src="/assets/images/ctf/fluffy/user/used/step 6.png" alt="Hashcat cracking">
 
             <h3>Step 7: AD Enumeration with BloodHound</h3>
             <p>
@@ -206,9 +206,9 @@
             <p>
                 <strong>Why:</strong> BloodHound maps AD permissions to find abusable relationships. It showed <code>p.agila</code> in <code>SERVICE ACCOUNT MANAGERS</code>, with <code>GenericAll</code> on <code>SERVICE ACCOUNTS</code>, which has <code>GenericWrite</code> on <code>ca_svc</code>, <code>ldap_svc</code>, and <code>winrm_svc</code>. This suggested a Shadow Credentials attack on <code>winrm_svc</code> for user access.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 7 a.png" alt="a">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 7 b.png" alt="b">
-             <img src="/assets/images/ctf/Fluffy/user/used/step 7 c.png" alt="c">
+            <img src="/assets/images/ctf/fluffy/user/used/step 7 a.png" alt="a">
+            <img src="/assets/images/ctf/fluffy/user/used/step 7 b.png" alt="b">
+             <img src="/assets/images/ctf/fluffy/user/used/step 7 c.png" alt="c">
 
             <h3>Step 8: Adding p.agila to SERVICE ACCOUNTS</h3>
             <p>
@@ -219,7 +219,7 @@
             <p>
                 <strong>Why:</strong> <code>GenericAll</code> allows modifying group membership. Adding <code>p.agila</code> to <code>SERVICE ACCOUNTS</code> grants <code>GenericWrite</code> on service accounts, enabling a Shadow Credentials attack to impersonate <code>winrm_svc</code>.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 8.png" alt="Group membership update">
+            <img src="/assets/images/ctf/fluffy/user/used/step 8.png" alt="Group membership update">
 
             <h3>Step 9: Shadow Credentials Attack on winrm_svc</h3>
             <p>
@@ -233,9 +233,9 @@
             <p>
                 <strong>Why:</strong> <code>GenericWrite</code> allows adding a certificate to <code>winrm_svc</code>’s <code>msDS-KeyCredentialLink</code> attribute. <code>pywhisker</code> generates the certificate, <code>gettgtpkinit</code> requests a Kerberos TGT, and <code>getnthash</code> derives the NT hash. This gave me <code>winrm_svc</code>’s NT hash for remote access.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 9 a.png" alt="a">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 9 b.png" alt="b">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 9 c.png" alt="c">
+            <img src="/assets/images/ctf/fluffy/user/used/step 9 a.png" alt="a">
+            <img src="/assets/images/ctf/fluffy/user/used/step 9 b.png" alt="b">
+            <img src="/assets/images/ctf/fluffy/user/used/step 9 c.png" alt="c">
 
             <h3>Step 10: Gaining User Access via evil-winrm</h3>
             <p>
@@ -246,8 +246,8 @@
             <p>
                 <strong>Why:</strong> <code>winrm_svc</code> has WinRM access, and the NT hash enables a Pass-the-Hash attack. <code>evil-winrm</code> provides a shell, allowing me to navigate to the desktop and retrieve the user flag, completing the first objective.
             </p>
-            <img src="/assets/images/ctf/Fluffy/user/used/step 10 .png" alt="step 10">
-            <img src="/assets/images/ctf/Fluffy/user/used/step 10 b.png" alt="User flag">
+            <img src="/assets/images/ctf/fluffy/user/used/step 10 .png" alt="step 10">
+            <img src="/assets/images/ctf/fluffy/user/used/step 10 b.png" alt="User flag">
 
             <h3>Step 11: Shadow Credentials on ca_svc</h3>
             <p>
@@ -261,7 +261,7 @@
             <p>
                 <strong>Why:</strong> <code>ca_svc</code> controls the CA, key for the ESC16 attack. The Shadow Credentials process mirrors the <code>winrm_svc</code> attack, yielding <code>ca_svc</code>’s NT hash (<code>ca0f4f9e9eb8a092addf53bb03fc98c8</code>).
             </p>
-            <img src="/assets/images/ctf/Fluffy/root/step 11.png" alt="Pywhisker ca_svc">
+            <img src="/assets/images/ctf/fluffy/root/step 11.png" alt="Pywhisker ca_svc">
 
             <h3>Step 12: Identifying ESC16 Vulnerability</h3>
             <p>
@@ -272,7 +272,7 @@
             <p>
                 <strong>Why:</strong> AD CS misconfigurations like ESC16 allow privilege escalation. The updated <code>Certipy</code> detected the vulnerability, which the Kali version missed, confirming the CA (<code>fluffy-DC01-CA</code>) was exploitable.
             </p>
-            <img src="/assets/images/ctf/Fluffy/root/step12.png" alt="Certipy ESC16">
+            <img src="/assets/images/ctf/fluffy/root/step12.png" alt="Certipy ESC16">
 
             <h3>Step 13: Updating ca_svc’s UPN to Administrator</h3>
             <p>
@@ -283,7 +283,7 @@
             <p>
                 <strong>Why:</strong> ESC16 allows UPN spoofing. Changing <code>ca_svc</code>’s UPN to <code>administrator</code> lets us request a certificate as the Administrator, leveraging <code>p.agila</code>’s <code>GenericWrite</code> permissions.
             </p>
-            <img src="/assets/images/ctf/Fluffy/root/step 13.png" alt="UPN update">
+            <img src="/assets/images/ctf/fluffy/root/step 13.png" alt="UPN update">
 
             <h3>Step 14: Requesting an Administrator Certificate</h3>
             <p>
@@ -314,7 +314,7 @@
             <p>
                 <strong>Why:</strong> The certificate allows Kerberos authentication as the Administrator, yielding the NT hash (<code>aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e</code>) for Pass-the-Hash attacks.
             </p>
-            <img src="/assets/images/ctf/Fluffy/root/step 16.png" alt="Administrator auth">
+            <img src="/assets/images/ctf/fluffy/root/step 16.png" alt="Administrator auth">
 
             <h3>Step 17: Gaining System Access</h3>
             <p>
@@ -325,8 +325,8 @@
             <p>
                 <strong>Why:</strong> The NT hash enables a Pass-the-Hash attack via <code>psexec</code>, which executes a command as Administrator. Navigating to <code>C:\Users\Administrator\Desktop</code>, I found <code>root.txt</code> with the flag, completing the challenge.
             </p>
-            <img src="/assets/images/ctf/Fluffy/root/rootflag.png" alt="Root flag">
-            <img src="/assets/images/ctf/Fluffy/root/fluffy completed.png" alt="completed screenshot">
+            <img src="/assets/images/ctf/fluffy/root/rootflag.png" alt="Root flag">
+            <img src="/assets/images/ctf/fluffy/root/fluffy completed.png" alt="completed screenshot">
 
             <h2>4. Lessons Learned and Tips</h2>
             <p>Here’s what I took away from Fluffy:</p>
