@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fluffy Easy Machine Writeup - 18gi0n's Tech Lair</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
@@ -131,9 +130,9 @@
             </p>
             <p><strong>Command:</strong></p>
             <pre><code>nmap -T4 -sV -sC --open 10.10.11.69</code></pre>
-<p>
-    <strong>Why:</strong> Nmap’s faster timing (<code>-T4</code>) with version detection (<code>-sV</code>) and default scripts (<code>-sC</code>) focuses on open ports (<code>--open</code>) to efficiently identify services. The scan revealed ports such as 445 (SMB), 3268/3269 (LDAP Global Catalog), 5985 (WinRM), and 593 (RPC), along with the domain (<code>FLUFFY.HTB</code>) and DC (<code>DC01.FLUFFY.HTB</code>). This highlighted SMB as a potential entry point, leveraging the provided credentials.
-</p>
+            <p>
+                <strong>Why:</strong> Nmap’s faster timing (<code>-T4</code>) with version detection (<code>-sV</code>) and default scripts (<code>-sC</code>) focuses on open ports (<code>--open</code>) to efficiently identify services. The scan revealed ports such as 445 (SMB), 3268/3269 (LDAP Global Catalog), 5985 (WinRM), and 593 (RPC), along with the domain (<code>FLUFFY.HTB</code>) and DC (<code>DC01.FLUFFY.HTB</code>). This highlighted SMB as a potential entry point, leveraging the provided credentials.
+            </p>
             <img src="/assets/images/ctf/fluffy/user/used/step 1.png" alt="Nmap scan results">
 
             <h3>Step 2: Synchronizing Time with ntpdate</h3>
@@ -209,7 +208,7 @@
             </p>
             <img src="/assets/images/ctf/fluffy/user/used/step 7 a.png" alt="a">
             <img src="/assets/images/ctf/fluffy/user/used/step 7 b.png" alt="b">
-             <img src="/assets/images/ctf/fluffy/user/used/step 7 c.png" alt="c">
+            <img src="/assets/images/ctf/fluffy/user/used/step 7 c.png" alt="c">
 
             <h3>Step 8: Adding p.agila to SERVICE ACCOUNTS</h3>
             <p>
