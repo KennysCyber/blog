@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cap CTF Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Cap CTF Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/Cap/capcover.png" alt="Cap Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Cap from Hack The Box was an engaging challenge that tested my skills in network enumeration, web exploration, and privilege escalation. The box involved exploiting a web dashboard to uncover FTP credentials, gaining initial access via SSH, and escalating to root by leveraging a Python binary with elevated capabilities. It was a great mix of real-world pentesting techniques, emphasizing the importance of thorough enumeration and creative exploitation.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate to root, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, web directory enumeration, credential reuse, FTP and SSH access, and privilege escalation via Linux capabilities.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided me through this challenge:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://book.hacktricks.wiki/en/linux-hardening/privilege-escalation/linux-capabilities.html">HackTricks: Linux Capabilities</a><br>
+                    Usage: Helped me understand how to exploit the <code>cap_setuid</code> capability on the Python binary for privilege escalation.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://sirensecurity.io/blog/linux-privilege-escalation-resources/">Siren Security: Linux Privilege Escalation Resources</a><br>
+                    Usage: Provided additional context for privilege escalation techniques.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://gtfobins.github.io/">GTFOBins</a><br>
+                    Usage: Referenced for identifying and exploiting binaries with elevated permissions.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Cap</h2>
+            <p>Here’s a step-by-step breakdown of how I tackled the Cap box, from initial reconnaissance to capturing both flags.</p>
+
+            <h3>Starting with Nmap Recon</h3>
+            <p>
+                I began with an Nmap scan to identify open ports and services using the command <code>nmap -sV -sC --open -T4 10.10.10.245</code>. The <code>-sV</code> flag grabs service versions, <code>-sC</code> runs default scripts for extra details, <code>--open</code> filters to open ports, and <code>-T4</code> speeds up the scan. This approach is efficient for quick recon without worrying about stealth.
+            </p>
+            <p>
+                The scan revealed three open ports: 21 (FTP, vsftpd 3.0.3), 22 (SSH, OpenSSH 8.2p1), and 80 (HTTP, Gunicorn). This suggested a Linux box with a web server, FTP access, and SSH as potential entry points.
+            </p>
+            <img src="/assets/images/ctf/Cap/nmap.png" alt="Nmap scan results">
+
+        
+            <h3>Exploring the Web Dashboard</h3>
+            <p>
+                I navigated to the web server on port 80 and found a "Security Dashboard" displaying network statistics. The dashboard had tabs for different commands like <code>netstat</code>, <code>ip a</code>, and a PCAP capture option. The PCAP feature caught my attention—it captured the last 5 minutes of traffic and offered a download link with a URL structure like <code>/data/1</code>. I suspected an Insecure Direct Object Reference (IDOR) or command injection vulnerability, but initial tests with manipulated URLs and payloads didn’t work.
+            </p>
+            <img src="/assets/images/ctf/Cap/webbrowserdashboard.png" alt="Security Dashboard">
+            <img src="/assets/images/ctf/Cap/download pcap.png" alt="Security Dashboard">
+
+            <h3>Directory Enumeration with Dirb</h3>
+            <p>
+                To dig deeper, I ran <code>dirb</code> against the <code>/data</code> directory to enumerate files. This revealed PCAP files I had generated during my dashboard exploration, starting at <code>/data/1</code>. Interestingly, I noticed a <code>/data/0</code> PCAP file that predated my interactions, suggesting it was created by someone else or the system. I downloaded this file for analysis.
+            </p>
+            <img src="/assets/images/ctf/Cap/url.png" alt="Dirb enumeration">
+            <img src="/assets/images/ctf/Cap/dib.png" alt="Dirb enumeration">
+
+            <h3>Analyzing the PCAP File</h3>
+            <p>
+                I opened the <code>/data/0</code> PCAP in Wireshark and examined the packets. Within the capture, I found cleartext FTP credentials (username and password) transmitted during a previous session. This was a critical find, as it gave me a potential way to access the system.
+            </p>
+            <img src="/assets/images/ctf/Cap/pcap.png" alt="PCAP credentials">
+             <img src="/assets/images/ctf/Cap/pcappwd.png" alt="PCAP credentials">
+
+            <h3>Gaining Initial Access via FTP</h3>
+            <p>
+                Using the credentials from the PCAP, I logged into the FTP server on port 21 with <code>ftp 10.10.10.245</code>. After authenticating, I explored the directory and found the user flag in a file named <code>user.txt</code>. I downloaded it to confirm I had completed the first objective.
+            </p>
+            <img src="/assets/images/ctf/Cap/usrflagftp.png" alt="User flag via FTP">
+
+            <h3>Accessing the System via SSH</h3>
+            <p>
+                Since credential reuse is common, I tested the same FTP credentials for SSH access on port 22 using <code>ssh username@10.10.10.245</code>. The login worked, granting me a shell as the user. This gave me a more interactive environment to explore the system and begin privilege escalation.
+            </p>
+            <img src="/assets/images/ctf/Cap/ssh.png" alt="SSH login">
+
+            <h3>Attempting Privilege Escalation via app.py</h3>
+            <p>
+                For privilege escalation, I first explored the web server’s backend. I noticed <code>app.py</code> (likely the Gunicorn application) was running <code>tcpdump</code> as root to generate PCAPs. I attempted to manipulate the PCAP capture feature to execute a reverse shell as root, but my payloads failed, likely due to input sanitization or restrictions in the application logic.
+            </p>
+            <img src="/assets/images/ctf/Cap/app.png" alt="app.py exploration">
+
+            <h3>Finding a Binary with Elevated Permissions</h3>
+            <p>
+                Undeterred, I searched for binaries with elevated permissions using a command from GTFOBins: <code>getcap -r / 2>/dev/null</code>. This revealed that <code>/usr/bin/python3.8</code> had the <code>cap_setuid</code> capability, allowing it to set the user ID of a process to any value, including UID 0 (root). This was a game-changer for privilege escalation.
+            </p>
+            <img src="/assets/images/ctf/Cap/getcap.png" alt="getcap results">
+
+            <h3>Escalating to Root with Python</h3>
+            <p>
+                Leveraging the <code>cap_setuid</code> capability, I ran the following Python commands to gain a root shell: <code>/usr/bin/python3.8 -c 'import os; os.setuid(0); os.system("sh")'</code>. This set the process’s UID to 0 (root) and spawned a shell. I confirmed root access with <code>whoami</code> and navigated to <code>/root</code> to find the root flag in <code>root.txt</code>.
+            </p>
+            <img src="/assets/images/ctf/Cap/rootflag with vuln.png" alt="Root shell and flag">
+
+            <h2>4. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Cap box:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always enumerate web directories thoroughly—tools like <code>dirb</code> can uncover hidden files like the <code>/data/0</code> PCAP that were critical to this challenge.</li>
+                <li><strong>Tip 2:</strong> Be on the lookout for binaries with elevated permissions. Commands like <code>getcap -r /</code> can reveal exploitable capabilities, such as <code>cap_setuid</code>.</li>
+                <li><strong>Tip 3:</strong> Test for credential reuse across services. The FTP credentials working for SSH saved significant time in gaining a shell.</li>
+                <li><strong>Key Lesson:</strong> Learning about Linux capabilities, especially <code>cap_setuid</code>, was a highlight. It showed me how powerful misconfigured binaries can be for privilege escalation.</li>
+                <li><strong>Future Goals:</strong> I plan to practice more with tools like LinPEAS to automate privilege escalation enumeration and deepen my understanding of Linux capabilities.</li>
+            </ul>
+
+            <h2>5. Conclusion</h2>
+            <img src="/assets/images/ctf/Cap/completed badge.png" alt="Root shell and flag">
+            <p>
+                Cap was a rewarding HTB challenge that honed my skills in enumeration, credential exploitation, and privilege escalation. From uncovering FTP credentials in a PCAP file to escalating to root via a Python binary’s capabilities, each step was a learning opportunity. The privilege escalation technique was particularly enlightening, and I’m excited to apply these skills to future boxes. Cap was a fun and educational experience, and I’m ready for more!
+            </p>
+            
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://book.hacktricks.wiki/en/linux-hardening/privilege-escalation/linux-capabilities.html">HackTricks Linux Capabilities</a> page was invaluable for understanding how to exploit <code>cap_setuid</code>.</li>
+                <li><a href="https://gtfobins.github.io/">GTFOBins</a> is a must-bookmark resource for identifying exploitable binaries.</li>
+                <li>For further reading on privilege escalation, check out <a href="https://sirensecurity.io/blog/linux-privilege-escalation-resources/">Siren Security’s resources</a>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
