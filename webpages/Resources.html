@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resources - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a.soc-tools {
+            color: #33ccff !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.threat-intel {
+            color: #cc33ff !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.osint {
+            color: #33ff99 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.malware {
+            color: #ff3333 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.pentesting {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .resource-item {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .resource-item h3 {
+            margin: 0 0 10px 0;
+            color: #ffffff;
+        }
+
+        .resource-item p {
+            margin: 0 0 10px 0;
+            color: #cccccc;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+            <li><a href="/resources.html">Resources</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Cyber Resources</h1>
+            <p>
+                This page consolidates my go-to resources for pentesting, CTF challenges, SOC operations, threat intelligence, OSINT, and malware analysis. Each resource includes a link, a brief description of why it's valuable, and a screenshot to give you a visual sense of the content. These are the tools and guides I rely on to sharpen my skills and tackle challenges like those on Hack The Box. Resources are color-coded by type: <span style="color: #33ccff;">SOC Tools</span>, <span style="color: #cc33ff;">Threat Intel</span>, <span style="color: #33ff99;">OSINT</span>, <span style="color: #ff3333;">Malware</span>, and <span style="color: #ff9933;">Pentesting</span>.
+            </p>
+
+            <div class="resource-item">
+                <h3><a href="https://haveibeenpwned.com/" class="soc-tools">Have I Been Pwned</a></h3>
+                <p>
+                    Check if your email has been compromised in a data breach, a critical tool for SOC analysts monitoring credential exposure.
+                </p>
+                <img src="/assets/images/resources/ihavebeenpwned.png" alt="Have I Been Pwned">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://mxtoolbox.com/" class="soc-tools">MX Toolbox</a></h3>
+                <p>
+                    A versatile tool for checking DNS MX records and diagnosing email delivery issues, essential for SOC email security tasks.
+                </p>
+                <img src="/assets/images/resources/mxtoolbox.png" alt="MX Toolbox">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://www.abuseipdb.com/" class="soc-tools">AbuseIPDB</a></h3>
+                <p>
+                    A database for reporting and checking IP address abuse, helping SOC teams identify malicious network activity.
+                </p>
+                <img src="/assets/images/resources/abuseipdb.png" alt="AbuseIPDB">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://www.osintdojo.com/resources/" class="osint">OSINT Dojo</a></h3>
+                <p>
+                    A curated collection of OSINT tools and resources, ideal for gathering open-source intelligence efficiently.
+                </p>
+                <img src="/assets/images/resources/osintdojo.png" alt="OSINT Dojo">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://grabify.link/" class="osint">Grabify IP Logger & URL Shortener</a></h3>
+                <p>
+                    A tool for creating trackable URLs to log IP addresses, useful for OSINT investigations with caution.
+                </p>
+                <img src="/assets/images/resources/grabify.png" alt="Grabify">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://www.urlvoid.com/" class="threat-intel">URLVoid</a></h3>
+                <p>
+                    Analyzes websites for malicious behavior or scams, aiding threat intelligence by assessing URL safety.
+                </p>
+                <img src="/assets/images/resources/urlviod.png" alt="URLVoid">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://www.virustotal.com/" class="threat-intel">VirusTotal URL Analysis</a></h3>
+                <p>
+                    VirusTotal scans URLs for malicious content, a staple for threat intelligence and malware detection.
+                </p>
+                <img src="/assets/images/resources/VT.png" alt="VirusTotal">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://cyberchef.org/" class="soc-tools">CyberChef</a></h3>
+                <p>
+                    A web-based tool for data transformation and analysis, widely used in SOC for decoding and analyzing logs.
+                </p>
+                <img src="/assets/images/resources/cyberchef.png" alt="CyberChef">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://www.diffchecker.com/text-compare/" class="soc-tools">Diffchecker</a></h3>
+                <p>
+                    Compares text differences, useful for SOC analysts reviewing configuration changes or log anomalies.
+                </p>
+                <img src="/assets/images/resources/diffchecker.png" alt="Diffchecker">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://downdetector.com/" class="soc-tools">Downdetector</a></h3>
+                <p>
+                    Monitors service outages and disruptions, helping SOC teams stay informed about platform availability issues.
+                </p>
+                <img src="/assets/images/resources/downdetecker.png" alt="Downdetector">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://www.revshells.com/" class="pentesting">Reverse Shell Generator</a></h3>
+                <p>
+                    An online tool for generating reverse shell payloads, useful for pentesting and CTF challenges.
+                </p>
+                <img src="/assets/images/resources/reverseshellgen.png" alt="Reverse Shell Generator">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://book.hacktricks.wiki/en/linux-hardening/privilege-escalation/linux-capabilities.html" class="pentesting">HackTricks: Linux Capabilities</a></h3>
+                <p>
+                    A detailed guide on Linux privilege escalation via capabilities, invaluable for pentesting and CTF scenarios.
+                </p>
+                <img src="/assets/images/resources/hacktricks.png" alt="HackTricks Linux Capabilities">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://sirensecurity.io/blog/linux-privilege-escalation-resources/" class="pentesting">Siren Security: Linux Privilege Escalation Resources</a></h3>
+                <p>
+                    A curated list of Linux privilege escalation techniques, perfect for pentesters diving into Linux security.
+                </p>
+                <img src="/assets/images/resources/sirensecurity.png" alt="Siren Security Blog">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://gtfobins.github.io/" class="pentesting">GTFOBins</a></h3>
+                <p>
+                    A comprehensive list of binaries exploitable for privilege escalation, a must-have for pentesters.
+                </p>
+                <img src="/assets/images/resources/gtfobins.png" alt="GTFOBins">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://github.com/ShutdownRepo/pywhisker" class="pentesting">PyWhisker</a></h3>
+                <p>
+                    A Python tool for Active Directory enumeration and exploitation, ideal for pentesting AD environments.
+                </p>
+                <img src="/assets/images/resources/pywhisker.png" alt="PyWhisker">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://github.com/ly4k/Certipy" class="pentesting">Certipy</a></h3>
+                <p>
+                    A tool for Active Directory certificate services enumeration and abuse, useful for advanced pentesting.
+                </p>
+                <img src="/assets/images/resources/certipy.png" alt="Certipy">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://github.com/swisskyrepo/InternalAllTheThings/blob/main/docs/cheatsheets/shell-reverse-cheatsheet.md" class="pentesting">Shell Reverse Cheatsheet</a></h3>
+                <p>
+                    A cheatsheet for crafting reverse shells, essential for pentesting and gaining remote access.
+                </p>
+                <img src="/assets/images/resources/reverseshellcheatsheet.png" alt="Shell Reverse Cheatsheet">
+            </div>
+
+            <div class="resource-item">
+                <h3><a href="https://skf.gitbook.io/asvs-write-ups/server-side-template-injection-ssti/server-side-template-injection" class="pentesting">Server-Side Template Injection (SSTI)</a></h3>
+                <p>
+                    A guide on exploiting SSTI vulnerabilities, critical for pentesting modern web applications.
+                </p>
+                <img src="/assets/images/resources/ssti sheet.png" alt="SSTI Guide">
+            </div>
+
+            <h2>Want to Add More?</h2>
+            <p>
+                These are some of my favorite resources, but I’m always discovering new ones. If you have recommendations or want me to add more to this list, let me know! I’ll keep this page updated as I explore new tools and guides.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
