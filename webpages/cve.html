@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CVE Proofs of Concept - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a.cve-poc {
+            color: #00ffff !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .resource-item {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .resource-item h3 {
+            margin: 0 0 10px 0;
+            color: #ffffff;
+        }
+
+        .resource-item p {
+            margin: 0 0 10px 0;
+            color: #cccccc;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+            <li><a href="/resources.html">Resources</a></li>
+            <li><a href="/cve-pocs.html">CVE PoCs</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>CVE Proofs of Concept</h1>
+            <p>
+                This page lists proof-of-concept (PoC) exploits for CVEs, providing references for security researchers and pentesters. Each PoC includes a link, a brief description of its usage, and a screenshot of the repository or tool. Links are color-coded in <span style="color: #00ffff;">cyan</span> to indicate CVE PoCs. Use these responsibly and only in authorized environments.
+            </p>
+
+            <div class="resource-item">
+                <h3><a href="https://github.com/helidem/CVE-2025-24054_CVE-2025-24071-PoC" class="cve-poc">CVE-2025-24071 PoC</a></h3>
+                <p>
+                    Provided a proof-of-concept exploit to capture NTLMv2 hashes via user file interaction, targeting Windows File Explorer vulnerabilities (CVE-2025-24054/24071).[](https://github.com/helidem/CVE-2025-24054_CVE-2025-24071-PoC)
+                </p>
+                <img src="/assets/images/cve/CVE-2025-24054.png" alt="CVE-2025-24071 PoC">
+            </div>
+
+            <h2>Want to Add More?</h2>
+            <p>
+                This is the start of my CVE PoC collection. If you have recommendations for other PoC exploits or want me to add more to this list, let me know! I’ll keep this page updated as I discover new references.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
