@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'self'; frame-src 'self';">
+    <title>Threat Intel - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content p {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a.threat-intel {
+            color: #cc33ff !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .resource-item {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .resource-item h3 {
+            margin: 0 0 10px 0;
+            color: #ffffff;
+        }
+
+        .resource-item p {
+            margin: 0 0 10px 0;
+            color: #cccccc;
+        }
+
+        .resource-item .pdf-container {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Threat Intelligence Quick Reference</h1>
+            <p>
+                This page hosts my threat intelligence reference, tracking current threats and threat actors by sector. 
+                The PDF below is viewable for research and threat hunting purposes. For more resources, check out my 
+                <a href="/webpages/Resources.html" class="threat-intel">Resources</a> page.
+            </p>
+
+            <div class="resource-item">
+                <h3>Threat Intelligence PDF</h3>
+                <p>
+                    A comprehensive guide to current threats and threat actors, organized by sector. Use this for quick 
+                    reference during threat hunting and research. Scroll to explore the content.
+                </p>
+
+            <div class="pdf-container">
+            <object class="pdf-object" data="/assets/files/Threat Intelligence Summary2.pdf" type="application/pdf">
+            </object>
+            </div>
+                <!--<div class="pdf-container">
+                    <iframe src="https://18gi0n.com/assets/files/Threat Intelligence Summary2.pdf" width="100%" height="100%" style="border: none;" id="pdfViewer">
+                    </iframe>-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Disable right-click on the iframe to deter download attempts
+        document.getElementById('pdfViewer').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
