@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resources - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a.soc-tools {
+            color: #33ccff !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.threat-intel {
+            color: #cc33ff !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.osint {
+            color: #33ff99 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.malware {
+            color: #ff3333 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a.pentesting {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .resource-item {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .resource-item h3 {
+            margin: 0 0 10px 0;
+            color: #ffffff;
+        }
+
+        .resource-item p {
+            margin: 0 0 10px 0;
+            color: #cccccc;
+        }
+
+        /* New styles for query boxes */
+        .query-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .query-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .copy-btn, .toggle-btn {
+            background: #4f46e5;
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .query-description {
+            color: #cccccc;
+            font-size: 1em;
+            margin-bottom: 12px;
+        }
+
+        .code-container {
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .code-container.hidden {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        pre {
+            background: #2d2d44;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        code.language-kql {
+            color: #f0f0f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95em;
+        }
+
+        .query-footer {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .tag {
+            background: #374151;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section label {
+            color: #ffffff;
+            margin-right: 10reetings
+        }
+
+        .filter-section select {
+            background: #2d2d44;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>KQL Queries</h1>
+            <p>
+                This page consolidates my go-to KQL Queries. Covering a broad range of uses from DFIR to Threat Hunting.
+            </p>
+            
+<!---------------------------------------New Box---------------------------------------------->
+            <div class="resource-item">
+                <div class="query-header">
+                    <h3><a href="#kql1">CMD Hunting</a></h3>
+                    <div class="query-actions">
+                        <button class="copy-btn" onclick="copyCode('kql1')">Copy</button>
+                        <button class="toggle-btn" onclick="toggleCode('kql1-code')">Toggle</button>
+                    </div>
+                </div>
+                <p class="query-description">
+                    This KQL query identifies devices running curl commands in the last 7 days, retrieving process details like timestamps, device names, and account names. Replace curl with other commands or adjust the time range (e.g., ago(30d)) to fit your environment's monitoring needs. Results include process file names, command lines, and folder paths for investigation.
+                </p>
+                <div id="kql1-code" class="code-container">
+                    <pre><code id="kql1" class="language-kql">
+DeviceProcessEvents
+    | where Timestamp > ago(7d)
+    | where ProcessCommandLine has "curl"
+    | project Timestamp, DeviceName, InitiatingProcessFileName, ProcessCommandLine, InitiatingProcessFolderPath, AccountName
+                    </code></pre>
+                </div>
+                <div class="query-footer">
+                    <span class="last-updated">Last Updated: 2025-07-10</span>
+                </div>
+            </div>
+<!---------------------------------------New Box---------------------------------------------->
+            <div class="resource-item">
+                <div class="query-header">
+                    <h3><a href="#kql2">CMD Hunting by Host IP</a></h3>
+                    <div class="query-actions">
+                        <button class="copy-btn" onclick="copyCode('kql2')">Copy</button>
+                        <button class="toggle-btn" onclick="toggleCode('kql2-code')">Toggle</button>
+                    </div>
+                </div>
+                <p class="query-description">
+                   This KQL query finds devices running curl commands in the last 7 days, linking to network events with IPs in 10.10.* or 10.12.*. Swap curl for other commands or adjust IP ranges (e.g., 10.10.* to your network’s subnet) to tailor it to your environment. Results are sorted by recent process timestamps for analysis.
+                </p>
+                <div id="kql2-code" class="code-container">
+                    <pre><code id="kql2" class="language-kql">
+DeviceProcessEvents
+| where Timestamp > ago(7d)
+| where ProcessCommandLine has "curl"
+| project ProcessEventTimestamp = Timestamp, DeviceId, DeviceName, InitiatingProcessFileName, ProcessCommandLine, InitiatingProcessId, ProcessId
+| join kind=inner (
+    DeviceNetworkEvents
+    | where Timestamp > ago(7d)
+    | where RemoteIP startswith "10.10." or RemoteIP startswith "10.12."
+    | project NetworkEventTimestamp = Timestamp, DeviceId, RemoteIP, RemotePort, LocalIP, LocalPort, InitiatingProcessId, InitiatingProcessCommandLine, ReportId
+) on DeviceId, InitiatingProcessId 
+| project
+    ProcessEventTimestamp,
+    NetworkEventTimestamp,
+    DeviceName,
+    ProcessCommandLine,
+    RemoteIP,
+    RemotePort,
+    LocalIP,
+    LocalPort,
+    InitiatingProcessFileName,
+    InitiatingProcessId,
+    ProcessId
+| sort by ProcessEventTimestamp desc
+                    </code></pre>
+                </div>
+                <div class="query-footer">
+                    <span class="last-updated">Last Updated: 2025-07-10</span>
+                </div>
+            </div>
+<!---------------------------------------New Box---------------------------------------------->
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        // Copy code to clipboard
+        function copyCode(codeId) {
+            const code = document.getElementById(codeId).textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+
+        // Toggle code block visibility
+        function toggleCode(containerId) {
+            const container = document.getElementById(containerId);
+            container.classList.toggle('hidden');
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
