@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My First DEFCON - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+            color: #e6e600 !important; /* Matching font color */
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <img src="/assets/images/defcon33/sign.png" alt="sign">
+            <h1>My First DEFCON: A Wild Ride at DEFCON 33</h1>
+            <p>
+                Hey there, fellow tech nerds! I just got back from my first-ever DEFCON, year 33, and let me tell you—it was an absolute blast. I went in with the goal of soaking up the experience, checking out the villages, and learning some new tricks to bring back to work. No plans to compete, just pure exploration. Spoiler alert: things didn’t go exactly as planned, and I’m so glad they didn’t. Here’s my breakdown of the adventure, written in my voice but polished up for clarity. Buckle up!
+            </p>
+    
+            <h2>Prepping for the Trip</h2>
+            <p>
+                I decided to hit DEFCON about three months out, booking flights for around $700 and splitting a hotel stay with my coworker and CTF teammate, callsign 10-4. The hotel cost us about $1,400 for five nights, split two ways, at a spot near the Las Vegas Convention Center (LVCC) West Hall. Pro tip: staying close means you can walk back and forth, no car needed. We preregistered online for $540 each to secure our badges—non-electronic this year, but still a must-have for my first DEFCON.
+            </p>
+            
+            <h2>Day 1: Arrival and Chill Vibes</h2>
+            <p>
+                We landed on Wednesday, a day before the chaos kicked off. Check-in was smooth, and the vibe was super chill since the crowds hadn’t hit yet. We unpacked, grabbed some food, and started mapping out talks and villages we wanted to hit. If you’re not attending Black Hat, an early Thursday arrival works just as well—Wednesday felt a bit quiet unless you’re into pre-conference stuff.
+            </p>
+            <img src="/assets/images/defcon33/hacker.png" alt="">
+            <h2>Day 2: LineCon and Goon Encounters</h2>
+            <p>
+                Thursday was registration and merch day, and oh boy, did we experience <i>LineCon</i>. We got to the LVCC around 8 AM, an hour before registration opened at 9. The lines were already massive, but the goons (DEFCON staff) were on point, keeping things organized and chaos-free. There are two big lines on Thursday: one for badges and one for merch. We hit the badge line first, which took about two hours, then jumped into the merch line for another <i>four hours</i>. Word of advice: hit the merch line first if you want official DEFCON gear—by the time we got there, a lot was sold out. Next year, I’m preregistering for a badge and starting with merch to save time.
+            </p>
+            <p>
+                Oh, and a huge heads-up: DEFCON is <b>CASH ONLY</b>. Bring $500–$700 in cash to avoid ATM LineCon. We also witnessed some goon action in the merch line. Two dudes tried to cut in, and since you get <i>real</i> familiar with your line neighbors after hours of waiting, the folks behind us weren’t having it. They texted the goon hotline, and within 30 minutes, three goons showed up like ninjas. The lead goon was super chill, saying, “We’re not mad you cheated, you just need to be better at it,” and politely escorted them out. DEFCON takes LineCon seriously, and I’m here for it.
+            </p>
+            
+            <h2>Day 3: Talks, Villages, and an Unexpected CTF Addiction</h2>
+            <p>
+                Originally, 10-4 and I planned to focus on talks to learn stuff for work. I’ve got about eight years in IT and three in cyber, so I’m still a bit of a noob. I prioritized 101 talks like Digital Forensics 101 and Incident Response 101, thinking they’d be perfect. Turns out, if you’ve got any professional cyber experience, these are pretty basic. Skip the 101s and go for creator or track talks on specific topics or techniques—they’re way more valuable.
+            </p>
+            <p>
+                Pro tip: Download the <b>Hacker Tracker</b> app. It’s a lifesaver for navigating the conference, finding talks, and mapping out your day. We got to the LVCC early and had time to kill, so we hit the Social Engineering Village to catch one of their live SE contest calls. It was <i>amazing</i>—watching someone work their magic from the infamous booth was a highlight. Highly recommend catching at least one call.
+            </p>
+            <img src="/assets/images/defcon33/SE village.png" alt="">
+            <p>
+                Later, we wandered into the Blue Team Village, which had an awesome, inviting setup (and very BLUE vibes). They were running a Blue Team CTF, and we signed up just to mess around. Little did we know, we’d get hooked. The CTF involved a hosted Wazuh SIEM with logs and flags to find. We started playing around, called in a remote CTF teammate to make us a team of three, and by 4 AM, we were in 6th place—10 hours late and with only three players! That leaderboard ranking lit a fire under us.
+            </p>
+            <img src="/assets/images/defcon33/bt.png" alt="">
+            <img src="/assets/images/defcon33/btctf.png" alt="">
+            <h2>Day 4: Full-On CTF Madness</h2>
+            <p>
+                By Day 4, we were all in on the Blue Team CTF. We grabbed breakfast, bolted to the Blue Team Village, and spent the entire day battling to stay in the top 10. We were running around the conference hunting in-person flags and trading spots with another team, “KirklandSignaturePwnys,” for 9th and 10th place. At 2 PM, we got a curveball: the CTF was ending at 6 PM that day, not Sunday, cutting us short by 24 hours. Those last two hours were intense—back-and-forth with KirklandSignaturePwnys, both teams cheering and groaning as we swapped spots. In the final two minutes, we snagged one last flag to clinch 9th place. It felt like a movie! Afterward, we shook hands with the Splunk-repping team, swapped battle stories, and basked in the glow of finishing top 10. That impromptu competition was the trip’s highlight.
+            </p>
+            <img src="/assets/images/defcon33/btleader.png" alt="">
+            <p>
+                Exhausted, we explored some open villages to decompress and called it a day.
+            </p>
+            
+            <h2>Day 5: Chill Vibes and Closing Ceremonies</h2>
+            <p>
+                Sunday was laid-back—lots of folks head out to get back for work, so the crowds were thinner. We hit a couple of talks but mostly explored villages and the vendor hall. The Packet Capture Village was my favorite, with an awesome setup that got people hands-on with learning and games. There was so much to see that we couldn’t cover it all in one day. Next year, I’m diving deeper into the villages.
+            </p>
+            <img src="/assets/images/defcon33/wallsheep.png" alt="">
+            <p>
+                We wrapped up with the competition closing ceremony and DEFCON closeout ceremony. Honestly, the four hours of sitting were a slog. If I could do it again, I’d skip the competition ceremony and just hit the DEFCON closeout to catch the conference stats and black badge winners. We ended the night like true script kiddies, chowing down on hotel burgers and watching <i>Hackers</i> on the hotel TV. Flew out early the next morning.
+            </p>
+            
+            <h2>Final Thoughts</h2>
+            <p>
+                DEFCON 33 was worth every penny and more. As an introvert, I was worried it’d be overwhelming, but the community is chill, respectful, and full of fellow tech geeks. They even provide quiet spaces to recharge, which was a lifesaver. My biggest regret? Sleeping on the workshops. They’re free but require preregistration, and I missed out on some amazing ones. If you’re going to learn, snag those workshop spots early.
+            </p>
+            <p>
+                If you’re thinking about competing, go for it. If not, your first DEFCON is perfect for exploring—you won’t run out of things to do. Thanks for reading my ramblings! If you’ve got questions or want to swap DEFCON stories, hit me up on X (check my <a href="/about.html">about page</a> for my handle). Peace out!
+            </p>
+            <img src="/assets/images/defcon33/track.png" alt="">
+            
+            <h2>DEFCON AAR Checklist</h2>
+            <ul>
+                <li>Pre-register for workshops</li>
+                <li>Hit the merch line first, then badge (especially in non-electronic badge years)</li>
+                <li>Bring lots of cash ($500–$700)</li>
+                <li>Pack a Hydro Flask</li>
+                <li>Book hotels like Springhill or Marriott (near LVCC)</li>
+                <li>Bring portable monitors</li>
+                <li>Pack a whiteboard</li>
+                <li>Bring a jacket (LVCC can get chilly)</li>
+                <li>Pre-plan dinners</li>
+            </ul>
+            
+            <h2>Tips</h2>
+            <ul>
+                <li>Skip basic 101 talks if you have professional cyber experience</li>
+                <li>Prioritize track or creator talks over 101s</li>
+            </ul>
+            
+            <h2>Blue Team CTF AAR</h2>
+            <ul>
+                <li>Create a OneNote per kill chain (shared with team)</li>
+                <li>Bring a power strip with a long cord</li>
+                <li>Pack a portable monitor</li>
+                <li>Bring mice</li>
+                <li>Wear pants or warm clothes (LVCC is cold)</li>
+                <li>Use noise-canceling headphones and join the Discord lounge</li>
+                <li>Arrive early for a good table</li>
+                <li>Review all questions and organize them by kill chain in OneNote</li>
+                <li>Create a OneNote for anomalies</li>
+                <li>Identify questions that involve visiting villages</li>
+                <li>Maintain a OneNote for common log types and fields</li>
+            </ul>
+            
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
