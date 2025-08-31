@@ -213,7 +213,7 @@ sudo systemctl enable elastic-agent
 sudo systemctl start elastic-agent
 sudo elastic-agent enroll \
   --fleet-server-es=http://localhost:9200 \
-  --fleet-server-service-token=AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3NTY0NDk4MzM0NzQ6T3VTN2EzS2xUY0dKTUxINFJRa1dVUQ \
+  --fleet-server-service-token= \
   --fleet-server-policy=fleet-server-policy \
   --fleet-server-port=8220 --insecure</code></pre>
             <p>
@@ -228,7 +228,7 @@ sudo elastic-agent enroll \
                 Add integrations for system logs (default) and Zeek.
             </p>
             <p>
-                <strong>Steps:</strong> Go to Management > Integrations, add Zeek, specify log location (e.g., /zeek/logs), and apply to the agent policy.
+                <strong>Steps:</strong> Go to Management > Integrations, add Zeek, specify log location (e.g., /zeek/logs/current), and apply to the agent policy.
             </p>
             <p>
                 <strong>Why:</strong> Integrations define what logs to collect. System is added by default; Zeek requires custom log path configuration. Wait 5 minutes for collection to start.
