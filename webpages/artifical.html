@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Artificial CTF Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Artificial CTF Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/artificial/title.png" alt="Artificial Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Artificial from Hack The Box was a challenging box focused on AI model hosting vulnerabilities. It involved exploiting a TensorFlow/Keras code injection vulnerability (CVE-2024-3660) for initial access via a malicious model upload, pivoting to a user account by cracking database hashes, and escalating privileges by abusing a misconfigured Backrest backup system running as root. This box highlighted real-world risks in AI/ML deployments, credential management, and backup configurations.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate to root, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, web application enumeration, vulnerability research in ML frameworks, crafting malicious models, reverse shells, shell upgrades, SQLite database enumeration, hash cracking, SSH access, port forwarding, and privilege escalation via backup misconfiguration.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided me through this challenge:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://splint.gitbook.io/cyberblog/security-research/tensorflow-remote-code-execution-with-malicious-model">GitBook PoC for TensorFlow RCE</a><br>
+                    Usage: Provided a proof-of-concept for crafting a malicious .h5 model to exploit CVE-2024-3660.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://mastersplinter.work/research/tensorflow-rce/">TensorFlow RCE Writeup</a><br>
+                    Usage: Detailed explanation of the TensorFlow/Keras vulnerability and exploitation.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-3660">NVD - CVE-2024-3660</a><grok-card data-id="26703e" data-type="citation_card"></grok-card><br>
+                    Usage: Official details on the Keras code injection vulnerability.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/garethgeorge/backrest">Backrest GitHub Repository</a><grok-card data-id="959da4" data-type="citation_card"></grok-card><br>
+                    Usage: Documentation for the Backrest backup tool used in privilege escalation.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Artificial</h2>
+            <p>Here’s a step-by-step breakdown of how I tackled the Artificial box, from initial reconnaissance to capturing both flags.</p>
+
+            <h3>Starting with Nmap Recon</h3>
+            <p>
+                I started with an Nmap scan to identify open ports and services, revealing SSH on port 22 and HTTP on port 80 running Nginx.
+            </p>
+            <img src="/assets/images/ctf/artificial/a.png" alt="Nmap scan results">
+            
+
+            <h3>Exploring the Web Application</h3>
+            <p>
+                Browsing to port 80 showed a website for hosting AI models. I registered an account, which led to a page for uploading models and provided downloads for requirements.txt and a Dockerfile.
+            </p>
+            <img src="/assets/images/ctf/artificial/1.png" alt="Web application registration">
+            <img src="/assets/images/ctf/artificial/2.png" alt="Web application registration">
+            <img src="/assets/images/ctf/artificial/3.png" alt="Web application registration">
+
+            <h3>Analyzing Requirements and Researching Vulnerabilities</h3>
+            <p>
+                The requirements.txt specified tensorflow-cpu==2.13.1. Searching for vulnerabilities in this version revealed CVE-2024-3660, an arbitrary code execution flaw in Keras allowing malicious models to run code.
+            </p>
+            <img src="/assets/images/ctf/artificial/4.png" alt="Vulnerability research">
+            <img src="/assets/images/ctf/artificial/5.png" alt="Web application registration">
+
+            <h3>Finding a PoC for CVE-2024-3660</h3>
+            <p>
+                I found a PoC on GitBook that crafts a malicious .h5 model using a Lambda layer to execute arbitrary code.
+            </p>
+            <img src="/assets/images/ctf/artificial/6.png" alt="PoC discovery">
+
+            <h3>Setting Up the Docker Environment</h3>
+            <p>
+                Using the provided Dockerfile, I built a Docker image to match the target environment for testing the exploit.
+            </p>
+            <img src="/assets/images/ctf/artificial/7.png" alt="Docker build">
+
+            <h3>Running the Container and Crafting the Model</h3>
+            <p>
+                I ran the container, copied the exploit.py inside, and generated the malicious exploit.h5 file with a reverse shell payload.
+            </p>
+            <img src="/assets/images/ctf/artificial/8.png" alt="Container run and model creation">
+            <img src="/assets/images/ctf/artificial/9.png" alt="Container run and model creation">
+            <img src="/assets/images/ctf/artificial/10.png" alt="Container run and model creation">
+
+            <h3>Uploading the Model and Triggering the Exploit</h3>
+            <p>
+                I uploaded the .h5 file to the web app and clicked "View Predictions" to trigger the code execution.
+            </p>
+            <img src="/assets/images/ctf/artificial/11.png" alt="Model upload">
+            <img src="/assets/images/ctf/artificial/13.png" alt="Model upload">
+
+            <h3>Setting Up a Listener and Catching the Shell</h3>
+            <p>
+                With a Netcat listener ready, the reverse shell connected after triggering the model.
+            </p>
+            <img src="/assets/images/ctf/artificial/14.png" alt="Reverse shell catch">
+
+            <h3>Enumerating the Application Directory</h3>
+            <p>
+                As the app user, I found a users.db SQLite database in /app/instances.
+            </p>
+            <img src="/assets/images/ctf/artificial/15.png" alt="Database discovery">
+
+            <h3>Extracting User Hashes</h3>
+            <p>
+                Querying the database revealed user hashes. Checking /etc/passwd showed 'gael' as a valid user.
+            </p>
+            <img src="/assets/images/ctf/artificial/16.png" alt="Hash extraction">
+            <img src="/assets/images/ctf/artificial/17.png" alt="Hash extraction">
+
+            <h3>Cracking the Hash</h3>
+            <p>
+                I attempted to crack the MD5 hash c99175974b6e192936d97224638a34f8 using CrackStation, revealing the password 'mattp005numbertwo'.
+            </p>
+            <img src="/assets/images/ctf/artificial/18.png" alt="Hash cracking">
+
+            <h3>SSH as Gael and Capturing User Flag</h3>
+            <p>
+                Using the credentials (gael:mattp005numbertwo), I SSH'd in and captured the user flag.
+            </p>
+            <img src="/assets/images/ctf/artificial/19.png" alt="SSH access">
+
+            <h3>Privilege Escalation Enumeration</h3>
+            <p>
+                Enumerating as gael, I found backups in /var/backups, including backrest_backup.tar.gz owned by the sysadm group (which gael is in).
+            </p>
+            <img src="/assets/images/ctf/artificial/20.png" alt="Backup discovery">
+            <img src="/assets/images/ctf/artificial/21.png" alt="Backup discovery">
+
+            <h3>Extracting the Backup Archive</h3>
+            <p>
+                I copied and extracted the archive to /tmp, finding config.json with a bcrypt hash for 'backrest_root'.
+            </p>
+            <img src="/assets/images/ctf/artificial/22.png" alt="Archive extraction">
+
+            <h3>Decoding and Cracking the Bcrypt Hash</h3>
+            <p>
+                The hash was base64-encoded. After decoding, I cracked it with Hashcat using rockyou.txt, revealing '!@#$%^'.
+            </p>
+            <img src="/assets/images/ctf/artificial/24.png" alt="Hash cracking">
+            <img src="/assets/images/ctf/artificial/25.png" alt="Hash cracking">
+            <img src="/assets/images/ctf/artificial/26.png" alt="Hash cracking">
+
+            <h3>Discovering Local Ports</h3>
+            <p>
+                Process enumeration showed services on localhost:5000 and :9898. I used SSH port forwarding to access them.
+            </p>
+            <img src="/assets/images/ctf/artificial/28.png" alt="Port discovery">
+            <img src="/assets/images/ctf/artificial/29.png" alt="Port discovery">
+            <img src="/assets/images/ctf/artificial/30.png" alt="Port discovery">
+
+            <h3>Accessing the Backrest Web UI</h3>
+            <p>
+                Forwarding port 9898 revealed the Backrest web interface. I logged in as backrest_root with '!@#$%^'.
+            </p>
+            <img src="/assets/images/ctf/artificial/31.png" alt="Backrest login">
+            <img src="/assets/images/ctf/artificial/32.png" alt="Backrest login">
+
+            <h3>Creating a Backup Repository for /root</h3>
+            <p>
+                I created a new repository to back up /root, as Backrest runs as root.
+            </p>
+            <img src="/assets/images/ctf/artificial/33.png" alt="Repo creation">
+
+            <h3>Scheduling and Performing the Backup</h3>
+            <p>
+                I scheduled a backup plan for /root and waited for it to complete.
+            </p>
+            <img src="/assets/images/ctf/artificial/34.png" alt="Backup scheduling">
+
+            <h3>Restoring the Root Flag</h3>
+            <p>
+                I restored root.txt to a writable path, downloaded it, and captured the root flag. Alternatively, restoring .ssh keys would allow direct root SSH.
+            </p>
+            <img src="/assets/images/ctf/artificial/36.png" alt="Flag restore">
+            <img src="/assets/images/ctf/artificial/37.png" alt="Flag restore">
+            <img src="/assets/images/ctf/artificial/38.png" alt="Flag restore">
+            <img src="/assets/images/ctf/artificial/39.png" alt="Flag restore">
+
+            <h3>Optional: Root SSH Access</h3>
+            <p>
+                For full root access, I restored the .ssh directory, adjusted permissions, and SSH'd as root.
+            </p>
+            <img src="/assets/images/ctf/artificial/40.png" alt="Root SSH">
+            <img src="/assets/images/ctf/artificial/41.png" alt="Root SSH">
+            
+
+            <h2>4. Remediation of Vulnerabilities</h2>
+            <p>Here’s how to remediate the key vulnerabilities exploited in this challenge:</p>
+            <ul>
+                <li><strong>CVE-2024-3660 (Keras Code Injection):</strong> Update TensorFlow/Keras to version 2.13 or later. Enable safe mode when loading models, validate uploads, and run ML inference in isolated environments like containers with restricted permissions.</li>
+                <li><strong>Backrest Misconfiguration:</strong> Avoid running backup tools as root. Use least-privilege principles, restrict repository paths to non-sensitive directories, and enforce strong authentication. Regularly audit backup configurations and group memberships.</li>
+            </ul>
+
+            <h2>5. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Artificial box:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always research dependencies like ML frameworks for known vulnerabilities—CVEs in TensorFlow are common due to deserialization risks.</li>
+                <li><strong>Tip 2:</strong> Use Docker to replicate target environments when testing exploits to ensure compatibility.</li>
+                <li><strong>Tip 3:</strong> Check for encoded hashes; base64 is often used in configs—decode before cracking.</li>
+                <li><strong>Tip 4:</strong> Local services can be accessed via SSH port forwarding; always check running processes for hidden ports.</li>
+                <li><strong>Key Lesson:</strong> Backup tools running as root pose significant risks if misconfigured—limit their scope to prevent data exfiltration.</li>
+                <li><strong>Future Goals:</strong> Dive deeper into ML security, including model poisoning and supply chain attacks, and explore more backup tool exploits.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <img src="/assets/images/ctf/artificial/congrats.png" alt="Completed badge">
+            <p>
+                Artificial was an insightful HTB box blending AI vulnerabilities with classic Linux priv esc. Exploiting TensorFlow for RCE and abusing Backrest for root access provided great learning on emerging threats in ML hosting. Eager for more AI-themed challenges!
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://splint.gitbook.io/cyberblog/security-research/tensorflow-remote-code-execution-with-malicious-model">TensorFlow PoC</a> was key for the malicious model—inspect and test in safe environments.</li>
+                <li>Backrest's web UI simplifies backups but requires careful configuration to avoid privilege abuse.</li>
+                <li>For more on CVE-2024-3660, see the <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-3660">NVD entry</a><grok-card data-id="7ac44b" data-type="citation_card"></grok-card>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
