@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Brutus Sherlock Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1 style="color: #4639f0;">Brutus Sherlock Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/Sherlocks/brutus/Title.png" alt="Brutus Cover">
+            <h2>1. Scenario Overview</h2>
+            <p>
+                This is my first dive into Sherlock HTB boxes. These are the opposite of traditional HTB challenges, where the focus is on red team activities like finding flags through exploitation of a box. Sherlocks, on the other hand, are about investigating potential suspicious or malicious activity.
+            </p>
+            <p>
+                Scenario: We have a potentially compromised Confluence server that we've been asked to investigate.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Analyze logs to identify brute-force activity, successful logins, session details, and post-compromise actions.</li>
+                <li><strong>Skills Developed:</strong> Log analysis with grep, parsing binary logs with Python scripts, correlating events across log files, identifying persistence techniques, and mapping to MITRE ATT&CK.</li>
+                <li><strong>Platform:</strong> Hack The Box Sherlocks</li>
+            </ul>
+
+            <h2>2. Provided Artifacts</h2>
+            <p>Once we download the Brutus Logs, we see three files: auth.log, wtmp, and utmp.py. Let's examine what we're looking at here.</p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/files.png" alt="files">
+            <ul>
+                <li>
+                    <strong>auth.log:</strong> This file is a critical system log on Debian-based Linux distributions, such as Ubuntu, that records all authentication and authorization activities.
+                </li>
+                <li>
+                    <strong>wtmp:</strong> This file in Linux is a binary log that records a complete history of all user logins and logouts, as well as system events like reboots and shutdowns.
+                </li>
+                <li>
+                    <strong>utmp.py:</strong> This is a Python script to parse out relevant information from wtmp and display it in a readable format.
+                </li>
+            </ul>
+            <p>So this lays the groundwork for us to see authentication and login activity for the server. auth.log showed us the authentication and session creation as well as the user actions, whereas wtmp offers us the logins and logouts for the server.</p>
+
+            <h2>3. Investigation Approach</h2>
+            <p>From the logs provided, we are able to see the authentication as well as logins for the server. Here's a step-by-step breakdown of the investigation, aligned with the tasks presented in the challenge.</p>
+
+            <h3>Task 1: Analyze the auth.log - What is the IP Address Used by the Attacker to Carry Out a Brute-Force Attack?</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task1a.png" alt="Failed logins grep">
+            <p>
+                This question tells us a bit. First, we are looking for a brute-force attack, which is the act of attempting to guess the password of a login over and over with a wordlist in the hopes that one will be successful. From an investigator's perspective, this should generate a large amount of unsuccessful logins.
+            </p>
+            <p>
+                If we simply cat the log, we are sifting through a ton of logs relevant to a multitude of things on the box. On a production server, this will leave you digging for hours. What we can do is cat the file to display contents and pipe that into grep to display only lines that match a string.
+            </p>
+            <p>
+                Command: <code>cat auth.log | grep -i "failed"</code>
+            </p>
+            <p>
+                This outputs a refined list of lines from the log that will display only relevant information to what we are looking for, which is the brute-force.
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task1b.png" alt="Failed logins grep">
+            <p>
+                From here, we see that IP 65.2.161.68 is seen with the majority of failed logins from auth.log. If we examine a little deeper than just volume, we see that it is trying to login to several accounts (server_adm, svc_account, admin, root), all of which are common names for default accounts on different types of devices. This behavior of failed logins from a single IP, as well as tied with the failed logins to multiple accounts, points to our brute-force activity. Also, another correlating detail is the timeframe. If we examine the timeframe of these failed attempts, we see that they are grouped together with multiple attempts within the same second of time. This is another confirmation factor due to it being highly unlikely for an individual to fail that many login attempts within that short of a timeframe. This points to the potential use of a brute-force tool being used with a credential list such as Hydra or John the Ripper, etc. From these factors, we can conclude that the attacker's IP is 65.2.161.68.
+            </p>
+
+            <h3>Task 2: The Brute-Force Attempts Were Successful and the Attacker Gained Access to an Account on the Server. What Is the Username of the Account?</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/Task 2 a.png" alt="task">
+            <p>
+                Up next, we want to identify if the attacker was successful with his attacks.
+            </p>
+            <p>
+                Let's take another look at the auth.log. If we use that same grep command as before but this time change the searchable string with "Accepted", we get a list of all successful logins in the log.
+            </p>
+            <p>
+                Command: <code>cat auth.log | grep -i "Accepted"</code>
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task2b.png" alt="task">
+            <p>
+                Here we see a shorter list of login events, and we are able to see that the first successful login from the IP is at March 6 06:31:40 onto the root account.
+            </p>
+
+            <h3>Task 3: Identify the UTC Timestamp When the Attacker Logged In Manually to the Server and Established a Terminal Session to Carry Out Their Objectives. The Login Time Will Be Different Than the Authentication Time, and Can Be Found In the wtmp Artifact.</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task3a.png" alt="task 3">
+            <p>
+                This lets us explore the wtmp file now. To use the Python script, we want to run python3 and then the .py. Once we do that, we see that it takes arguments after the command. The syntax should look something like this:
+            </p>
+            <p>
+                <code>python3 utmp.py &lt;filename&gt;</code><br>
+                or<br>
+                <code>python3 utmp.py &lt;filename&gt; -o &lt;output filename&gt;</code>
+            </p>
+            <p>
+                Since we want to just display to screen, we'll use the first option.
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task3b.png" alt="task">
+            <p>
+                One thing we notice is that the auth.log is in UTC time but the wtmp file is not; it seems to be in local time for the server. The best way to examine this is to filter by attacker IP so we see events relevant to the brute-force attempt.
+            </p>
+            <p>
+                Command: <code>python3 utmp.py wtmp | grep -i "65.2.161.68"</code>
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task3c.png" alt="task">
+            <p>
+                Here we get quite a bit of information from these logs. First, we see that root login was at 03/05 20:32:45 local time. But let's break that log down more to see what it tells us.
+            </p>
+            <table>
+                <tr><th>Value</th><th>Meaning</th></tr>
+                <tr><td>"USER"</td><td>Record type or a label (might mean this is a user process record)</td></tr>
+                <tr><td>"2549"</td><td>PID (Process ID) of the user's login shell</td></tr>
+                <tr><td>"pts/1"</td><td>TTY/terminal used (pseudo-terminal slave 1)</td></tr>
+                <tr><td>"ts/1"</td><td>Possibly another name for the terminal (or could be an app-specific label)</td></tr>
+                <tr><td>"root"</td><td>Username of the person who logged in</td></tr>
+                <tr><td>"65.2.161.68"</td><td>Remote IP address (origin of the login session)</td></tr>
+                <tr><td>"2024/03/05 20:32:45"</td><td>Login timestamp (date and time of login)</td></tr>
+                <tr><td>"387923"</td><td>Possibly session duration (seconds) or another timestamp-related field</td></tr>
+                <tr><td>"65.2.161.68"</td><td>Repeated remote IP</td></tr>
+            </table>
+            <p>
+                As we can see, this is a user record type for a terminal being started for the root account under process ID 2549 from remote IP of 65.2.161.68 on a timestamp followed by duration.
+            </p>
+            <p>
+                Now we need to correlate this to the LOGIN time. This shows us the time the terminal opened, but we need to know the login prior to terminal. So let's pivot back to auth.log and look for timestamps around the login time as well as before the terminal time of min 32:45.
+            </p>
+            <p>
+                Command: <code>cat auth.log | grep -i "login"</code>
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task3d.png" alt="task">
+            <p>
+                If we look around the time of the login from wtmp, we see that there is a login at min 32:44 that opens a session 37 which stays open for about 5 mins. We then see a login from cyberjunkie right after. This will come into play later.
+            </p>
+            <p>
+                From these logs, we can determine that the actor was able to login and establish a terminal at 06:32:45 UTC as seen in wtmp after converting time to UTC.
+            </p>
+
+            <h3>Task 4: SSH Login Sessions Are Tracked and Assigned a Session Number Upon Login. What Is the Session Number Assigned to the Attacker's Session for the User Account From Question 2?</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task4a.png" alt="task">
+            <p>
+                We now need to ID the session number that the attacker was assigned on login. From previous logs, we know that he was assigned session number 37 seen in auth.log.
+            </p>
+
+            <h3>Task 5: The Attacker Added a New User as Part of Their Persistence Strategy on the Server and Gave This New User Account Higher Privileges. What Is the Name of This Account?</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task5a.png" alt="task">
+            <p>
+                Now we need to identify what the attacker did directly following terminal establishment.
+            </p>
+            <p>
+                If we go back and look at auth.log, we can start at 32:45ish time frame and see what the root account did directly following that terminal login.
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task5b.png" alt="task">
+            <p>
+                If we inspect the highlighted logs from the screenshot above, we see that directly following the login at 32:44, we see the actor create an account named cyberjunkie and then add them to the sudo group. This is a common method of persistence for threat actors to pivot from a compromised account to a new account with root permissions.
+            </p>
+
+            <h3>Task 6: What Is the MITRE ATT&CK Sub-Technique ID Used for Persistence by Creating a New Account?</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task6a.png" alt="task">
+            <p>
+                As previously spoken, this is a common technique of persistence, and this task asks us to find the exact sub-technique that corresponds on the MITRE ATT&CK framework. So quick hop over to <a href="https://attack.mitre.org/">https://attack.mitre.org/</a>.
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task6b.png" alt="task">
+            <p>
+                We see that Technique Create Account with sub-technique of Local Account is the answer to this task due to the threat actor executing this style of persistence.
+            </p>
+
+            <h3>Task 7: What Time Did the Attacker's First SSH Session End According to auth.log?</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task7a.png" alt="task">
+            <p>
+                This task asks us what time did his SSH session end. From previous tasks, we know his session was #37, and we know that auth.log was where it had relevant entries regarding this session.
+            </p>
+            <p>
+                So one quick command we can run is <code>cat auth.log | grep -i "Session 37"</code>. This will show all entries relevant to the attacker's session.
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task7b.png" alt="task">
+            <p>
+                Therefore, we know his session ended at 06:37:44.
+            </p>
+
+            <h3>Task 8: This Task Asks Us to Find What Actions Were Run Once He Was Able to Login as His Backdoor "cyberjunkie" Account.</h3>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task8a.png" alt="task">
+            <p>
+                So let's go take a look at auth.log again.
+            </p>
+            <p>
+                If we grep for cyberjunkie logs, we see that they attempted to curl for a Linux enumeration script from GitHub following login. This is a common technique for attackers to enumerate their target post-compromise.
+            </p>
+            <img src="/assets/images/ctf/Sherlocks/brutus/task8b.png" alt="task">
+            <img src="/assets/images/ctf/Sherlocks/brutus/task8c.png" alt="task">
+
+            <h2>4. Summary of Findings</h2>
+            <p>
+                We investigated a confirmed case of compromise on a Confluence server where an external attacker brute-forced an SSH login from IP 65.2.161.68. Then, he was able to login as root and create a backdoor via a local account. He then logged back in and attempted to pull down a Linux bash script that is a common tool for target enumeration post-initial access. This is just the initial access and persistence pieces of the puzzle seen. Overall, a very insightful challenge to brush back up on investigating Linux logs/devices.
+            </p>
+
+            <h2>5. Recommended IR Actions</h2>
+            <p>
+                Would be to isolate the system from the network via logical VLAN or layer 1 Ethernet disconnect. Then, to image the system and establish chain of custody for further investigation and evidence storage. Then, to maintain availability, if able to reimage the system to a known safe image and reset the root password. I would also recommend to the customer to make root a no-login account to make sure the brute-force of that account is not possible again. This is best security practice due to least privilege and granular IAM controls on user accounts and sudo groups. It also helps account for attribution of actions on a system from each user since they cannot just login as root from multiple user accounts. I would then confirm password and no-login for root and allow the system back on the network. Post this, I would go into a deep dive of the image for any other actions from the user to find out if he was able to exfil data or lateral move off the device to another. Another good takeaway from this is to maybe check other servers for root login from this IP since the threat actor had the password for root and password reuse might be in effect.
+            </p>
+
+            <h2>6. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Brutus Sherlock:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Use grep extensively for filtering logs to focus on key events like "failed" or "Accepted" to identify brute-force and successful logins.</li>
+                <li><strong>Tip 2:</strong> Correlate timestamps across logs (auth.log in UTC vs. wtmp in local) and convert as needed for accurate timelines.</li>
+                <li><strong>Tip 3:</strong> Look for post-login actions like user creation and group additions as indicators of persistence.</li>
+                <li><strong>Tip 4:</strong> Map findings to MITRE ATT&CK for standardized threat classification.</li>
+                <li><strong>Key Lesson:</strong> Binary logs like wtmp require parsing tools; always inspect provided scripts before use.</li>
+                <li><strong>Future Goals:</strong> Practice more with advanced log analysis tools like ELK Stack and deepen knowledge of Linux forensics.</li>
+            </ul>
+
+            <h2>7. Conclusion</h2>
+            <img src="/assets/images/ctf/Sherlocks/brutus/congrats.png" alt="task">
+            <p>
+                Brutus was a great introductory Sherlock challenge that sharpened my skills in log analysis and incident investigation. Identifying the brute-force, persistence via account creation, and mapping to MITRE provided valuable insights into blue team workflows. Looking forward to more forensics-focused boxes!
+            </p>
+
+            <h2>8. Additional Notes</h2>
+            <ul>
+                <li>For more on MITRE ATT&CK Create Account: Local Account, see <a href="https://attack.mitre.org/techniques/T1136/001/">T1136.001</a>.</li>
+                <li>utmp.py was crucial for parsing wtmp—always verify scripts from challenges.</li>
+                <li>Common post-compromise tools like LinEnum.sh are red flags in logs.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
