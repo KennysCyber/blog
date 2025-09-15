@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Soulmate CTF Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Soulmate CTF Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/soulmate/title.png" alt="Soulmate Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Soulmate from Hack The Box was a challenging box that involved enumerating a web application, exploiting a vulnerability in CrushFTP for initial access, discovering credentials to pivot to a user account, and leveraging an RCE in Erlang OTP SSH for root privileges. It tested skills in web enumeration, vulnerability exploitation, credential hunting, and advanced privilege escalation techniques.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access, escalate to root, and capture the user and root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap scanning, subdomain enumeration, vulnerability research, authentication bypass exploitation, reverse shells, user enumeration, password searching, SSH access, and remote code execution via SSH protocol flaws.</li>
+                <li><strong>Platform:</strong> Hack The Box</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided me through this challenge:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/Immersive-Labs-Sec/CVE-2025-31161">GitHub PoC for CVE-2025-31161</a><br>
+                    Usage: Used to exploit the CrushFTP authentication bypass for account creation.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/platsecurity/CVE-2025-32433">GitHub PoC for CVE-2025-32433 Vulnerability Check</a><br>
+                    Usage: Confirmed the vulnerability in the Erlang OTP SSH server.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/omer-efe-curkus/CVE-2025-32433-Erlang-OTP-SSH-RCE-PoC">GitHub PoC for CVE-2025-32433 RCE</a><br>
+                    Usage: Exploited the RCE to gain a root reverse shell.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://www.cybereason.com/blog/rce-vulnerability-erlang-otp">CyberReason Blog on Erlang OTP RCE</a><br>
+                    Usage: Provided details on the Erlang OTP vulnerability.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Soulmate</h2>
+            <p>Here’s a step-by-step breakdown of how I tackled the Soulmate box, from initial reconnaissance to capturing both flags.</p>
+
+            <h3>Starting with Nmap Recon</h3>
+            <p>
+                I started with an Nmap scan using <code>nmap -Pn -n -sS -T4 10.129.24.106 --open</code>, which revealed open ports 22 (SSH) and 80 (HTTP). A more detailed scan with <code>nmap -Pn -sV -sC -p 80,22 10.129.24.106</code> showed SSH as OpenSSH 8.9p1 and HTTP as nginx 1.18.0, redirecting to http://soulmate.htb/.
+            </p>
+
+            <h3>Adding Domain to /etc/hosts</h3>
+            <p>
+                I added soulmate.htb to /etc/hosts to resolve the domain.
+            </p>
+            <img src="/assets/images/ctf/soulmate/1.png" alt="Soulmate website">
+
+            <h3>Exploring the Website</h3>
+            <p>
+                The website at http://soulmate.htb was an online dating site.
+            </p>
+            <img src="/assets/images/ctf/soulmate/2.png" alt="Soulmate website">
+
+            <h3>Web Enumeration with Whatweb</h3>
+            <p>
+                Running whatweb confirmed technologies like Bootstrap, PHPSESSID cookie, nginx 1.18.0.
+            </p>
+
+            <h3>Subdomain Enumeration with Gobuster</h3>
+            <p>
+                Using <code>gobuster vhost -u http://soulmate.htb -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt --append-domain -r</code>, I discovered ftp.soulmate.htb.
+            </p>
+            <img src="/assets/images/ctf/soulmate/3.png" alt="Gobuster results">
+
+            <h3>Finding CrushFTP Version</h3>
+            <p>
+                On ftp.soulmate.htb, viewing source code (Ctrl+U) revealed CrushFTP version 11.w.657.
+            </p>
+            <img src="/assets/images/ctf/soulmate/4.png" alt="CrushFTP version in source">
+
+            <h3>Researching Vulnerabilities</h3>
+            <p>
+                Searched for CrushFTP 11 vulnerabilities. Tried CVE-2025-54309 without success, but CVE-2025-31161 worked for authentication bypass.
+            </p>
+            <img src="/assets/images/ctf/soulmate/5.png" alt="CrushFTP version in source">
+
+            <h3>Running PoC for CVE-2025-31161</h3>
+            <p>
+                Used the PoC from <a href="https://github.com/Immersive-Labs-Sec/CVE-2025-31161">GitHub</a> to create a new account.
+            </p>
+            <img src="/assets/images/ctf/soulmate/6.png" alt="CrushFTP PoC execution">
+
+            <h3>Logging in as New User</h3>
+            <p>
+                Logged in with the newly created credentials.
+            </p>
+            <img src="/assets/images/ctf/soulmate/7.png" alt="CrushFTP login">
+            <img src="/assets/images/ctf/soulmate/8.png" alt="Editing admin account">
+
+            <h3>Editing Admin Account for Upload Access</h3>
+            <p>
+                Edited the admin account to allow uploads to the web app directory for Soulmate.
+            </p>
+            <img src="/assets/images/ctf/soulmate/9.png" alt="Editing admin account">
+
+            <h3>Uploading and Executing PHP Shell</h3>
+            <p>
+                Uploaded a PHP reverse shell to the web app directory and executed it by visiting the file, gaining a www-data shell.
+            </p>
+            <img src="/assets/images/ctf/soulmate/12.png" alt="Editing admin account">
+            <img src="/assets/images/ctf/soulmate/10.png" alt="Editing admin account">
+            <img src="/assets/images/ctf/soulmate/13.png" alt="/etc/passwd">
+
+            <h3>User Enumeration</h3>
+            <p>
+                As www-data, ran <code>cat /etc/passwd</code> and found user 'ben'.
+            </p>
+            <img src="/assets/images/ctf/soulmate/14.png" alt="/etc/passwd">
+
+            <h3>Searching for Passwords</h3>
+            <p>
+                Grepped <code>"grep --color=auto -rnw "/" -ie "PASSWORD=" --color=always 2> /dev/null</code> for passwords in accessible files and found 'HouseH0ldings998' for ben.
+            </p>
+            <img src="/assets/images/ctf/soulmate/15a.png" alt="Password search">
+            <img src="/assets/images/ctf/soulmate/15.png" alt="Password search">
+
+            <h3>SSH as Ben and Capturing User Flag</h3>
+            <p>
+                SSH'd as ben:HouseH0ldings998 and captured the user flag.
+            </p>
+            <img src="/assets/images/ctf/soulmate/16.png" alt="SSH as ben">
+
+            <h3>Privilege Escalation Enumeration</h3>
+            <p>
+                Enumerated listening ports; port 2222 caught attention. NC banner grab showed Erlang 5.2.9.
+            </p>
+            <img src="/assets/images/ctf/soulmate/17.png" alt="SSH as ben">
+
+            <h3>Researching Erlang Vulnerability</h3>
+            <p>
+                Found CVE-2025-32433, a logic issue allowing unauthenticated RCE via post-auth messages not being dropped.
+            </p>
+            <img src="/assets/images/ctf/soulmate/18.png" alt="SSH as ben">
+
+
+            <h3>Confirming Vulnerability with PoC</h3>
+            <p>
+                Used <a href="https://github.com/platsecurity/CVE-2025-32433">GitHub PoC</a> to confirm; it wrote to /lab.txt meaning it was vulnerable.
+            </p>
+
+            <h3>Exploiting RCE for Root Shell</h3>
+            <p>
+                Used <a href="https://github.com/omer-efe-curkus/CVE-2025-32433-Erlang-OTP-SSH-RCE-PoC">another PoC</a> to execute a reverse shell, gaining root and capturing the root flag.
+            </p>
+            <img src="/assets/images/ctf/soulmate/19.png" alt="Erlang PoC execution">
+            <img src="/assets/images/ctf/soulmate/20.png" alt="Erlang PoC execution">
+            <img src="/assets/images/ctf/soulmate/21.png" alt="Erlang PoC execution">
+
+            <h2>4. Remediation of Vulnerabilities</h2>
+            <p>Here’s how to remediate the key vulnerabilities exploited in this challenge:</p>
+            <ul>
+                <li><strong>CVE-2025-31161 (CrushFTP Auth Bypass):</strong> Update CrushFTP to version 11.3.4_23 or later. Implement strong authentication mechanisms, monitor for unauthorized account creations, and restrict access to the admin interface.<grok-card data-id="c64c70" data-type="citation_card"></grok-card><grok-card data-id="b46e0c" data-type="citation_card"></grok-card></li>
+                <li><strong>CVE-2025-32433 (Erlang OTP SSH RCE):</strong> Update Erlang/OTP to a patched version such as 27.3.2, 26.2.16, or 25.3.2.19. Disable the SSH daemon if not needed, or restrict access via firewalls to trusted sources only.<grok-card data-id="786ee6" data-type="citation_card"></grok-card><grok-card data-id="892065" data-type="citation_card"></grok-card></li>
+            </ul>
+
+            <h2>5. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Soulmate box:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always enumerate subdomains—tools like gobuster can reveal hidden services like FTP.</li>
+                <li><strong>Tip 2:</strong> Check source code for version info; it's often key to finding vulnerabilities.</li>
+                <li><strong>Tip 3:</strong> Credential reuse and searching in config files can lead to user pivots.</li>
+                <li><strong>Tip 4:</strong> Investigate non-standard ports; banner grabbing can identify vulnerable services.</li>
+                <li><strong>Key Lesson:</strong> Protocol flaws like in SSH implementations can lead to severe RCE; always keep software updated.</li>
+                <li><strong>Future Goals:</strong> Dive deeper into protocol vulnerabilities and practice with more SSH-related exploits.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <img src="/assets/images/ctf/soulmate/congrats.png" alt="Completed badge">
+            <p>
+                Soulmate was an exciting HTB challenge that combined web exploitation with advanced RCE techniques. From bypassing auth in CrushFTP to exploiting Erlang SSH for root, it was a great learning experience. Ready for the next one!
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://github.com/Immersive-Labs-Sec/CVE-2025-31161">CVE-2025-31161 PoC</a> was essential for initial foothold.</li>
+                <li><a href="https://github.com/omer-efe-curkus/CVE-2025-32433-Erlang-OTP-SSH-RCE-PoC">CVE-2025-32433 RCE PoC</a> provided the path to root.</li>
+                <li>For more on Erlang vulnerabilities, see the <a href="https://www.cybereason.com/blog/rce-vulnerability-erlang-otp">CyberReason blog</a>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+</html>
