@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Outbound CTF Writeup - 18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="/blog/styles.css">
+    <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
         html, body {
@@ -90,7 +90,7 @@
     <div class="content">
         <div class="left-aligned-content">
             <h1>Outbound CTF Writeup - Hack The Box</h1>
-            <img src="/blog/assets/images/ctf/outbound/title.png" alt="Outbound Cover">
+            <img src="/assets/images/ctf/outbound/title.png" alt="Outbound Cover">
             <h2>1. Box Overview</h2>
             <p>
                 Outbound from Hack The Box was an easy Linux box that involved port scanning, subdomain discovery, exploiting a Roundcube vulnerability for initial access, extracting and decrypting credentials from the database to pivot to a user account, and leveraging a privilege escalation vulnerability in a sudo-allowed binary for root. It tested skills in enumeration, vulnerability exploitation, database interaction, credential decryption, and privilege escalation.
@@ -133,98 +133,98 @@
             <p>
                 Ran a quick Nmap scan with `nmap -Pn -n -sS -T4 10.129.232.158 --open` to check for open ports, revealing SSH (port 22) and a web server (port 80). The `-Pn` flag skips host discovery, `-n` avoids DNS resolution, and `-sS` does a SYN scan for speed, making it perfect for a fast initial look.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/1.png" alt="Nmap quick scan">
+            <img src="/assets/images/ctf/outbound/1.png" alt="Nmap quick scan">
 
             <h3>Service Scan on Open Ports</h3>
             <p>
                 Followed up with `nmap -Pn -sV -sC -p 22,80 10.129.232.158` to identify services and versions, showing SSH running OpenSSH 8.9p1 and the web server running nginx 1.18.0, plus a redirect to a mail subdomain URL, hinting at more to explore.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/2.png" alt="Nmap service scan">
+            <img src="/assets/images/ctf/outbound/2.png" alt="Nmap service scan">
 
             <h3>Adding Domain to /etc/hosts</h3>
             <p>
                 Added the mail subdomain to `/etc/hosts` to resolve it locally. This step lets me hit the site directly without DNS issues, setting up access to the mail server.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/3.png" alt="Adding to hosts">
+            <img src="/assets/images/ctf/outbound/3.png" alt="Adding to hosts">
 
             <h3>Visiting Website for Discovery</h3>
             <p>
                 Checked out the site at `http://mail.outbound.htb` and found a Roundcube Webmail login page. Using the `tyler` credentials let me in smoothly, giving me a foothold to poke around the interface.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/4.png" alt="Website discovery">
-            <img src="/blog/assets/images/ctf/outbound/5.png" alt="Website discovery">
+            <img src="/assets/images/ctf/outbound/4.png" alt="Website discovery">
+            <img src="/assets/images/ctf/outbound/5.png" alt="Website discovery">
 
             <h3>Parsing Webpage HTML to See Webserver Version</h3>
             <p>
                 Dug into the page source (right-click, View Page Source) and spotted an RC version of 10.6.10 in the comments. Realized it’s not the usual naming, so stripped the zeros to get 1.6.1, which matches Roundcube’s version control. This was key to figuring out what I was dealing with.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/6.png" alt="Webserver version">
+            <img src="/assets/images/ctf/outbound/6.png" alt="Webserver version">
 
             <h3>Researching Vulnerability for 1.6.1 with CVE-2025-49113</h3>
             <p>
                 Searched online and found CVE-2025-49113, a post-auth RCE in Roundcube 1.6.0 through 1.6.10. The PoC from `https://github.com/fearsoff-org/CVE-2025-49113` works by sending a crafted PHP object that gets deserialized improperly, letting me run arbitrary code via `program/actions/upload.php`.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/7.png" alt="Vulnerability search">
-            <img src="/blog/assets/images/ctf/outbound/8.png" alt="Vulnerability search">
-            <img src="/blog/assets/images/ctf/outbound/9.png" alt="Vulnerability search">
+            <img src="/assets/images/ctf/outbound/7.png" alt="Vulnerability search">
+            <img src="/assets/images/ctf/outbound/8.png" alt="Vulnerability search">
+            <img src="/assets/images/ctf/outbound/9.png" alt="Vulnerability search">
 
             <h3>Running PoC for CVE-2025-49113</h3>
             <p>
                 Grabbed the PoC, set up a listener with `nc -lvnp 7878`, and ran the script. It uploads a malicious PHP payload that executes a reverse shell back to my machine when I hit the upload endpoint, giving me a `www-data` shell. The PoC tweaks the deserialization process to inject my code.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/10.png" alt="Reverse shell">
+            <img src="/assets/images/ctf/outbound/10.png" alt="Reverse shell">
 
             <h3>User Enumeration with /etc/passwd</h3>
             <p>
                 Ran `cat /etc/passwd` from the shell and spotted `tyler` as a user with a `/bin/bash` shell, plus MySQL hints. This gave me a target to pivot to after checking the system layout.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/11.png" alt="User enumeration">
+            <img src="/assets/images/ctf/outbound/11.png" alt="User enumeration">
 
             <h3>Finding Credentials in Config</h3>
             <p>
                 Noticed MySQL references, so I cd’d to the config dir and found `mysql://roundcube:RCDBPass2025@localhost/roundcube` in a config file, plus a decrypt key `rcmail-!24ByteDESkey*Str`. The key’s used for encrypting IMAP passwords, which I’ll need later.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/12.png" alt="Config credentials">
-            <img src="/blog/assets/images/ctf/outbound/13.png" alt="Config credentials">
+            <img src="/assets/images/ctf/outbound/12.png" alt="Config credentials">
+            <img src="/assets/images/ctf/outbound/13.png" alt="Config credentials">
 
             <h3>Accessing MySQL and Dumping Tables</h3>
             <p>
                 Located the SQL dir with `ls -al` and logged in with `mysql -u roundcube -pRCDBPass2025 roundcube`. Dumped tables with `SHOW TABLES;`, focusing on the `session` table, which held base64-encoded user session data.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/14.png" alt="MySQL access">
-            <img src="/blog/assets/images/ctf/outbound/15.png" alt="MySQL access">
+            <img src="/assets/images/ctf/outbound/14.png" alt="MySQL access">
+            <img src="/assets/images/ctf/outbound/15.png" alt="MySQL access">
 
             <h3>Decrypting Roundcube Hashed Passwords</h3>
             <p>
                 Decoded the base64 session data with cyberchef, revealing encrypted credentials. I did some OSINT on roundcube passwords and foudn this site for decrypting them (3DES) `https://keydecryptor.com/decryption-tools/roundcube`, plugged in the base64 hash and key `rcmail-!24ByteDESkey*Str`, and got `595mO8DmwGeD` for jacob and `gY4Wr3a1evp4` for tyler.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/16.png" alt="Password decryption">
-            <img src="/blog/assets/images/ctf/outbound/17.png" alt="Password decryption">
+            <img src="/assets/images/ctf/outbound/16.png" alt="Password decryption">
+            <img src="/assets/images/ctf/outbound/17.png" alt="Password decryption">
 
             <h3>Logging in as Users via SSH</h3>
             <p>
                 Logged into Roundcube as `jacob` with `595mO8DmwGeD`, then SSH’d with `ssh jacob@10.129.232.158` using the decrypted `gY4Wr3a1evp4`. Got a shell as `jacob`, ready to escalate.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/18.png" alt="SSH as jacob">
-            <img src="/blog/assets/images/ctf/outbound/19.png" alt="SSH as jacob">
+            <img src="/assets/images/ctf/outbound/18.png" alt="SSH as jacob">
+            <img src="/assets/images/ctf/outbound/19.png" alt="SSH as jacob">
 
             <h3>Checking Sudo Permissions</h3>
             <p>
                 Ran `sudo -l` and saw a binary I can run as root. This is my ticket to privesc, so I started looking for an exploit.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/20.png" alt="Sudo enumeration">
+            <img src="/assets/images/ctf/outbound/20.png" alt="Sudo enumeration">
 
             <h3>Exploiting the Binary with CVE-2025-27591 PoC</h3>
             <p>
                 Found the PoC at `https://github.com/BridgerAlderson/CVE-2025-27591-PoC`. It creates a tmp file, symlinks it to `/etc/passwd`, and adds a root UID 0 entry. Running the binary as root triggers the write, letting me `su` to the new account.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/21.png" alt="Binary exploit">
+            <img src="/assets/images/ctf/outbound/21.png" alt="Binary exploit">
 
             <h3>Executing PoC Python File for Root</h3>
             <p>
                 Wrote the PoC Python script from the repo, uploaded it, and ran it with `sudo /path/to/binary`. It symlinked the tmp file, executed, and dropped me a root shell. Grabbed the flag with `cat /root/root.txt`.
             </p>
-            <img src="/blog/assets/images/ctf/outbound/22.png" alt="Root shell">
+            <img src="/assets/images/ctf/outbound/22.png" alt="Root shell">
 
             <h2>4. Remediation of Vulnerabilities</h2>
             <p>Here’s how to remediate the key vulnerabilities exploited in this challenge:</p>
@@ -245,7 +245,7 @@
             </ul>
 
             <h2>6. Conclusion</h2>
-            <img src="/blog/assets/images/ctf/outbound/congrats.png" alt="Completed badge">
+            <img src="/assets/images/ctf/outbound/congrats.png" alt="Completed badge">
             <p>
                 Outbound was a straightforward HTB challenge focusing on webmail exploitation and local privesc. From exploiting Roundcube to rooting via a sudo binary, it was a solid learning experience. On to the next!
             </p>
