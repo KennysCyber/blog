@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>Ansible Playbooks - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block;
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a;
+        }
+
+        .content .left-aligned-content .copy-btn:focus {
+            outline: 2px solid #ff007a;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Page Background -->
+    <div class="opaque-bg"></div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Ansible Playbooks Collection</h1>
+            <p>This page holds various Ansible playbooks with explanations, ready to view and copy.</p>
+
+            <b>
+                <p>Ansible Setup:</p>
+            </b> If you dont have an envriometn setup with an ansible controller, Inventory files, secrets file this
+            webpage will guide you through how to set that up to be able to copy and paste your these playbook into your
+            enviroment</p>
+
+            <li><a href="/webpages/ansible_setup.html">Ansible Setup Lab</a></li>
+
+            <!-- 🔹 Playbook Template Section -->
+            <!-- Copy & paste the block below to add a new playbook -->
+
+            <section class="playbook">
+                <h2>1. Sensor Health Ansible</h2>
+                <p><strong>Description:</strong>This Ansbile playbook can be used to check core services for a sensor of
+                    server that can be used as a daily health check</p>
+
+                <pre><code>
+---
+- name: Sensor Health Check
+  hosts: all
+  vars_files:
+    - -path to secrets file-
+  gather_facts: no
+  vars:
+    ansible_password: "{{ sensors_pwd2 }}"
+    ansible_user: " {{ sensor_health }}"
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_become_password: "{{ sensors_pwd2 }}"
+    ansible_become: yes
+  tasks:
+    - name: Check Zeek service status
+      ansible.builtin.systemd:
+        name: zeek
+        state: started
+      become: yes
+      become_user: root
+      become_method: sudo
+      register: zeek_status
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display Zeek status
+      ansible.builtin.debug:
+        msg: "Zeek is {{ 'running' if zeek_status.status.ActiveState == 'active' else 'not running' }}"
+      when: zeek_status.status is defined
+
+    - name: Check Tcpdump service status
+      ansible.builtin.systemd:
+        name: tcpdump
+        state: started
+      become: yes
+      become_user: root
+      become_method: sudo
+      register: tcpdump_status
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display Tcpdump status
+      ansible.builtin.debug:
+        msg: "Tcpdump is {{ 'running' if tcpdump_status.status.ActiveState == 'active' else 'not running' }}"
+      when: tcpdump_status.status is defined
+
+    - name: Check Snort service status
+      ansible.builtin.systemd:
+        name: snort
+        state: started
+      become: yes
+      become_user: root
+      become_method: sudo
+      register: snort_status
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display Snort status
+      ansible.builtin.debug:
+        msg: "Snort is {{ 'running' if snort_status.status.ActiveState == 'active' else 'not running' }}"
+      when: snort_status.status is defined
+
+    - name: Check disk usage
+      ansible.builtin.command: df -h
+      become: yes
+      become_user: root
+      become_method: sudo
+      register: disk_usage
+      changed_when: false
+      failed_when: false
+
+    - name: Parse disk usage for 100% full filesystems
+      ansible.builtin.set_fact:
+        full_disks: "{{ disk_usage.stdout_lines | select('match', '.*100%.*') | list }}"
+      no_log: true
+
+    - name: Display 100% full filesystems
+      ansible.builtin.debug:
+        msg: "{{ item }}"
+      loop: "{{ full_disks }}"
+      when: full_disks | length > 0
+
+    - name: Find large files on 100% full filesystems
+      ansible.builtin.command: find / -xdev -type f -size +100M -exec ls -lah {} + | sort -hr -k 5 | head -n 5
+      become: yes
+      become_user: root
+      become_method: sudo
+      register: large_files
+      changed_when: false
+      failed_when: false
+      when: full_disks | length > 0
+
+    - name: Display large files
+      ansible.builtin.debug:
+        msg: "{{ item }}"
+      loop: "{{ large_files.stdout_lines }}"
+      when: large_files.stdout_lines is defined and full_disks | length > 0
+
+                </code>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </pre>
+            </section>
+
+            <!-- 🔹 Add another playbook section like this -->
+            <section class="playbook">
+                <h2>2. Reasource Check Playbook</h2>
+                <p><strong>Description:</strong> This Playbook is used to check reasource statics for a group of devics.
+                </p>
+
+                <pre><code>
+---
+- name: Check Elastic Node Stats
+  hosts: all
+  vars_files:
+    - -path to secrets file-
+  gather_facts: no
+  vars:
+    ansible_password: "{{ newelastic_pwd }}"
+    ansible_user: "{{ elastic_user }}"
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_become_password: "{{ newelastic_pwd }}"
+    ansible_become: yes
+  tasks:
+    - name: Check Storage amount
+      ansible.builtin.command: df -h --total
+      become: yes
+      become_user: root
+      become_method: sudo su
+      register: ES_df
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display storage total
+      ansible.builtin.debug:
+        msg: "Node storage: {{ ES_df.stdout }}"
+      when: ES_df is defined and ES_df.stdout is defined
+
+    - name: Check Memory amount
+      ansible.builtin.command: free -h
+      become: yes
+      become_user: root
+      become_method: sudo su
+      register: ES_free
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display mem total
+      ansible.builtin.debug:
+        msg: "Node memory: {{ ES_free.stdout }}"
+      when: ES_free is defined and ES_free.stdout is defined
+
+    - name: Check CPU amount
+      ansible.builtin.command: lscpu
+      become: yes
+      become_user: root
+      become_method: sudo su
+      register: ES_lscpu
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display CPU amount
+      ansible.builtin.debug:
+        msg: "Node CPU: {{ ES_lscpu.stdout }}"
+      when: ES_lscpu is defined and ES_lscpu.stdout is defined
+
+                </code>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </pre>
+            </section>
+
+            <!-- 🔹 Add another playbook section like this -->
+            <section class="playbook">
+                <h2>3. SED Replace Playbook</h2>
+                <p><strong>Description:</strong> This playbook can be used to find and replace text of a file on mutiple
+                    devices.</p>
+
+                <pre><code>
+---
+- name: Add persitance to journald.conf
+  hosts: all
+  vars_files:
+    - <path to secrets file>
+  gather_facts: no
+  vars:
+    ansible_password: "{{ sensors_pwd2 }}"
+    ansible_user: "{{ sensor_user }}"
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_become_password: "{{ sensors_pwd2 }}"
+    ansible_become: yes
+  tasks:
+    - name: fix journald
+      ansible.builtin.command: sed -i 's/#Storage=auto/Storage=persistent/g' /etc/systemd/journald.conf
+      become: yes
+      become_user: root
+      become_method: sudo
+      ignore_errors: yes
+      changed_when: false
+                </code>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </pre>
+            </section>
+
+            <!--Creating user accounts/Groups/add to priv user / Deploy rsyslog / Deleting user accounts and home dir / unlocking a user account / disable a user account -->
+
+            <!-- 🔹 Add another playbook section like this --><!-- 🔹 Add another playbook section like this 
+            <section class="playbook">
+                <h2>Title</h2>
+                <p><strong>Description:</strong> Simple playbook to create a new user with a home directory and SSH key.</p>
+
+                <pre><code>
+---
+- name: Create new user
+  hosts: all
+  become: true
+  vars:
+    username: devuser
+
+  tasks:
+    - name: Create user
+      user:
+        name: "{{ username }}"
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Add authorized SSH key
+      authorized_key:
+        user: "{{ username }}"
+        key: "{{ lookup('file', '/home/{{ username }}/.ssh/id_rsa.pub') }}"
+                </code>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </pre>
+            </section>
+
+
+            Keep adding more <section> blocks here for new playbooks -->
+
+
+        </div>
+    </div>
+
+    <script>
+        // Copy button functionality
+        function copyCode(button) {
+            const code = button.parentElement.querySelector("code").innerText;
+            navigator.clipboard.writeText(code);
+            button.textContent = "Copied!";
+            setTimeout(() => button.textContent = "Copy", 1500);
+        }
+    </script>
+</body>
+
+</html>

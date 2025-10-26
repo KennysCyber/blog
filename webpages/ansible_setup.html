@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Setting Up Your Ansible Environment - 18gi0n's Tech Lair</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      position: relative;
+      min-height: 100vh;
+    }
+
+    .opaque-bg {
+      background-color: rgba(13, 13, 13, 0.6);
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      padding-bottom: 20px;
+    }
+
+    .content .left-aligned-content {
+      text-align: left !important;
+      max-width: 800px;
+      margin: 0 20px !important;
+      padding: 20px 0 !important;
+    }
+
+    .content .left-aligned-content h1,
+    .content .left-aligned-content h2,
+    .content .left-aligned-content p,
+    .content .left-aligned-content ul,
+    .content .left-aligned-content ol,
+    .content .left-aligned-content li {
+      text-align: left !important;
+    }
+
+    .content .left-aligned-content a {
+      color: #ff9933 !important;
+      text-decoration: underline;
+    }
+
+    .content .left-aligned-content a:hover {
+      color: #ff007a !important;
+      text-shadow: 0 0 5px #ff007a;
+    }
+
+    .content .left-aligned-content pre {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .content .left-aligned-content code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .content .left-aligned-content .copy-btn {
+      display: none;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #ff9933;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .content .left-aligned-content pre:hover .copy-btn {
+      display: block;
+    }
+
+    .content .left-aligned-content .copy-btn:hover {
+      background: #ff007a;
+    }
+
+    .content .left-aligned-content .copy-btn:focus {
+      outline: 2px solid #ff007a;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 600px) {
+      .content .left-aligned-content {
+        margin: 0 10px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Nav Bar -->
+  <nav>
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/projects.html">Projects</a></li>
+      <li><a href="/code.html">Code & Tools</a></li>
+      <li><a href="/ctf.html">Write-ups</a></li>
+      <li><a href="/research.html">Research</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="opaque-bg" id="opaqueBg"></div>
+  <div class="content">
+    <div class="left-aligned-content">
+      <h1>Setting Up Your Ansible Environment</h1>
+      <img src="/assets/images/Code/ansibleHS/ansibleslogo.png" alt="Ansible Setup cover" width="400" height="300">
+      <p>This guide provides a step-by-step process to set up your Ansible environment for automation, including
+        controller configuration, inventory files, secrets management, and building your first playbook.</p>
+      <ul>
+        <li><a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html">Official
+            Ansible Installation Guide</a></li>
+        <li><a href="https://www.ansible.com/resources/get-started">Ansible Get Started</a></li>
+      </ul>
+
+      <h2>1. How Ansible Works</h2>
+      <p>Ansible is an open-source automation tool that uses a simple, human-readable language (YAML) to automate tasks
+        across multiple systems. It operates in a push-based model, where an Ansible control node executes playbooks to
+        manage remote hosts via SSH, requiring no agents on the managed nodes.</p>
+      <!-- Placeholder for diagram -->
+      <img src="/assets/images/Code/ansibleHS/6.png" alt="Ansible Architecture Diagram">
+      <p><strong>Key Components:</strong></p>
+      <ul>
+        <li><strong>Control Node:</strong> The machine running Ansible to execute playbooks.</li>
+        <li><strong>Managed Nodes:</strong> The remote systems Ansible manages.</li>
+        <li><strong>Inventory:</strong> A file listing the managed nodes.</li>
+        <li><strong>Playbooks:</strong> YAML files defining tasks to automate.</li>
+      </ul>
+
+      <h2>2. Setting Up the Ansible Controller</h2>
+      <p>Install Ansible on your control node and configure <code>ansible.cfg</code> to customize defaults for better
+        control.</p>
+      <pre><code id="ansibleCfg">
+# ===============================
+# Ansible Configuration File
+# ===============================
+# Save this file as "ansible.cfg" in your project root.
+# It customizes Ansible behavior and saves you from typing long CLI options.
+
+[defaults]
+# --- Inventory file location ---
+# The inventory is where Ansible finds your target hosts.
+inventory = ./inventory
+
+# --- Default remote user ---
+# This is the SSH user Ansible will use to connect to remote hosts.
+# You can override it per host or in playbooks.
+remote_user = ubuntu
+
+# --- Whether to ask for SSH password ---
+# If using key-based SSH (recommended), keep this 'false'.
+ask_pass = false
+
+# --- Roles path ---
+# Defines where Ansible looks for roles when you use "roles:" in playbooks.
+roles_path = ./roles
+
+# --- Disabling host key checking ---
+# This avoids interactive SSH authenticity prompts.
+# WARNING: Only disable in trusted environments.
+host_key_checking = False
+
+# --- Retry files ---
+# Controls creation of .retry files after failed runs.
+# Set to 'False' to disable creating those files.
+retry_files_enabled = False
+
+# --- Output verbosity / color ---
+# Keeps output clean and colored for readability.
+stdout_callback = yaml
+bin_ansible_callbacks = True
+
+# --- Log file (optional) ---
+# Uncomment to log all Ansible output to a file.
+# log_path = ./ansible.log
+
+[privilege_escalation]
+# --- Become settings ---
+# Enables privilege escalation (sudo) by default.
+become = True
+become_method = sudo
+become_user = root
+become_ask_pass = False
+
+[ssh_connection]
+# --- SSH optimizations ---
+# Enables SSH pipelining to reduce overhead and speed up execution.
+pipelining = True
+
+# --- Control persist settings ---
+# Keeps SSH connections open for reuse, improving performance.
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s
+
+# --- Timeout for SSH connections ---
+# Default is 10 seconds; increase if remote hosts are slow to respond.
+timeout = 15
+      </code></pre>
+      <p><strong>Note:</strong> The <code>ansible.cfg</code> file is optional but allows you to set defaults like
+        inventory file location, remote user, or disable host key checking for ease of use.</p>
+
+      <h2>3. Setting Up Inventory Files</h2>
+      <p>Create an inventory file in YAML format to define the hosts Ansible will manage. Keep it simple without
+        variables or encryption for now.</p>
+      <pre><code id="inventoryYml">
+all:
+  hosts:
+    server1:
+      ansible_host: 10.0.2.4
+    server2:
+      ansible_host: 10.0.2.15
+  </code></pre>
+      <p><strong>Why No Encryption?</strong> Inventory files typically contain host details (e.g., IPs or hostnames)
+        that are not sensitive. Sensitive data like passwords should be stored in encrypted files (e.g., using Ansible
+        Vault).</p>
+
+      <h2>4. Setting Up Secrets with Ansible Vault</h2>
+      <p>Create an encrypted <code>secrets.yml</code> file to store sensitive variables like usernames and passwords.
+      </p>
+      <pre><code id="secretsYml">
+# Create encrypted file
+ansible-vault create secrets.yml
+
+# Example content of secrets.yml (encrypted)
+username: john
+pwd1:  12345
+      </code></pre>
+      <p><strong>Commands for Managing Vault:</strong></p>
+      <ul>
+        <li><strong>View:</strong> <code>ansible-vault view secrets.yml</code></li>
+        <li><strong>Edit:</strong> <code>ansible-vault edit secrets.yml</code></li>
+        <li><strong>Decrypt:</strong> <code>ansible-vault decrypt secrets.yml</code></li>
+      </ul>
+      <p><strong>Security Note:</strong> Always use Ansible Vault for sensitive data to prevent unauthorized access.</p>
+
+      <h2>5. Building Your First Playbook</h2>
+      <p>Create a simple playbook to test your setup. This example checks if a service is running and displays the
+        result. A playbook is a YAML file that defines automation tasks, organized into key components that tell Ansible
+        what to do and how to do it.</p>
+      <p><strong>Playbook Components Explained:</strong></p>
+      <ul>
+        <li><strong>Vars (Variables):</strong> Define reusable data, like usernames or file paths, to make the playbook
+          flexible. Here, we load sensitive data from <code>secrets.yml</code> to securely access credentials.</li>
+        <li><strong>Tasks:</strong> The actions Ansible performs, such as checking a service or running a command. Each
+          task is a step in the automation process.</li>
+        <li><strong>Register:</strong> Captures the output of a task (e.g., service status) into a variable, allowing
+          you to use or display it later, like showing if a service is running.</li>
+        <li><strong>Become:</strong> Enables privilege escalation (e.g., running tasks as root). Use it when tasks
+          require higher permissions, like managing system services, to ensure they execute successfully.</li>
+      </ul>
+      <pre><code id="firstPlaybook">
+---
+- name: First Ansible Playbook
+  hosts: all
+  vars_files:
+    - secrets.yml
+  vars:
+    ansible_password: "{{ pwd1 }}"
+    ansible_user: "{{ username }}"
+    ansible_become_method: sudo
+    ansible_become_password: "{{ pwd1 }}"
+    ansible_become: yes
+  tasks:
+    - name: Check if sshd service is running
+      ansible.builtin.systemd:
+        name: sshd
+        state: started
+      become: yes
+      become_user: root
+      become_method: sudo
+      register: sshd
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Display sshd status
+      ansible.builtin.debug:
+        msg: "SSH is {{ 'running' if sshd.status.ActiveState == 'active' else 'not running' }}"
+      when: sshd.status is defined
+      </code></pre>
+      <p><strong>Key Elements:</strong></p>
+      <ul>
+        <li><strong>Vars:</strong> Load variables from <code>secrets.yml</code> using <code>vars_files</code>.</li>
+        <li><strong>Tasks:</strong> Define actions like checking service status.</li>
+        <li><strong>Register:</strong> Capture task output (e.g., service status) for display or further use.</li>
+        <li><strong>Become:</strong> Use <code>become: yes</code> to escalate privileges (e.g., for root-level tasks).
+          Use it when tasks require elevated permissions, like managing services.</li>
+      </ul>
+
+      <h2>6. Example</h2>
+      <p>In the example below I setup a lan with 3 linux VMS. User john has a account on all vms. We are going to use
+        templates from above to conduct a simple service check from controller (10.0.2.5) to the other 2 host (10.0.2.4,
+        10.0.2.15) and once done we will display service status.</p>
+      <ul>
+        <li><strong>1: Host Involved~</strong> This screenshot shows the 3 host involved.</li>
+        <img src="/assets/images/Code/ansibleHS/1.png" alt="Ansible host">
+        <li><strong>2: File Check~</strong> Here we check to ensure that we have a inventory a playbook and a vault
+          file.</li>
+        <img src="/assets/images/Code/ansibleHS/2.png" alt="Ansible core files">
+        <li><strong>3:Vault file View~</strong> Use <code>ansible-vault -view </code> to view key value pairs in vault.
+        </li>
+        <img src="/assets/images/Code/ansibleHS/3.png" alt="Ansible vault">
+        <li><strong>4: Playbook~</strong> Here we show playbook about to be run.</li>
+        <img src="/assets/images/Code/ansibleHS/4.png" alt="Ansible playbook">
+        <li><strong>5: Output~</strong> This below output shows the successful run of playbook and corresponding
+          output.<code>ansible-playbook -i inventory1 playbook1 --ask-vault-pass </code></li>
+        <img src="/assets/images/Code/ansibleHS/5.png" alt="Ansible ouput">
+      </ul>
+
+      <h2>7. Tips and Best Practices</h2>
+      <p>Lessons and tips to enhance your Ansible setup:</p>
+      <ul>
+        <li><strong>Tip 1:</strong> Always encrypt sensitive data with Ansible Vault.</li>
+        <li><strong>Tip 2:</strong> IMO leave inventories and playbook unencrptyed to allow for easy sharing and
+          reference all pwd and user names in playbooks with varibles that refernce back to secrets.yml. This will
+          require authenication before it will pass pwd in on varible call.</li>
+        <li><strong>Tip 3:</strong> Use <code>ansible-playbook --check</code> to dry-run playbooks without making
+          changes.</li>
+        <li><strong>Lesson Learned:</strong> Clear inventory files make scaling easier; group hosts logically for better
+          management.</li>
+        <li><strong>Future Improvements:</strong> Automate playbook execution with tools like Ansible Tower or cron
+          jobs.</li>
+      </ul>
+
+      <h2>8. Conclusion</h2>
+      <p>This guide covers the essentials of setting up an Ansible environment, from installing the controller to
+        building your first playbook. With this foundation, you can automate system administration tasks efficiently and
+        securely. If you are looking for playbooks to start using please visit my Ansible Collection to find some basic
+        playbooks to get started.</p>
+    </div>
+  </div>
+</body>
+
+</html>
