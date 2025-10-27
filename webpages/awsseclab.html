@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Setting Up AWS Security Lab - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Setting Up AWS Security Lab</h1>
+            <img src="/assets/images/seclab/Title.png" alt="1">
+            <h2>1. Overview</h2>
+            <p>
+                In this project, I set up a cloud-hosted cybersecurity homelab on AWS, consisting of three EC2
+                instances: a Security Tools box on Ubuntu for monitoring and scanning, an Attacker box on Kali Linux for
+                offensive simulations, and a Victim box on Windows for testing. The setup uses one VPC with a single
+                public subnet. I explored both manual configuration via the AWS Console and automated deployment with
+                Terraform. Tools like Splunk for SIEM and Nessus for vulnerability scanning were installed to enable red
+                team/blue team exercises. This homelab provides a safe, controlled environment for practicing
+                cybersecurity skills without risking real infrastructure.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Build a scalable, cost-effective AWS-based lab for cybersecurity
+                    training and experimentation.</li>
+                <li><strong>Skills Developed:</strong> AWS resource management, Infrastructure as Code with Terraform,
+                    network configuration, tool installation (Splunk, Nessus), and secure remote access.</li>
+                <li><strong>Platform:</strong> AWS EC2, VPC, Ubuntu Desktop, Kali Linux, Windows 10.</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the key resources and tools that guided this setup:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://www.youtube.com/watch?v=2cMkpLoKUj0&t=1089s">Build a Cloud Red Team / Blue
+                        Team Cybersecurity Homelab - Crash Course</a><br>
+                    Usage: Comprehensive video tutorial providing step-by-step instructions for the homelab setup,
+                    including topology, provisioning options, and tool configurations.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/collinsmc23/cloud-cybersecurity-homelab/tree/main">GitHub
+                        Repository</a><br>
+                    Usage: Terraform scripts and configuration files for automating the deployment of VPC, subnets,
+                    security groups, and EC2 instances.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://developer.hashicorp.com/terraform/install">Terraform Installation
+                        Guide</a><br>
+                    Usage: Instructions for downloading and installing Terraform to enable automated infrastructure
+                    provisioning.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://aws.amazon.com/marketplace/pp?sku=df70ws4ov67q26svgczkekjmu">Kali Linux
+                        AMI</a><br>
+                    Usage: AWS Marketplace AMI for subscribing to and launching the Kali Linux instance.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://www.tenable.com/downloads?loginAttempted=true">Nessus Download</a><br>
+                    Usage: Source for downloading the Nessus vulnerability scanner package.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://www.splunk.com/en_us/download.html">Splunk Download</a><br>
+                    Usage: Source for downloading Splunk Enterprise and Universal Forwarder packages.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://docs.aws.amazon.com/">AWS Documentation</a><br>
+                    Usage: Reference for AWS services like EC2, VPC, IAM, and best practices for security and cost
+                    management.
+                </li>
+            </ul>
+
+            <h2>3. Step-by-Step Setup</h2>
+            <p>This section covers the detailed process for preparing the AWS environment, deploying via Terraform or
+                manually, installing tools, and accessing the instances. All commands and configurations are based on
+                the video guide and GitHub repo, with adjustments for my setup.</p>
+
+            <h3>Step 1: Prepare AWS Account</h3>
+            <p>
+                Start by creating a free AWS account if you don't have one. Enable Multi-Factor Authentication (MFA) for
+                security. Add billing information to activate services. Then, create a new IAM user for the homelab
+                (e.g., "cloud-cyber-homelab-terraform") and attach necessary permission policies, such as
+                AmazonEC2FullAccess and AmazonVPCFullAccess. Generate an access key for this user and configure it
+                securely on your local machine using the AWS CLI.
+            </p>
+            <a href="https://youtu.be/9R3v3lhfkTk?si=d-H5CMN7z0hNcqJG">How to Create a AWS Account</a>
+            <br>
+            <a href="https://youtu.be/QzTkIfQNsVw?si=-ipY6Wj-S4MLAthz">How to Configure AWS CLI</a>
+
+            <p><strong>Commands:</strong></p>
+            <pre><code>sudo apt install awscli
+aws configure</code></pre>
+            <p>
+                <strong>Why:</strong> This ensures secure, programmatic access to AWS resources without using root
+                account credentials, following least privilege principles.
+            </p>
+            <img src="/assets/images/seclab/2.png" alt="2">
+
+            <h3>Step 2: Create SSH Key Pairs</h3>
+            <p>
+                In the AWS EC2 console, navigate to Key Pairs and create a new pair (e.g., "Home-lab-key-1"). Download
+                the .pem file and save it in your local ~/.ssh directory. Set permissions to 400 for security.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><code>chmod 400 ~/.ssh/Home-lab-key-1.pem</code></pre>
+            <p>
+                <strong>Why:</strong> SSH keys provide secure, passwordless access to Linux instances like Kali and
+                Ubuntu.
+            </p>
+            <img src="/assets/images/seclab/3.png" alt="3">
+
+            <h3>Step 3: Subscribe to AMIs</h3>
+            <p>
+                In the AWS Marketplace, search for and subscribe to the required AMIs: Kali Linux, Ubuntu Desktop (e.g.,
+                Netspectrum Ubuntu Desktop 22.04 LTS), and Windows 10 Workstation. Ensure the AMIs are available in your
+                chosen region (e.g., us-east-1).
+            </p>
+            <p>
+                <strong>Why:</strong> Subscribing grants access to pre-configured OS images tailored for the homelab
+                roles.
+            </p>
+            <img src="/assets/images/seclab/4.png" alt="4">
+
+            <h3>Terraform Setup</h3>
+            <p>
+                Download and install Terraform. Clone the GitHub repo and navigate to the directory. Edit provider.tf to
+                set your region and key path. Update main.tf with region-specific AMI IDs and ensure instance types
+                (e.g., t2.micro for Kali/Windows, t3.large for Ubuntu) meet requirements like TPM support. Initialize,
+                plan, and apply the configuration.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><code>git clone https://github.com/collinsmc23/cloud-cybersecurity-homelab
+cd cloud-cybersecurity-homelab
+terraform init
+terraform plan
+terraform apply -var="aws-key=~/.ssh/Home-lab-key-1.pem"
+</code></pre>
+            <p>
+                <strong>Why:</strong> Terraform automates the creation of VPC, subnet, security groups, and instances,
+                making the setup repeatable and efficient.
+            </p>
+            <img src="/assets/images/seclab/5.png" alt="5">
+            <p>To retrieve instance IDs for stopping/starting:</p>
+            <pre><code>aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=Cybersecurity Homelab*" \
+  --query "Reservations[].Instances[].InstanceId" \
+  --region us-east-1 \
+  --output text</code></pre>
+            <p>Use with:</p>
+            <pre><code>aws ec2 stop-instances --instance-ids [IDs]
+aws ec2 start-instances --instance-ids [IDs]</code></pre>
+            <p>Verify cleanup after destroy:</p>
+            <pre><code>aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].[InstanceId,State.Name]' --output table
+aws ec2 describe-volumes --region us-east-1 --query 'Volumes[*].[VolumeId,State,Size]' --output table
+aws ec2 describe-addresses --region us-east-1 --output table</code></pre>
+            <img src="/assets/images/seclab/6.png" alt="6">
+            <img src="/assets/images/seclab/6a.png" alt="6">
+
+            <h3>Manual Setup</h3>
+            <p>
+                Log into the AWS Console. Create a VPC with "VPC and more" wizard: one AZ, one public subnet, no private
+                subnets, no NAT gateways, no VPC endpoints. Name it appropriately (e.g., "Home Lab 1 - vpc").
+            </p>
+            <p>
+                <strong>Why:</strong> A simple public subnet setup keeps costs low and allows direct internet access for
+                homelab purposes.
+            </p>
+            <img src="/assets/images/seclab/7.png" alt="7">
+
+            <h3>Step 4: Create Security Groups</h3>
+            <p>
+                Create a security group in your VPC (e.g., "Home Lab 1 SG-A"). Add inbound rules: ICMP (IPv4) from
+                anywhere for ping, SSH (TCP 22) from your IP, RDP (TCP 3389) from your IP. For the Security Tools box,
+                edit its default group to add Custom TCP 9997 for Splunk forwarding. Leave outbound rules as default
+                (all traffic allowed).
+            </p>
+            <p>
+                <strong>Why:</strong> Security groups act as stateful firewalls, controlling traffic to prevent
+                unauthorized access while enabling management.
+            </p>
+            <img src="/assets/images/seclab/8.png" alt="8">
+            <img src="/assets/images/seclab/8a.png" alt="8">
+            <img src="/assets/images/seclab/8b.png" alt="8">
+
+            <h3>Step 5: Launch Instances</h3>
+            <p>
+                Launch each instance from the subscribed AMIs. For Kali: t2.micro, 12 GB storage, custom security group.
+                For Security Tools (Ubuntu): t3.large, 30 GB storage, default group with added rules
+                (HTTP/HTTPS/SSH/RDP/9997). For Victim (Windows): t3.micro, 30 GB storage, same custom group as Kali.
+                Select your VPC, enable public IP auto-assign, and choose the key pair.
+            </p>
+            <p>
+                <strong>Why:</strong> These specs balance cost and performance; larger storage for tools like
+                Splunk/Nessus.
+            </p>
+            <img src="/assets/images/seclab/9.png" alt="9">
+            <img src="/assets/images/seclab/10.png" alt="10">
+            <img src="/assets/images/seclab/11.png" alt="11">
+
+            <h3>Splunk Setup</h3>
+            <p>
+                On the Security Tools instance (Ubuntu), download the Splunk Enterprise .deb package and install it.
+                Start Splunk, accept the license, and set admin credentials. Configure forwarding/receiving on port 9997
+                (ensure security group allows it). Create a new index (e.g., "win-security"). On the Victim (Windows),
+                download and install the Universal Forwarder MSI. Edit inputs.conf to monitor Windows Event Logs
+                (Application, Security, System) and forward to the Security Tools IP on 9997, using the "win-security"
+                index. Restart the forwarder.
+            </p>
+            <p><strong>Commands (Security Instance):</strong></p>
+            <pre><code>wget -O splunk.deb "https://www.splunk.com/en_us/download/splunk-enterprise.html?platform=linux&version=latest"
+sudo dpkg -i splunk.deb
+cd /opt/splunk/bin
+sudo ./splunk start --accept-license --answer-yes --no-prompt</code></pre>
+            <img src="/assets/images/seclab/12.png" alt="12">
+            <img src="/assets/images/seclab/12a.png" alt="12">
+            <img src="/assets/images/seclab/12b.png" alt="12">
+            <p><strong>inputs.conf Example (Windows):</strong></p>
+            <pre><code>[WinEventLog://Application]
+disabled = 0
+index = win-security
+
+[WinEventLog://Security]
+disabled = 0
+index = win-security
+
+[WinEventLog://System]
+disabled = 0
+index = win-security</code></pre>
+            <p>
+                <strong>Why:</strong> Splunk enables centralized log collection and analysis, crucial for blue team
+                monitoring.
+            </p>
+            <img src="/assets/images/seclab/13.png" alt="13">
+            <img src="/assets/images/seclab/13a.png" alt="13">
+            <img src="/assets/images/seclab/13b.png" alt="13">
+            <img src="/assets/images/seclab/14.png" alt="14">
+            <img src="/assets/images/seclab/14a.png" alt="14">
+            <img src="/assets/images/seclab/14b.png" alt="14">
+            <img src="/assets/images/seclab/14c.png" alt="14">
+
+            <h3>Nessus Setup</h3>
+            <p>
+                On the Security Tools instance, download the Nessus .deb from Tenable and install it. Start the nessusd
+                service. Access the web interface at https://[instance-ip]:8834/, select Nessus Essentials, register for
+                a free license, and set up credentials.
+            </p>
+            <p><strong>Commands:</strong></p>
+            <pre><code>wget -O nessus.deb "https://www.tenable.com/downloads/nessus"
+sudo dpkg -i nessus.deb
+sudo systemctl start nessusd</code></pre>
+            <p>
+                <strong>Why:</strong> Nessus adds vulnerability scanning, enhancing the lab’s defensive capabilities.
+            </p>
+            <img src="/assets/images/seclab/15.png" alt="15">
+            <img src="/assets/images/seclab/15a.png" alt="15">
+            <img src="/assets/images/seclab/16.png" alt="16">
+
+            <h3>Accessing Instances</h3>
+            <ul>
+                <li> Kali: Use SSH with your .pem key and public DNS. Install VNC for GUI access if needed.</li>
+                <img src="/assets/images/seclab/17.png" alt="17">
+                <img src="/assets/images/seclab/17a.png" alt="17">
+                <p><strong>Commands (Kali):</strong></p>
+                <pre><code>ssh -i "~/.ssh/Home-lab-key-1.pem" kali@[public-dns]
+sudo apt install tigervnc-standalone-server xfce4 xfce4-goodies -y
+vncserver :1
+ssh -i "~/.ssh/Home-lab-key-1.pem" -L 5901:localhost:5901 kali@[public-dns]
+vncviewer 127.0.0.1:5901</code></pre>
+                <li>For Security Tools: Enter the public IP in a browser (default password is the instance ID).</li>
+                <img src="/assets/images/seclab/17b (1).png" alt="17">
+                <li>For Windows: Use an RDP client with the decrypted admin password.
+                </li>
+                <img src="/assets/images/seclab/17c.png" alt="17">
+                <img src="/assets/images/seclab/17d.png" alt="17">
+
+                <p><strong>Commands (Windows RDP from Linux):</strong></p>
+                <pre><code>xfreerdp3 /v:[public-ip] /u:Administrator /p:'[decrypted-pwd]'</code></pre>
+                <p>
+            </ul>
+
+            <strong>Why:</strong> Secure remote access is essential for managing and testing the lab.
+            </p>
+
+            <h2>4. Lessons Learned and Tips</h2>
+            <p>Key takeaways from this project:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always redact sensitive data (e.g., access keys, passwords) in public notes
+                    or screenshots.</li>
+                <li><strong>Tip 2:</strong> Use stop/start to pause instances and save costs without losing data.</li>
+                <li><strong>Tip 3:</strong> Verify all resources are terminated after terraform destroy to avoid
+                    unexpected charges.</li>
+                <li><strong>Key Lesson:</strong> Terraform speeds up deployment, but manual setup deepens understanding
+                    of AWS architecture.</li>
+                <li><strong>Future Goals:</strong> Integrate additional tools like Zeek or Suricata for network
+                    monitoring.</li>
+            </ul>
+
+            <h2>5. Conclusion</h2>
+            <p>
+                This AWS security lab project has been a rewarding journey into cloud-based cybersecurity practice. By
+                leveraging Terraform and manual methods, along with Splunk and Nessus, I’ve created a versatile platform
+                for simulating attack and defense scenarios. Keeping an eye on costs and securing credentials are key to
+                maintaining this setup. I’m excited to expand it further—stay tuned for updates!
+            </p>
+
+            <h2>6. Additional Notes</h2>
+            <ul>
+                <li>Change default passwords and enable MFA for enhanced security.</li>
+                <li>Consider private subnets and NAT gateways for production-like setups in the future.</li>
+                <li>Stop instances when idle to minimize expenses.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+
+</html>
