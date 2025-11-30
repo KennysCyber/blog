@@ -11,11 +11,21 @@ body {
     font-family: "Courier New", monospace;
 }
 
-/* Main Layout */
+/* Main Layout Container (for index.html) */
 .container {
     width: min(92%, 1100px);
     margin: auto;
     padding: 40px 0;
+}
+
+/* Content Wrapper (for about.html, writeups, etc.) */
+.content {
+    width: min(92%, 1100px);
+    margin: auto;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
 }
 
 
@@ -67,7 +77,7 @@ body {
 
 
 /* --------------------------------------------------
-   Hero Section
+   Hero Section (Index Homepage)
 -------------------------------------------------- */
 .hero {
     text-align: center;
@@ -101,7 +111,7 @@ body {
 
 
 /* --------------------------------------------------
-   Card Grid (Featured + Latest)
+   Card Grid (Featured + Latest Posts)
 -------------------------------------------------- */
 .card-grid {
     display: grid;
@@ -175,7 +185,7 @@ body {
 
 
 /* --------------------------------------------------
-   Video Section
+   Video Section (Index + About)
 -------------------------------------------------- */
 .video-wrapper {
     position: relative;
@@ -183,6 +193,7 @@ body {
     padding-bottom: 56.25%;
     border-radius: 12px;
     overflow: hidden;
+    margin-top: 20px;
 }
 
 .video-wrapper iframe {
@@ -194,7 +205,7 @@ body {
 
 
 /* --------------------------------------------------
-   Under Construction
+   Under Construction Alert (Homepage)
 -------------------------------------------------- */
 .warning {
     background: rgba(255, 0, 122, 0.15);
@@ -212,6 +223,28 @@ body {
 
 
 /* --------------------------------------------------
+   About Me Page Text
+-------------------------------------------------- */
+.about-text {
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #e6e600;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+
+/* --------------------------------------------------
+   Utility Classes
+-------------------------------------------------- */
+.center {
+    display: block;
+    margin: 0 auto;
+}
+
+
+/* --------------------------------------------------
    Responsive Tweaks
 -------------------------------------------------- */
 @media (max-width: 700px) {
@@ -224,5 +257,10 @@ body {
     .wide-card img {
         width: 100%;
         height: auto;
+    }
+
+    .nav-container {
+        flex-direction: column;
+        gap: 15px;
     }
 }
