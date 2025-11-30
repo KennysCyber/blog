@@ -1,0 +1,228 @@
+/* --------------------------------------------------
+   Global
+-------------------------------------------------- */
+body {
+    background-image: url(/assets/images/nebua.jpg);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    margin: 0;
+    color: #00ffcc;
+    font-family: "Courier New", monospace;
+}
+
+/* Main Layout */
+.container {
+    width: min(92%, 1100px);
+    margin: auto;
+    padding: 40px 0;
+}
+
+
+/* --------------------------------------------------
+   Navigation
+-------------------------------------------------- */
+.navbar {
+    background: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(6px);
+    border-bottom: 2px solid #ff007a;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.nav-container {
+    width: min(92%, 1200px);
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-logo {
+    color: #ff007a;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+    list-style: none;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #00ffcc;
+    font-size: 18px;
+    transition: 0.25s;
+}
+
+.nav-links a:hover,
+.nav-links .active {
+    color: #ff007a;
+    text-shadow: 0 0 8px #ff007a;
+}
+
+
+/* --------------------------------------------------
+   Hero Section
+-------------------------------------------------- */
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.hero h1 {
+    color: #ff007a;
+    text-shadow: 0 0 15px #000;
+    font-size: clamp(32px, 5vw, 48px);
+}
+
+.subtitle {
+    max-width: 700px;
+    margin: 20px auto;
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+
+/* --------------------------------------------------
+   Section Titles
+-------------------------------------------------- */
+.section-title {
+    text-align: center;
+    font-size: clamp(26px, 4vw, 36px);
+    color: #e6e600;
+    text-shadow: 0 0 10px #000;
+    margin: 50px 0 20px;
+}
+
+
+/* --------------------------------------------------
+   Card Grid (Featured + Latest)
+-------------------------------------------------- */
+.card-grid {
+    display: grid;
+    gap: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card {
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid #001a33;
+    border-radius: 12px;
+    text-decoration: none;
+    overflow: hidden;
+    padding-bottom: 8px;
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 12px #ff007a;
+}
+
+.card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+}
+
+.card-content h3 {
+    color: #ff0000;
+    text-align: center;
+    margin-top: 12px;
+}
+
+
+/* --------------------------------------------------
+   Wide Cards (Latest Posts)
+-------------------------------------------------- */
+.card-grid.wide {
+    grid-template-columns: 1fr;
+}
+
+.wide-card {
+    display: flex;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid #001a33;
+    border-radius: 14px;
+    padding: 12px;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.wide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 12px #ff007a;
+}
+
+.wide-card img {
+    width: 160px;
+    height: 160px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.wide-card-content h3 {
+    margin: 0;
+    color: #ff0000;
+    font-size: 20px;
+}
+
+
+/* --------------------------------------------------
+   Video Section
+-------------------------------------------------- */
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.video-wrapper iframe {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+
+/* --------------------------------------------------
+   Under Construction
+-------------------------------------------------- */
+.warning {
+    background: rgba(255, 0, 122, 0.15);
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #ff007a;
+    max-width: 600px;
+    margin: auto;
+}
+
+.construction-img {
+    width: 260px;
+    margin-top: 20px;
+}
+
+
+/* --------------------------------------------------
+   Responsive Tweaks
+-------------------------------------------------- */
+@media (max-width: 700px) {
+
+    .wide-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .wide-card img {
+        width: 100%;
+        height: auto;
+    }
+}

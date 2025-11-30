@@ -2,92 +2,127 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles1.css" />
     <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
 </head>
 
 <body>
-    <!-- Nav Bar -->
-    <nav>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="projects.html">Projects</a></li>
-            <li><a href="code.html">Code & Tools</a></li>
-            <li><a href="ctf.html">Write-ups</a></li>
-            <li><a href="research.html">Research</a></li>
-        </ul>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">18gi0n's Tech Blog</div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="code.html">Code & Tools</a></li>
+                <li><a href="ctf.html">Write-ups</a></li>
+                <li><a href="research.html">Research</a></li>
+            </ul>
+        </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="content">
-        <h1>
-            Welcome to 18gi0n's Tech Lair
-        </h1>
-        <p>
-            A hub for red team ops, blue team defenses, code experiments, and HTB victories.
-            Stick around—things are about to get technical.
+    <!-- Header Section -->
+    <header class="hero">
+        <h1>Welcome to 18gi0n's Tech Blog</h1>
+        <p class="subtitle">
+            This is my personal cyber blog — my living notebook, training ground, and memory backup in case my brain
+            bluescreens. I learn best by teaching and writing things down, so I publish it all here: red team ops, blue
+            team defense, DFIR, cloud, threat intel, coding experiments… basically every corner of cyber except GRC (for
+            obvious reasons). See you out there in cyberspace.
         </p>
+    </header>
 
-        <!-- Featured Posts Section -->
-        <h2>Featured Posts</h2>
-        <div class="featured-posts">
-            <a href="/webpages/forensicscollection.html" class="featured-box">
-                <img src="assets/images/fcssdsetup/df1.png" alt="fcssd">
-                <h3>Win DFIR Collections Guide</h3>
-            </a>
-            <a href="/webpages/awsseclab.html" class="featured-box">
-                <img src="assets/images/seclab/thumbnail.jpg" alt="aws">
-                <h3>AWS Cyber Home Lab</h3>
-            </a>
-            <a href="/webpages/outbound.html" class="featured-box">
-                <img src="assets/images/ctf/outbound/thumbnail.png" alt="outbound">
-                <h3>Outbound - Hack The Box</h3>
-            </a>
+    <main class="container">
 
-        </div>
-        <h1>
-            Video of the Month
-        </h1>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/fxqcwK5OMag?si=Ud4yD_0YuWy7gQPk"
-            title="YouTube video player" frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <br>
-        <br>
-        <div class="project-posts">
-            <a href="/webpages/defconn33.html" class="project-box">
-                <img src="/assets/images/defcon33/logo.png" alt="">
-                <div class="project-text">
-                    <h2>DEFCON 33 ReCap/Writeup</h2>
-                </div>
-                <a href="/webpages/Resources.html" class="project-box">
+        <!-- Featured Posts -->
+        <section>
+            <h2 class="section-title">Featured Posts</h2>
+            <div class="card-grid">
+
+                <a href="/webpages/forensicscollection.html" class="card">
+                    <img src="assets/images/fcssdsetup/df1.png" alt="DFIR" />
+                    <div class="card-content">
+                        <h3>Win DFIR Collections Guide</h3>
+                    </div>
+                </a>
+
+                <a href="/webpages/awsseclab.html" class="card">
+                    <img src="assets/images/seclab/thumbnail.jpg" alt="AWS" />
+                    <div class="card-content">
+                        <h3>AWS Cyber Home Lab</h3>
+                    </div>
+                </a>
+
+                <a href="/webpages/outbound.html" class="card">
+                    <img src="assets/images/ctf/outbound/thumbnail.png" alt="Outbound" />
+                    <div class="card-content">
+                        <h3>Outbound – Hack The Box</h3>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Video of the Month -->
+        <section class="video-section">
+            <h2 class="section-title">Video of the Month</h2>
+
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/fxqcwK5OMag?si=Ud4yD_0YuWy7gQPk" title="YouTube video"
+                    allowfullscreen></iframe>
+            </div>
+        </section>
+
+        <!-- Latest Posts -->
+        <section>
+            <h2 class="section-title">Latest Posts</h2>
+
+            <div class="card-grid wide">
+
+                <a href="/webpages/defconn33.html" class="wide-card">
+                    <img src="/assets/images/defcon33/logo.png" alt="">
+                    <div class="wide-card-content">
+                        <h3>DEFCON 33 Recap / Write-up</h3>
+                    </div>
+                </a>
+
+                <a href="/webpages/Resources.html" class="wide-card">
                     <img src="/assets/images/research/CyberR (1).jpg" alt="">
-                    <div class="project-text">
-                        <h2>My Go-To Cyber Resources</h2>
+                    <div class="wide-card-content">
+                        <h3>My Go-To Cyber Resources</h3>
                     </div>
                 </a>
-                <a href="/webpages/threatintel.html" class="project-box">
-                    <img src="/assets/images/research/threat intel.jpg" alt="">
-                    <div class="project-text">
-                        <h2>My Threat Intel Quick Guide</h2>
-                    </div>
-                </a>
-        </div>
-        <br>
-        <br>
-        <!-- Construction Sign -->
-        <h2>Site Status: Under Construction</h2>
-        <p class="warning">
-            Warning: This site is a work-in-progress. Bear with my raw, unpolished web design skills—I’m hand-coding
-            this beast from scratch, no frameworks allowed. Expect glitches, 404s, and a lot of caffeine-fueled updates.
-        </p>
 
-        <!-- Construction meme -->
-        <img src="assets/images/HP1.jpg" alt="Hacker meme" width="300">
-    </div>
+                <a href="/webpages/threatintel.html" class="wide-card">
+                    <img src="/assets/images/research/threat intel.jpg" alt="">
+                    <div class="wide-card-content">
+                        <h3>Threat Intel Quick Guide</h3>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Under Construction Section -->
+        <section class="construction">
+            <h2 class="section-title">Site Status: Under Construction</h2>
+            <p class="warning">
+                This site is "hand-coded" from scratch — no frameworks, all caffeine.
+                Expect bugs, 404s, and rapid updates.
+            </p>
+        </section>
+        <div style="text-align:center;">
+            <img src="assets/images/HP1.jpg" class="construction-img">
+        </div>
+
+
+    </main>
+
+
 </body>
 
 </html>
