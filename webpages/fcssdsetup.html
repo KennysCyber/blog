@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>My Forensic Collection SSD (T7) Setup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content h3,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a
+        }
+
+        .content .left-aligned-content pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a
+        }
+
+        .content .left-aligned-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: block
+        }
+
+        @media (max-width:600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <div class="opaque-bg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>My Forensic Collection SSD (Samsung T7) Setup</h1>
+
+            <img src="/assets/images/fcssdsetup/1.png" alt="Samsung T7 SSD">
+
+            <p>This is my personal, 100% free forensic collection SSD setup — built for speed, reliability, and
+                dual-boot compatibility. Feel free to copy or improve it!</p>
+
+            <p>Any fast USB-C SSD ≥1 TB works. I just happened to have a T7.</p>
+
+            <h2>Required Free Tools</h2>
+            <ul>
+                <li>DumpIt – <a href="https://www.magnetforensics.com/resources/magnet-dumpit-for-windows/"
+                        target="_blank">Magnet Forensics</a></li>
+                <li>EDD – <a href="https://www.magnetforensics.com/resources/encrypted-disk-detector/"
+                        target="_blank">Magnet Forensics</a></li>
+                <li>KAPE – <a href="https://www.sans.org/tools/kape" target="_blank">SANS / Eric Zimmerman</a></li>
+                <li>FTK Imager – <a href="https://www.exterro.com/ftk-product-downloads/ftk-imager-pro-8-2-0-26"
+                        target="_blank">Exterro</a></li>
+            </ul>
+
+            <h2>Goal: Dual-Partition Layout</h2>
+            <ul>
+                <li>Partition 1 → NTFS (Windows tools + case folders)</li>
+                <li>Partition 2 → EXT4 (Linux tools / persistence)</li>
+            </ul>
+
+            <h2>Step-by-Step Partitioning Guide</h2>
+
+            <h3>1. Plug in drive and identify device name</h3>
+            <pre><code>lsblk</code></pre>
+            <img src="/assets/images/fcssdsetup/2.png" alt="lsblk output showing the T7 as /dev/sda">
+
+            <h3>2. Unmount the drive from the system</h3>
+            <p>(Replace <code>sda1</code> with whatever partitions are currently mounted)</p>
+            <pre><code>umount /dev/sda1
+umount /dev/sda2   # if it exists</code></pre>
+
+            <h3>3. Launch gdisk on the correct device</h3>
+            <pre><code>gdisk /dev/sda</code></pre>
+
+
+            <h3>4. Delete any existing partitions</h3>
+            <p><code>o</code> → deletes all partitions and creates new MBR<br><code>w</code> → writes to GPT. (write and
+                save)</p>
+            <pre><code>o w</code></pre>
+            <img src="/assets/images/fcssdsetup/3.png" alt="Deleting existing partition">
+
+            <h3>5. Create first partition — NTFS (Windows side)</h3>
+            <p><code>n</code> → create new partition<br><code>1</code> → partition number
+                1<br><code>&lt;enter&gt;</code> → default first sector<br><code>+500G</code> → size (adjust as
+                needed)<br><code>0700</code> → Microsoft basic data (NTFS)</p>
+            <pre><code>n
+1
+&lt;enter&gt;
++500G
+0700</code></pre>
+            <img src="/assets/images/fcssdsetup/4.png" alt="Creating NTFS partition">
+
+            <h3>6. Create second partition — EXT4 (Linux side)</h3>
+            <p><code>n</code> → new partition<br><code>2</code> → partition number 2<br><code>&lt;enter&gt;</code> →
+                start after previous<br><code>&lt;enter&gt;</code> → use rest of disk<br><code>8300</code> → Linux
+                filesystem</p>
+            <pre><code>n
+2
+&lt;enter&gt;
+&lt;enter&gt;
+8300</code></pre>
+            <img src="/assets/images/fcssdsetup/4.png" alt="Creating EXT4 partition">
+
+            <h3>7. Write and save the new partition table</h3>
+            <p><code>w</code> → write changes to disk and exit</p>
+            <pre><code>w</code></pre>
+            <img src="/assets/images/fcssdsetup/5.png" alt="Writing partition table">
+
+            <h3>8. Format the partitions</h3>
+            <p>NTFS partition:</p>
+            <pre><code>mkfs.ntfs -f -L TOOLKIT_NTFS /dev/sda1</code></pre>
+            <p>EXT4 partition:</p>
+            <pre><code>mkfs.ext4 -L TOOLKIT_LINUX /dev/sda2</code></pre>
+            <img src="/assets/images/fcssdsetup/6.png" alt="Formatting both partitions">
+
+            <h3>9. Final verification</h3>
+            <pre><code>lsblk -f</code></pre>
+            <img src="/assets/images/fcssdsetup/7.png" alt="Final lsblk showing both NTFS and EXT4">
+
+            <h2>Recommended Folder Structure (NTFS side)</h2>
+            <img src="/assets/images/fcssdsetup/8.png" alt="Final folder layout">
+            <img src="/assets/images/fcssdsetup/9.png" alt="Final folder layout">
+            <img src="/assets/images/fcssdsetup/10.png" alt="Final folder layout">
+            <ul>
+                <li><strong>1-Memory</strong> → DumpIt.exe</li>
+                <li><strong>2-Encryption</strong> → EDDv310.exe</li>
+                <li><strong>3-Disk</strong> → KAPE, FTK Imager, etc.</li>
+                <li><strong>Cases</strong> → All evidence goes here</li>
+                <li><strong>Tools</strong> → Extra utilities</li>
+            </ul>
+
+            <h2>Download & Install Tools (After Partitioning)</h2>
+
+            <h3>1. Download DumpIt (Memory Acquisition)</h3>
+            <p><a href="https://www.magnetforensics.com/resources/magnet-dumpit-for-windows/"
+                    target="_blank">https://www.magnetforensics.com/resources/magnet-dumpit-for-windows/</a></p>
+            <ol>
+                <li>Fill in form → get email with download link</li>
+                <li>Download ZIP → extract → place <code>DumpIt.exe</code> in <code>1-Memory/</code></li>
+            </ol>
+            <img src="/assets/images/fcssdsetup/11.png" alt="DumpIt.exe in 1-Memory folder">
+            <img src="/assets/images/fcssdsetup/12.png" alt="DumpIt.exe in 1-Memory folder">
+            <img src="/assets/images/fcssdsetup/13.png" alt="DumpIt.exe in 1-Memory folder">
+            <img src="/assets/images/fcssdsetup/14.png" alt="DumpIt.exe in 1-Memory folder">
+
+            <h3>2. Download EDD (Encrypted Disk Detector)</h3>
+            <p><a href="https://www.magnetforensics.com/resources/encrypted-disk-detector/"
+                    target="_blank">https://www.magnetforensics.com/resources/encrypted-disk-detector/</a></p>
+            <ol>
+                <li>Fill in form → get email</li>
+                <li>Download ZIP → extract → place <code>EDDV310.exe</code> in <code>2-Encryption/</code></li>
+            </ol>
+            <img src="/assets/images/fcssdsetup/15.png" alt="EDD in 2-Encryption folder">
+            <img src="/assets/images/fcssdsetup/16.png" alt="EDD in 2-Encryption folder">
+            <img src="/assets/images/fcssdsetup/17.png" alt="EDD in 2-Encryption folder">
+
+            <h3>3. Download KAPE (Triage Collection)</h3>
+            <p><a href="https://www.sans.org/tools/kape" target="_blank">https://www.sans.org/tools/kape</a></p>
+            <ol>
+                <li>Fill in form → get email</li>
+                <li>Download ZIP → extract entire folder to <code>3-Disk/KAPE/</code></li>
+            </ol>
+            <img src="/assets/images/fcssdsetup/18.png" alt="KAPE folder in 3-Disk">
+            <img src="/assets/images/fcssdsetup/19.png" alt="KAPE folder in 3-Disk">
+            <img src="/assets/images/fcssdsetup/20.png" alt="KAPE folder in 3-Disk">
+
+            <h3>4. Download FTK Imager</h3>
+            <p><a href="https://www.exterro.com/ftk-product-downloads/ftk-imager-pro-8-2-0-26"
+                    target="_blank">https://www.exterro.com/ftk-product-downloads/ftk-imager-pro-8-2-0-26</a></p>
+            <ol>
+                <li>Download installer</li>
+                <li>Run installer → install to <code>3-Disk/FTK Imager/</code></li>
+            </ol>
+            <img src="/assets/images/fcssdsetup/21.png" alt="FTK Imager installed in 3-Disk">
+            <img src="/assets/images/fcssdsetup/22.png" alt="FTK Imager installed in 3-Disk">
+            <img src="/assets/images/fcssdsetup/23.png" alt="FTK Imager installed in 3-Disk">
+
+            <h2>Done!</h2>
+            <p>Your forensic collection SSD is now fully configured and ready for field use.</p>
+
+            <p>See it in action in my <a href="/webpages/forensicscollection.html">Windows DFIR TTP Guide</a>.</p>
+
+            <p>Happy hunting!</p>
+        </div>
+    </div>
+</body>
+
+</html>
