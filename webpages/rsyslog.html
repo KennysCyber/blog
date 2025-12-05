@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>Setting Up Rsyslog for Centralized Logging - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block;
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a;
+        }
+
+        .content .left-aligned-content .copy-btn:focus {
+            outline: 2px solid #ff007a;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Setting Up Rsyslog for Centralized Logging</h1>
+            <img src="/assets/images/rsyslog/1.png" alt="Rsyslog Setup cover">
+            <p>This guide provides a step-by-step process to set up Rsyslog for centralized logging on Linux systems,
+                including configuring a listener (server) to receive logs and producers (clients) to forward them.
+                Rsyslog is a powerful, open-source logging tool that enhances system monitoring and troubleshooting.</p>
+            <ul>
+                <li><a href="https://www.tecmint.com/install-rsyslog-centralized-logging-in-centos-ubuntu/">Tecmint
+                        Guide to Centralized Logging</a></li>
+                <li><a
+                        href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/deployment_guide/s1-configuring_rsyslog_on_a_logging_server">Red
+                        Hat Rsyslog Configuration Guide</a></li>
+                <li><a href="https://youtu.be/JocDslKu3j4?si=d2Hvo9MfEGnj8ZSG">Quick Video Tutorial on Rsyslog Setup</a>
+                </li>
+            </ul>
+
+            <h2>1. How Rsyslog Works</h2>
+            <p>Rsyslog is an advanced syslog daemon that monitors and collects logs from various sources like /dev/log,
+                forwarding them to files or remote servers. It supports both UDP and TCP for log transmission, with TCP
+                being more reliable. By default, it handles logs from services like cron, SSHD, dmesg, and mail.</p>
+            <!-- Placeholder for diagram -->
+            <img src="/assets/images/rsyslog/2.png" alt="Rsyslog Architecture Diagram">
+            <p><strong>Key Components:</strong></p>
+            <ul>
+                <li><strong>Listener (Server):</strong> The central system that receives and stores logs from remote
+                    hosts.</li>
+                <li><strong>Producer (Client):</strong> The systems that forward their logs to the listener.</li>
+                <li><strong>Configuration:</strong> Defined in /etc/rsyslog.conf or separate .conf files in
+                    /etc/rsyslog.d/ for modularity.</li>
+                <li><strong>Modules:</strong> Load imudp for UDP and imtcp for TCP inputs.</li>
+            </ul>
+
+            <h2>2. Setting Up the Listener (Server)</h2>
+            <p>Configure the server to receive logs from remote hosts. Always use <code>rsyslogd -N1</code> to check
+                your config before restarting the service to avoid errors.</p>
+            <ol>
+                <li>Ensure Rsyslog is installed:
+                    <pre>
+<code id="checkInstall">rsyslogd -v</code>
+          </pre>
+                </li>
+                <img src="/assets/images/rsyslog/4.png" alt="4">
+                <li>Enable and start the service (persistent across boots):
+                    <pre>
+<code id="enableService">systemctl enable rsyslog
+systemctl start rsyslog</code>
+          </pre>
+                    <img src="/assets/images/rsyslog/5.png" alt="5">
+                </li>
+                <li>Edit configuration: Decide between editing /etc/rsyslog.conf directly or using separate .conf files
+                    in /etc/rsyslog.d/ for better organization. This example uses a separate file.
+
+                    <p>Verify /etc/rsyslog.conf has conf files enabled.</p>
+                    <img src="/assets/images/rsyslog/6.png" alt="6">
+                    <img src="/assets/images/rsyslog/7.png" alt="7">
+
+                    <p> Sample default /etc/rsyslog.conf file.</p>
+                    <img src="/assets/images/rsyslog/3.png" alt="3">
+
+                    <p>Create /etc/rsyslog.d/testremote.conf:</p>
+                    <pre>
+<code id="listenerConfig"># Load TCP/UDP modules if not already loaded
+module(load="imudp")
+input(type="imudp" port="514")
+
+module(load="imtcp")
+input(type="imtcp" port="514")
+
+# Define a template for storing remote logs
+template(name="RemoteLogs" type="string" string="/var/log/remote/%HOSTNAME%/%PROGRAMNAME%.log")
+
+# Use the template to store all logs and not log local host logs.
+if ($fromhost-ip != '127.0.0.1') and ($fromhost != 'localhost') then {
+    *.* ?RemoteLogs
+}</code>
+          </pre>
+                    <p>This stores logs in /var/log/remote/&lt;hostname&gt;/&lt;program&gt;.log.</p>
+                    <img src="/assets/images/rsyslog/9.png" alt="9">
+                    <img src="/assets/images/rsyslog/10.png" alt="10">
+                </li>
+                <li>Restart Rsyslog:
+                    <pre>
+<code id="restartService">systemctl restart rsyslog</code>
+          </pre>
+                </li>
+                <li>Allow ports in the firewall (for UFW or firewalld):
+                    <p>For UFW:</p>
+                    <pre>
+<code id="ufwAllow">sudo ufw allow 514/tcp
+sudo ufw allow 514/udp</code>
+          </pre>
+                    <p>For firewalld:</p>
+                    <pre>
+<code id="firewalldAllow"># Allow TCP port 514
+sudo firewall-cmd --permanent --add-port=514/tcp
+
+# Allow UDP port 514
+sudo firewall-cmd --permanent --add-port=514/udp
+
+# Reload the firewall to apply changes
+sudo firewall-cmd --reload
+
+# To check
+firewall-cmd --list-ports</code>
+          </pre>
+                </li>
+                <img src="/assets/images/rsyslog/11.png" alt="11">
+                <li>Verify listening on ports:
+                    <pre>
+<code id="verifyPorts">ss -tulnp | grep rsyslog</code>
+          </pre>
+                    <img src="/assets/images/rsyslog/12.png" alt="12">
+                </li>
+            </ol>
+
+            <h2>3. Setting Up the Producer (Client)</h2>
+            <p>Configure clients to forward logs to the server. Repeat installation and service steps from the listener
+                if needed.</p>
+            <ol>
+                <li>Edit configuration to forward logs. Create or edit /etc/rsyslog.d/test.conf:
+                    <pre>
+<code id="producerConfig">*.* @@192.168.1.10:514</code>
+          </pre>
+                    <img src="/assets/images/rsyslog/13.png" alt="13">
+                    <img src="/assets/images/rsyslog/14.png" alt="14">
+                    <p>Use @ for UDP (less reliable) or @@ for TCP (recommended). You can be more specific:</p>
+                    <pre>
+<code id="specificForward">auth.*,cron.* @@192.168.1.10:514</code>
+          </pre>
+                </li>
+                <li>Restart Rsyslog:
+                    <pre>
+<code id="restartProducer">sudo systemctl restart rsyslog</code>
+          </pre>
+                </li>
+                <img src="/assets/images/rsyslog/15.png" alt="15">
+            </ol>
+
+            <h2>4. Verifying the Setup</h2>
+            <p>Test the configuration to ensure logs are being forwarded and received.</p>
+            <ol>
+                <li>On the server, monitor logs:
+                    <pre>
+<code id="tailLogs">tail -f /var/log/remote/*/*.log</code>
+          </pre>
+                </li>
+                <img src="/assets/images/rsyslog/16.png" alt="16">
+                <li>On the client, send a test message:
+                    <pre>
+<code id="testLogger">logger "Test message from Server A"</code>
+          </pre>
+                    <p>You should see the message appear in the server's logs.</p>
+                    <img src="/assets/images/rsyslog/17.png" alt="17">
+                </li>
+            </ol>
+
+            <h2>5. Tips and Best Practices</h2>
+            <p>Enhance your Rsyslog setup with these lessons and recommendations:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always validate configs with <code>rsyslogd -N1</code> before restarting to
+                    prevent service failures.</li>
+                <li><strong>Tip 2:</strong> Use separate .conf files in /etc/rsyslog.d/ for modularity, allowing easy
+                    plug-and-play with different templates.</li>
+                <li><strong>Tip 3:</strong> Prefer TCP (@@) over UDP (@) for reliable log delivery, especially in
+                    production environments.</li>
+                <li><strong>Lesson Learned:</strong> Filter out local logs on the server to avoid duplication and keep
+                    remote logs organized by hostname.</li>
+                <li><strong>Future Improvements:</strong> Integrate with tools like Logrotate for automatic log rotation
+                    and compression to manage disk space.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <p>This guide covers the basics of setting up Rsyslog for centralized logging, from installation to
+                verification. With this setup, you can efficiently collect and analyze logs from multiple systems for
+                better security and monitoring. Explore advanced features like filters and encryption for more robust
+                implementations.</p>
+        </div>
+    </div>
+</body>
+
+</html>
