@@ -1,119 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Blue/Red Reports - 18gi0n's Tech Lair</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
 </head>
+
 <body>
-   <!-- Nav Bar -->
-   <nav>
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="code.html">Code & Tools</a></li>
-        <li><a href="ctf.html">Write-ups</a></li>
-        <li><a href="research.html">Research</a></li>
-    </ul>
- </nav>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="code.html">Code & Tools</a></li>
+            <li><a href="ctf.html">Write-ups</a></li>
+            <li><a href="research.html">Research</a></li>
+        </ul>
+    </nav>
 
     <div class="content">
         <h1>Blue/Red Reports</h1>
         <p>
-            This section contains my Blue and Red Team reports, detailing engagements, methodologies, and findings from various security assessments. I'll update this as new reports are completed, but red teaming keeps me busy, so bear with me if I'm a bit behind!
+            This section contains my Blue and Red Team reports, detailing engagements, methodologies, and findings from
+            various security assessments. I'll update this as new reports are completed, but red teaming keeps me busy,
+            so bear with me if I'm a bit behind!
         </p>
         <!-- Reports Posts Section -->
-             </a>
+        </a>
+        <div class="project-posts">
+            <a href="/webpages/expressway.html" class="project-box">
+                <img src="/assets/images/ctf/express/thumbnail.png" alt="Expressway Report">
+                <div class="project-text">
+                    <h3>Expressway - Hack The Box</h3>
+                    <p>Expressway was a fun HTB challenge emphasizing UDP enumeration and local privesc. From cracking
+                        IKE PSKs to exploiting sudo chroot, it reinforced thorough scanning.</p>
+                </div>
+            </a>
+            </a>
+            </a>
             <div class="project-posts">
-            <a href="/webpages/outbound.html" class="project-box">
-                 <img src="/assets/images/ctf/outbound/thumbnail.png" alt="Outbound Report">
-                 <div class="project-text">
+                <a href="/webpages/outbound.html" class="project-box">
+                    <img src="/assets/images/ctf/outbound/thumbnail.png" alt="Outbound Report">
+                    <div class="project-text">
                         <h3>Outbound - Hack The Box</h3>
-                     <p>Outbound was a straightforward HTB challenge focusing on webmail exploitation and local privesc. From exploiting Roundcube to rooting via a sudo binary, it was a solid learning experience.</p>
+                        <p>Outbound was a straightforward HTB challenge focusing on webmail exploitation and local
+                            privesc. From exploiting Roundcube to rooting via a sudo binary, it was a solid learning
+                            experience.</p>
                     </div>
                 </a>
-             </a>
-             <a href="/webpages/soulmate.html" class="project-box">
-                 <img src="/assets/images/ctf/soulmate/thumbnail.png" alt="SoulMate Report">
-                 <div class="project-text">
+                </a>
+                <a href="/webpages/soulmate.html" class="project-box">
+                    <img src="/assets/images/ctf/soulmate/thumbnail.png" alt="SoulMate Report">
+                    <div class="project-text">
                         <h3>Soulmate - Hack The Box</h3>
-                     <p>Soulmate a challenging box that involved enumerating a web application, exploiting a vulnerability in    CrushFTP, and leveraging an RCE in Erlang OTP SSH for root privileges</p>
+                        <p>Soulmate a challenging box that involved enumerating a web application, exploiting a
+                            vulnerability in CrushFTP, and leveraging an RCE in Erlang OTP SSH for root privileges</p>
                     </div>
                 </a>
-             </a>
-            <a href="/webpages/Brutus.html" class="project-box">
-                <img src="/assets/images/ctf/Sherlocks/brutus/Thumbnail.png" alt="Brutus Report">
-                <div class="project-text">
-                    <h3 style="color: #4055e0;">Brutus - Hack The Box</h3>
-                    <p>Brutus is a great introductory Sherlock challenge that sharpened your skills in log analysis and incident investigation. Identifying the brute-force, persistence via account creation, and mapping to MITRE provided valuable insights into blue team workflows.</p>
-                </div>
-            </a>
-            <a href="/webpages/artifical.html" class="project-box">
-                <img src="/assets/images/ctf/artificial/thumbnail.png" alt="artifical Report">
-                <div class="project-text">
-                    <h3>Artifical - Hack The Box</h3>
-                    <p>Artificial was a challenging box focused on AI model hosting vulnerabilities. It involved exploiting a TensorFlow/Keras code injection vulnerability (CVE-2024-3660) for initial access via a malicious model upload, pivoting to a user account by cracking database hashes, and escalating privileges by abusing a misconfigured Backrest backup system running as root.</p>
-                </div>
-            </a>
-            <a href="/webpages/editor.html" class="project-box">
-                <img src="/assets/images/ctf/editor/thumbnail.png" alt="Editor Report">
-                <div class="project-text">
-                    <h3>Editor - Hack The Box</h3>
-                    <p>Editor box involved exploiting a vulnerable XWiki instance for initial access via RCE, discovering credentials to pivot to a user account via SSH, and escalating to root by leveraging a PATH injection vulnerability in Netdata.</p>
-                </div>
-            </a>
-            <a href="/webpages/code.html" class="project-box">
-                <img src="/assets/images/ctf/code/homepagecode.png" alt="Code Report">
-                <div class="project-text">
-                    <h3>Code - Hack The Box</h3>
-                    <p>Code box from HTB is a linux machine that focused on web exploitation, sandbox escapes, and creative privilege escalation.</p>
-                </div>
-            </a>
-            <a href="/webpages/2m.html" class="project-box">
-                <img src="/assets/images/ctf/2m/2mill thumbnail.png" alt="2m Report">
-                <div class="project-text">
-                    <h3>Two Million- Hack The Box</h3>
-                    <p>The challenge involves exploiting an insecure API to gain an invite code, escalating privileges through a misconfigured API endpoint, achieving command injection for an initial shell, and leveraging a vulnerable OverlayFS (CVE-2023-0386) for root access.</p>
-                </div>
-            </a>
-            <a href="/webpages/titanic.html" class="project-box">
-                <img src="/assets/images/ctf/titanic/cth_titanic_thumb.png" alt="Titanic Report">
-                <div class="project-text">
-                    <h3>Titanic - Hack The Box</h3>
-                    <p>The goal of this box is to exploit an Arbitrary File Read (LFI) vulnerability to retrieve a Gitea database, crack credentials for SSH access, and escalate privileges using a vulnerable ImageMagick version (CVE-2024-41817) in a cron script.</p>
-                </div>
-            </a>
-            <a href="/webpages/Cap.html" class="project-box">
-                <img src="/assets/images/ctf/Cap/capthumbnail.png" alt="Cap Report">
-                <div class="project-text">
-                    <h3>Cap - Hack The Box</h3>
-                    <p>The box involved exploiting a web dashboard to uncover FTP credentials, gaining initial access via SSH, and escalating to root by leveraging a Python binary with elevated capabilities.</p>
-                </div>
-            </a>
-            <a href="/webpages/fluffy.html" class="project-box">
-                <img src="/assets/images/ctf/fluffy/thumbnail.png" alt="Fluffy Report">
-                <div class="project-text">
-                    <h3>Fluffy - Hack The Box</h3>
-                    <p>Fluffy is an Windows machine from Hack The Box Season 8, designed to teach Active Directory (AD) pentesting techniques.</p>
-                </div>
-            </a>
-            <a href="/webpages/DC-4.html" class="project-box">
-                <img src="/assets/images/ctf/DC-4 Cover.png" alt="DC-4 Report">
-                <div class="project-text">
-                    <h3>CTF Report(OffSec):: DC-4</h3>
-                    <p>DC-4 from OffSec Proving Grounds was a challenging yet rewarding pentest lab that I recently tackled. It tested my skills in enumeration, brute-forcing, command injection, and privilege escalation.</p>
-                </div>
-            </a>
-            <a href="/webpages/Djinn3.html" class="project-box">
-                <img src="/assets/images/ctf/DC-4 Cover.png" alt="Djin3 Report">
-                <div class="project-text">
-                    <h3>CTF Report(OffSec): Djin3</h3>
-                    <p>Djinn3 box from OffSec involved exploiting a Server-Side Template Injection (SSTI) vulnerability followed by privilege escalation.</p>
-                </div>
-            </a>
+                </a>
+                <a href="/webpages/Brutus.html" class="project-box">
+                    <img src="/assets/images/ctf/Sherlocks/brutus/Thumbnail.png" alt="Brutus Report">
+                    <div class="project-text">
+                        <h3 style="color: #4055e0;">Brutus - Hack The Box</h3>
+                        <p>Brutus is a great introductory Sherlock challenge that sharpened your skills in log analysis
+                            and incident investigation. Identifying the brute-force, persistence via account creation,
+                            and mapping to MITRE provided valuable insights into blue team workflows.</p>
+                    </div>
+                </a>
+                <a href="/webpages/artifical.html" class="project-box">
+                    <img src="/assets/images/ctf/artificial/thumbnail.png" alt="artifical Report">
+                    <div class="project-text">
+                        <h3>Artifical - Hack The Box</h3>
+                        <p>Artificial was a challenging box focused on AI model hosting vulnerabilities. It involved
+                            exploiting a TensorFlow/Keras code injection vulnerability (CVE-2024-3660) for initial
+                            access via a malicious model upload, pivoting to a user account by cracking database hashes,
+                            and escalating privileges by abusing a misconfigured Backrest backup system running as root.
+                        </p>
+                    </div>
+                </a>
+                <a href="/webpages/editor.html" class="project-box">
+                    <img src="/assets/images/ctf/editor/thumbnail.png" alt="Editor Report">
+                    <div class="project-text">
+                        <h3>Editor - Hack The Box</h3>
+                        <p>Editor box involved exploiting a vulnerable XWiki instance for initial access via RCE,
+                            discovering credentials to pivot to a user account via SSH, and escalating to root by
+                            leveraging a PATH injection vulnerability in Netdata.</p>
+                    </div>
+                </a>
+                <a href="/webpages/code.html" class="project-box">
+                    <img src="/assets/images/ctf/code/homepagecode.png" alt="Code Report">
+                    <div class="project-text">
+                        <h3>Code - Hack The Box</h3>
+                        <p>Code box from HTB is a linux machine that focused on web exploitation, sandbox escapes, and
+                            creative privilege escalation.</p>
+                    </div>
+                </a>
+                <a href="/webpages/2m.html" class="project-box">
+                    <img src="/assets/images/ctf/2m/2mill thumbnail.png" alt="2m Report">
+                    <div class="project-text">
+                        <h3>Two Million- Hack The Box</h3>
+                        <p>The challenge involves exploiting an insecure API to gain an invite code, escalating
+                            privileges through a misconfigured API endpoint, achieving command injection for an initial
+                            shell, and leveraging a vulnerable OverlayFS (CVE-2023-0386) for root access.</p>
+                    </div>
+                </a>
+                <a href="/webpages/titanic.html" class="project-box">
+                    <img src="/assets/images/ctf/titanic/cth_titanic_thumb.png" alt="Titanic Report">
+                    <div class="project-text">
+                        <h3>Titanic - Hack The Box</h3>
+                        <p>The goal of this box is to exploit an Arbitrary File Read (LFI) vulnerability to retrieve a
+                            Gitea database, crack credentials for SSH access, and escalate privileges using a vulnerable
+                            ImageMagick version (CVE-2024-41817) in a cron script.</p>
+                    </div>
+                </a>
+                <a href="/webpages/Cap.html" class="project-box">
+                    <img src="/assets/images/ctf/Cap/capthumbnail.png" alt="Cap Report">
+                    <div class="project-text">
+                        <h3>Cap - Hack The Box</h3>
+                        <p>The box involved exploiting a web dashboard to uncover FTP credentials, gaining initial
+                            access via SSH, and escalating to root by leveraging a Python binary with elevated
+                            capabilities.</p>
+                    </div>
+                </a>
+                <a href="/webpages/fluffy.html" class="project-box">
+                    <img src="/assets/images/ctf/fluffy/thumbnail.png" alt="Fluffy Report">
+                    <div class="project-text">
+                        <h3>Fluffy - Hack The Box</h3>
+                        <p>Fluffy is an Windows machine from Hack The Box Season 8, designed to teach Active Directory
+                            (AD) pentesting techniques.</p>
+                    </div>
+                </a>
+                <a href="/webpages/DC-4.html" class="project-box">
+                    <img src="/assets/images/ctf/DC-4 Cover.png" alt="DC-4 Report">
+                    <div class="project-text">
+                        <h3>CTF Report(OffSec):: DC-4</h3>
+                        <p>DC-4 from OffSec Proving Grounds was a challenging yet rewarding pentest lab that I recently
+                            tackled. It tested my skills in enumeration, brute-forcing, command injection, and privilege
+                            escalation.</p>
+                    </div>
+                </a>
+                <a href="/webpages/Djinn3.html" class="project-box">
+                    <img src="/assets/images/ctf/DC-4 Cover.png" alt="Djin3 Report">
+                    <div class="project-text">
+                        <h3>CTF Report(OffSec): Djin3</h3>
+                        <p>Djinn3 box from OffSec involved exploiting a Server-Side Template Injection (SSTI)
+                            vulnerability followed by privilege escalation.</p>
+                    </div>
+                </a>
+            </div>
         </div>
-    </div>
 </body>
+
 </html>

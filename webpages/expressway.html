@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Expressway CTF Writeup - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        .content .left-aligned-content h2,
+        .content .left-aligned-content p,
+        .content .left-aligned-content ul,
+        .content .left-aligned-content ol,
+        .content .left-aligned-content li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            margin: 20px 0 !important;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>Expressway CTF Writeup - Hack The Box</h1>
+            <img src="/assets/images/ctf/express/title.png" alt="Expressway Cover">
+            <h2>1. Box Overview</h2>
+            <p>
+                Expressway from Hack The Box was an easy Linux box that involved TCP and UDP port scanning, TFTP
+                enumeration to discover configuration files and the domain, exploiting IKE aggressive mode to capture
+                and crack a PSK for SSH access, and leveraging a sudo privilege escalation vulnerability
+                (CVE-2025-32463) for root. It tested skills in network enumeration, UDP service exploitation, password
+                cracking, and local privilege escalation techniques.
+            </p>
+            <ul>
+                <li><strong>Objective:</strong> Gain initial access via SSH, escalate to root, and capture the user and
+                    root flags.</li>
+                <li><strong>Skills Developed:</strong> Nmap TCP/UDP scanning, TFTP file enumeration and download, IKE
+                    scanning and PSK cracking with hashcat, SSH login, system enumeration (/etc/passwd, binary paths),
+                    vulnerability research, and exploiting sudo chroot flaws.</li>
+            </ul>
+
+            <h2>2. Resources Used</h2>
+            <p>Here are the resources that guided me through this challenge:</p>
+            <ul>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://nmap.org/nsedoc/scripts/tftp-enum.html">Nmap TFTP Enum Script</a><br>
+                    Usage: Used to enumerate files on the TFTP server, revealing ciscortr.cfg.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a
+                        href="https://www.rapid7.com/db/modules/auxiliary/admin/tftp/tftp_transfer_util/">Metasploit
+                        TFTP Transfer Utility</a><br>
+                    Usage: Downloaded the discovered configuration file from the TFTP server.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/bojanisc/quicmap">Quicmap GitHub Repository</a><br>
+                    Usage: Although not directly used, it was researched for potential QUIC enumeration on UDP/443.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/royhills/ike-scan">IKE-Scan GitHub Repository</a><br>
+                    Usage: Enumerated IKE services on UDP/500, captured PSK hash in aggressive mode.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://hashcat.net/wiki/doku.php?id=example_hashes">Hashcat Example Hashes (Mode
+                        5400 for IKE-PSK SHA1)</a><br>
+                    Usage: Confirmed the hash mode and cracked the PSK using rockyou.txt.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a href="https://github.com/pr0v3rbs/CVE-2025-32463_chwoot/tree/main">GitHub PoC for
+                        CVE-2025-32463</a><br>
+                    Usage: Exploited the sudo chroot vulnerability for privilege escalation to root.
+                </li>
+                <li>
+                    <strong>Resource:</strong><br>
+                    Title: <a
+                        href="https://www.upwind.io/feed/cve%E2%80%912025%E2%80%9132463-critical-sudo-chroot-privilege-escalation-flaw">Upwind
+                        Article on CVE-2025-32463</a><br>
+                    Usage: Provided details on the sudo chroot privilege escalation flaw.
+                </li>
+            </ul>
+
+            <h2>3. My Approach to Pwning Expressway</h2>
+            <p>Here’s a step-by-step breakdown of how I tackled the Expressway box, from initial reconnaissance to
+                capturing both flags. Note: UDP scanning can be time-consuming due to rate limiting, so patience is key.
+                Always verify open ports carefully, as "open|filtered" indicates potential services without direct
+                responses.</p>
+
+            <h3>Starting with Nmap TCP Port Scan</h3>
+            <p>
+                Began with a quick Nmap TCP scan using `nmap -Pn -n -sV -T4 10.129.20.60 --open`. This revealed only SSH
+                on port 22 running OpenSSH 10.0p2 Debian 8. The version appeared up-to-date, so no immediate exploits.
+                The `-Pn` skips host discovery, `-n` avoids DNS, and `-sV` probes for service versions—ideal for initial
+                enumeration.
+            </p>
+            <img src="/assets/images/ctf/express/2.png" alt="Nmap TCP scan">
+
+            <h3>Pivoting to UDP Port Scan</h3>
+            <p>
+                Since TCP yielded little, I ran a UDP scan: `nmap -Pn -n -sU -T4 10.129.20.60 --open`. This took over 17
+                minutes due to retransmission limits but showed several open|filtered ports, including 69/udp (TFTP),
+                443/udp (possibly QUIC/HTTPS), 445/udp (Microsoft-DS), and 500/udp (ISAKMP/IKE). "Open|filtered" means
+                no response, but "open" on 500/udp indicated a service responding. Tip: Use `-T4` for speed, but expect
+                delays on UDP.
+            </p>
+            <img src="/assets/images/ctf/express/3.png" alt="Nmap UDP scan">
+
+            <h3>Enumerating TFTP with Nmap Script</h3>
+            <p>
+                Focused on TFTP (UDP/69) as it's often insecure. Ran the Nmap script: `nmap -Pn -p69 -sU -sV --script
+                tftp-enum 10.129.20.60`. This enumerated files from a default list, revealing `ciscortr.cfg`. TFTP lacks
+                authentication, making it great for config leaks. For more on TFTP pentesting, check <a
+                    href="https://www.verylazytech.com/network-pentesting/tftp-bittorrent-tracker-port-69-udp">this
+                    guide</a>.
+            </p>
+            <img src="/assets/images/ctf/express/4.png" alt="TFTP enum">
+
+            <h3>Downloading TFTP File with Metasploit</h3>
+            <p>
+                Used Metasploit's auxiliary module to download: `msfconsole`, then `use
+                auxiliary/admin/tftp/tftp_transfer_util`, set RHOSTS and REMOTE_FILE to "ciscortr.cfg", and run. The
+                config showed hostname "expressway" and a DNS entry "208.67.222.222 expressway.htb". Added "10.129.20.60
+                expressway.htb" to /etc/hosts. This hinted at Cisco-like networking gear with IPSec/VPN ports. Nothing
+                sensitive in config beyond that.
+            </p>
+            <img src="/assets/images/ctf/express/5.png" alt="TFTP download">
+
+            <h3>Researching QUIC on UDP/443</h3>
+            <p>
+                Noted UDP/443 as potential QUIC (HTTP/3 over UDP). Researched tools like <a
+                    href="https://github.com/bojanisc/quicmap">quicmap</a> for scanning, but it didn't yield exploits
+                here. QUIC is emerging; always check for misconfigs in new protocols.
+            </p>
+
+            <h3>Enumerating IKE on UDP/500</h3>
+            <p>
+                Port 500/udp was fully "open," indicating responses. Used ike-scan: `ike-scan -M 10.129.20.60` for basic
+                info, then aggressive mode: `ike-scan -M -A 10.129.20.60`. This revealed a VPN group name "ike".
+                Aggressive mode exposes hashes—avoid in production! For details, see <a
+                    href="https://www.kali.org/tools/ike-scan/">Kali's ike-scan page</a>.
+            </p>
+            <img src="/assets/images/ctf/express/6.png" alt="IKE scan">
+
+            <h3>Capturing and Cracking IKE PSK Hash</h3>
+            <p>
+                Captured the PSK hash in aggressive mode with ike-scan. Then used hashcat: `hashcat -m 5400 -a 0
+                hash.txt /usr/share/wordlists/rockyou.txt`. Mode 5400 is for IKE-PSK SHA1 (confirm via <a
+                    href="https://hashcat.net/wiki/doku.php?id=example_hashes">hashcat wiki</a>). Cracked to
+                "freakingrockstarontheroad". Tip: Start with rockyou for common passes; escalate to larger lists if
+                needed.
+            </p>
+            <img src="/assets/images/ctf/express/7.png" alt="Hashcat crack">
+            <img src="/assets/images/ctf/express/8.png" alt="Hashcat crack">
+
+            <h3>SSH Login as User 'ike'</h3>
+            <p>
+                With username "ike" from IKE group and cracked password, SSH'd: `ssh ike@10.129.20.60`. Landed in
+                /home/ike with user flag. Enumerated /etc/passwd: users include root, ike, mysql, strongswan, tftp, etc.
+                No other login users besides root/ike.
+            </p>
+            <img src="/assets/images/ctf/express/9.png" alt="SSH login">
+            <img src="/assets/images/ctf/express/10.png" alt="SSH login">
+
+            <h3>Checking Sudo Permissions and Binary</h3>
+            <p>
+                Ran `sudo -l`: No sudo for ike. But `which sudo` showed /usr/local/bin/sudo (unusual; normally
+                /usr/bin/sudo). Checked version: `sudo --version` revealed 1.9.17—outdated. This is a red flag; custom
+                paths can indicate custom builds or vulns.
+            </p>
+            <img src="/assets/images/ctf/express/11.png" alt="Sudo check">
+            <img src="/assets/images/ctf/express/12.png" alt="Sudo check">
+            <img src="/assets/images/ctf/express/13.png" alt="Sudo check">
+
+            <h3>Researching Vulnerability for Sudo 1.9.17 with CVE-2025-32463</h3>
+            <p>
+                Searched for exploits on version 1.9.17 and found CVE-2025-32463, a chroot privilege escalation. Allows
+                loading malicious libraries via crafted nsswitch.conf in a user-controlled dir when using sudo -R.
+                Details in <a
+                    href="https://www.upwind.io/feed/cve%E2%80%912025%E2%80%9132463-critical-sudo-chroot-privilege-escalation-flaw">Upwind
+                    article</a>. Even without sudoers entry, it escalates to root.
+            </p>
+            <img src="/assets/images/ctf/express/14.png" alt="Vuln research">
+            <img src="/assets/images/ctf/express/15.png" alt="Vuln research">
+
+            <h3>Running PoC for CVE-2025-32463</h3>
+            <p>
+                Grabbed PoC from <a href="https://github.com/pr0v3rbs/CVE-2025-32463_chwoot/tree/main">GitHub</a>.
+                Created poc.sh on target: It sets up a dir with malicious nsswitch.conf referencing a C payload that
+                sets UID/GID to 0 and spawns a shell. Ran with `sudo -R /path/to/crafted/dir /bin/sh`. Triggered the
+                load, got root shell. Grabbed root flag with `cat /root/root.txt`. Tip: Compile the C lib carefully;
+                test in a safe env first.
+            </p>
+            <img src="/assets/images/ctf/express/16.png" alt="Root exploit">
+
+            <h2>4. Remediation of Vulnerabilities</h2>
+            <p>Here’s how to remediate the key vulnerabilities exploited in this challenge:</p>
+            <ul>
+                <li><strong>IKE Aggressive Mode PSK Exposure:</strong> Disable aggressive mode in VPN configs (use main
+                    mode). Use certificates instead of PSKs. Update StrongSwan to latest and enforce strong policies.
+                    Monitor for UDP/500 exposures.</li>
+                <li><strong>TFTP Insecure Exposure:</strong> Restrict TFTP to internal networks or disable if
+                    unnecessary. Use authentication wrappers if possible. Avoid storing sensitive configs.</li>
+                <li><strong>CVE-2025-32463 (Sudo Chroot Privesc):</strong> Update sudo to 1.9.17p1 or later. Avoid
+                    custom binary paths; use system defaults. Restrict chroot usage and audit sudoers file.</li>
+            </ul>
+
+            <h2>5. Lessons Learned and Tips</h2>
+            <p>Here’s what I took away from the Expressway box:</p>
+            <ul>
+                <li><strong>Tip 1:</strong> Always scan UDP ports—many services like TFTP/IKE hide there and are often
+                    overlooked.</li>
+                <li><strong>Tip 2:</strong> Check for aggressive mode in IKE; it's a common misconfig leading to easy
+                    PSK cracks.</li>
+                <li><strong>Tip 3:</strong> Enumerate binary paths (e.g., `which sudo`); unusual locations signal
+                    potential custom/vulnerable builds.</li>
+                <li><strong>Tip 4:</strong> Use hashcat with the right mode (e.g., 5400 for IKE-PSK); start with rockyou
+                    for quick wins.</li>
+                <li><strong>Key Lesson:</strong> Outdated software like sudo can lead to privesc; keep systems patched.
+                    UDP services need equal attention to TCP.</li>
+                <li><strong>Future Goals:</strong> Explore more VPN/IKE exploits and custom binary analysis.</li>
+            </ul>
+
+            <h2>6. Conclusion</h2>
+            <img src="/assets/images/ctf/express/17.png" alt="Completed badge">
+            <p>
+                Expressway was a fun HTB challenge emphasizing UDP enumeration and local privesc. From cracking IKE PSKs
+                to exploiting sudo chroot, it reinforced thorough scanning. On to the next!
+            </p>
+
+            <h2>7. Additional Notes</h2>
+            <ul>
+                <li>The <a href="https://github.com/royhills/ike-scan">IKE-Scan PoC</a> was essential for initial
+                    access.</li>
+                <li>The <a href="https://github.com/pr0v3rbs/CVE-2025-32463_chwoot/tree/main">CVE-2025-32463 PoC</a>
+                    provided the path to root.</li>
+                <li>For more on the sudo vuln, see <a
+                        href="https://www.upwind.io/feed/cve%E2%80%912025%E2%80%9132463-critical-sudo-chroot-privilege-escalation-flaw">Upwind
+                        article</a>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dynamically set the height of opaque-bg to match the document height
+        function setOpaqueBgHeight() {
+            const opaqueBg = document.getElementById('opaqueBg');
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+            opaqueBg.style.height = `${docHeight - 50}px`;
+        }
+
+        window.addEventListener('load', setOpaqueBgHeight);
+        window.addEventListener('resize', setOpaqueBgHeight);
+    </script>
+</body>
+
+</html>
