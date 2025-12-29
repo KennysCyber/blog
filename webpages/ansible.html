@@ -2,159 +2,317 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
-    <title>Ansible Playbooks - 18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Ansible Playbooks - Tech Lair</title>
 
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
 
-        body {
-            position: relative;
-            min-height: 100vh;
-        }
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
 
-        .opaque-bg {
-            background-color: rgba(13, 13, 13, 0.6);
-            position: fixed;
-            top: 50px;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+    body {
+      position: relative;
+      min-height: 100vh;
+    }
 
-        .content {
-            position: relative;
-            z-index: 2;
-            min-height: 100vh;
-            padding-bottom: 20px;
-        }
+    .opaque-bg {
+      background-color: rgba(13, 13, 13, 0.6);
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
 
-        .content .left-aligned-content {
-            text-align: left !important;
-            max-width: 800px;
-            margin: 0 20px !important;
-            padding: 20px 0 !important;
-        }
+    .content {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      padding-bottom: 20px;
+    }
 
-        .content .left-aligned-content h1,
-        .content .left-aligned-content h2,
-        .content .left-aligned-content p,
-        .content .left-aligned-content ul,
-        .content .left-aligned-content ol,
-        .content .left-aligned-content li {
-            text-align: left !important;
-        }
+    .left-aligned-content {
+      max-width: 900px;
+      margin: 0 20px;
+      padding: 20px 0;
+    }
 
-        .content .left-aligned-content a {
-            color: #ff9933 !important;
-            text-decoration: underline;
-        }
+    h1,
+    h2,
+    p {
+      text-align: left;
+    }
 
-        .content .left-aligned-content a:hover {
-            color: #ff007a !important;
-            text-shadow: 0 0 5px #ff007a;
-        }
+    a {
+      color: #ff9933;
+      text-decoration: underline;
+    }
 
-        .content .left-aligned-content pre {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            margin: 10px 0;
-            position: relative;
-        }
+    a:hover {
+      color: #ff007a;
+      text-shadow: 0 0 5px #ff007a;
+    }
 
-        .content .left-aligned-content code {
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-        }
+    pre {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      position: relative;
+      text-align: left;
+      /* Left-aligned content inside pre */
+      white-space: pre-wrap;
+      /* Wrap long lines for better viewing */
+      word-wrap: break-word;
+      /* Prevent text overflow */
+    }
 
-        .content .left-aligned-content .copy-btn {
-            display: none;
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #ff9933;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: 'Consolas', 'Courier New', monospace;
-        }
+    code {
+      font-family: Consolas, monospace;
+      font-size: 14px;
+    }
 
-        .content .left-aligned-content pre:hover .copy-btn {
-            display: block;
-        }
+    .copy-btn {
+      display: none;
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #ff9933;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
 
-        .content .left-aligned-content .copy-btn:hover {
-            background: #ff007a;
-        }
+    pre:hover .copy-btn {
+      display: block;
+    }
 
-        .content .left-aligned-content .copy-btn:focus {
-            outline: 2px solid #ff007a;
-            outline-offset: 2px;
-        }
+    .copy-btn:hover {
+      background: #ff007a;
+    }
 
-        @media (max-width: 600px) {
-            .content .left-aligned-content {
-                margin: 0 10px !important;
-            }
-        }
-    </style>
+    details {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    details summary {
+      cursor: pointer;
+      background: #ff9933;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+    }
+
+    details summary:hover {
+      background: #ff007a;
+    }
+
+    details pre {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav>
-        <ul>
-            <li><a href="/index.html">Home</a></li>
-            <li><a href="/about.html">About</a></li>
-            <li><a href="/projects.html">Projects</a></li>
-            <li><a href="/code.html">Code & Tools</a></li>
-            <li><a href="/ctf.html">Write-ups</a></li>
-            <li><a href="/research.html">Research</a></li>
-        </ul>
-    </nav>
 
-    <!-- Page Background -->
-    <div class="opaque-bg"></div>
+  <nav>
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/projects.html">Projects</a></li>
+      <li><a href="/code.html">Code & Tools</a></li>
+      <li><a href="/ctf.html">Write-ups</a></li>
+      <li><a href="/research.html">Research</a></li>
+    </ul>
+  </nav>
 
-    <!-- Main Content -->
-    <div class="content">
-        <div class="left-aligned-content">
-            <h1>Ansible Playbooks Collection</h1>
-            <p>This page holds various Ansible playbooks with explanations, ready to view and copy.</p>
+  <div class="opaque-bg"></div>
 
-            <b>
-                <p>Ansible Setup:</p>
-            </b> If you dont have an envriometn setup with an ansible controller, Inventory files, secrets file this
-            webpage will guide you through how to set that up to be able to copy and paste your these playbook into your
-            enviroment</p>
+  <div class="content">
+    <div class="left-aligned-content">
 
-            <li><a href="/webpages/ansible_setup.html">Ansible Setup Lab</a></li>
+      <h1>Ansible Playbooks Collection</h1>
+      <p>Sanitized, reusable Ansible playbooks with secure defaults and toggleable views.</p>
 
-            <!-- 🔹 Playbook Template Section -->
-            <!-- Copy & paste the block below to add a new playbook -->
+      <p><strong>Ansible Setup:</strong></p>
+      <p>If you do not have an Ansible controller, inventory, or vault configured, start here:</p>
+      <li><a href="/webpages/ansible_setup.html">Ansible Setup Lab</a></li>
 
-            <section class="playbook">
-                <h2>1. Sensor Health Ansible</h2>
-                <p><strong>Description:</strong>This Ansbile playbook can be used to check core services for a sensor of
-                    server that can be used as a daily health check</p>
+      <br></br>
 
-                <pre><code>
+      <!-- ================= PLAYBOOK 1 ================= -->
+      <details>
+        <summary>1. Linux User & Admin Group Provisioning</summary>
+        <p>Creates admin group, configures sudo, and provisions multiple users.</p>
+        <pre><code>
+---
+- name: Configure Admin Group, Sudoers, and Provision Users
+  hosts: wain
+  vars_files:
+    - /path/to/secrets.yml
+  gather_facts: no
+  
+  vars:
+    ansible_password: "{{ 1_pwd }}"
+    ansible_user: "{{ 1_username }}"
+    ansible_become: yes
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_become_password: "{{ 1_pwd }}"
+    admin_group: "admin"
+    users:
+      - user1
+      - user2
+    selinux_user: "staff_u"
+    selinux_range: "s0-s0:c0.c1023"
+
+  tasks:
+    ## SECTION 1: Group & Sudo Configuration ##
+    
+    - name: Ensure the admin group exists
+      ansible.builtin.group:
+        name: "{{ admin_group }}"
+        state: present
+
+    - name: Create sudoers.d file for the admin group
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ admin_group | lower }}"
+        content: "%{{ admin_group }} ALL=(ALL) ALL"
+        mode: '0440'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    ## SECTION 2: User Provisioning ##
+
+    - name: Ensure per-user private groups exist
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Create user accounts and assign groups
+      ansible.builtin.user:
+        name: "{{ item }}"
+        group: "{{ item }}"
+        groups: "{{ admin_group }}"
+        append: yes
+        create_home: yes
+        state: present
+        password: ""
+      loop: "{{ users }}"
+
+    - name: Create user .ssh directory
+      ansible.builtin.file:
+        path: "/home/{{ item }}/.ssh"
+        state: directory
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: '0700'
+      loop: "{{ users }}"
+
+    - name: Force password change on first login
+      ansible.builtin.command:
+        cmd: "chage -d 0 {{ item }}"
+      loop: "{{ users }}"
+      changed_when: true
+
+    - name: Set SELinux login assignments
+      ansible.builtin.command:
+        cmd: "semanage login -a -s {{ selinux_user }} -r {{ selinux_range }} {{ item }}"
+      loop: "{{ users }}"
+</code>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+</pre>
+      </details>
+
+      <!-- ================= PLAYBOOK 2 ================= -->
+      <details>
+        <summary>2. Elastic Stack Health Checks</summary>
+        <p>Validates core Elastic Stack services across host groups.</p>
+        <pre><code>
+---
+- name: Check Elastic Services
+  hosts: elastic_nodes
+  vars_files:
+    - /path/to/vault.yml
+  gather_facts: no
+
+  vars:
+    ansible_user: "{{ vault_user }}"
+    ansible_password: "{{ vault_password }}"
+    ansible_become: yes
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_become_password: "{{ vault_password }}"
+    services:
+      - elasticsearch
+      - logstash
+      - kibana
+      - elastic-agent
+
+  tasks:
+    - name: Check service status
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+      register: svc
+      ignore_errors: yes
+      changed_when: false
+      loop: "{{ services }}"
+</code>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+</pre>
+      </details>
+
+      <!-- ================= PLAYBOOK 3 ================= -->
+      <details>
+        <summary>3. Server Reboot Playbook</summary>
+        <p>Safely reboots infrastructure nodes.</p>
+        <pre><code>
+---
+- name: Reboot Servers
+  hosts: infrastructure_nodes
+  vars_files:
+    - /path/to/vault.yml
+  gather_facts: no
+
+  vars:
+    ansible_user: "{{ vault_user }}"
+    ansible_password: "{{ vault_password }}"
+    ansible_become: yes
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_become_password: "{{ vault_password }}"
+
+  tasks:
+    - name: Reboot system
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+</code>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+</pre>
+      </details>
+
+      <!-- ================= PLAYBOOK 4 ================= -->
+      <details>
+        <summary>4. Sensor Health Check</summary>
+        <p>Checks the health of various services on sensor devices (e.g., Zeek, Tcpdump, Snort) and disk usage.</p>
+        <pre><code>
 ---
 - name: Sensor Health Check
   hosts: all
@@ -252,19 +410,16 @@
         msg: "{{ item }}"
       loop: "{{ large_files.stdout_lines }}"
       when: large_files.stdout_lines is defined and full_disks | length > 0
+</code>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+</pre>
+      </details>
 
-                </code>
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                </pre>
-            </section>
-
-            <!-- 🔹 Add another playbook section like this -->
-            <section class="playbook">
-                <h2>2. Reasource Check Playbook</h2>
-                <p><strong>Description:</strong> This Playbook is used to check reasource statics for a group of devics.
-                </p>
-
-                <pre><code>
+      <!-- ================= PLAYBOOK 5 ================= -->
+      <details>
+        <summary>5. Resource Check Playbook</summary>
+        <p>Checks storage, memory, and CPU usage on Elastic nodes.</p>
+        <pre><code>
 ---
 - name: Check Elastic Node Stats
   hosts: all
@@ -320,24 +475,21 @@
       ansible.builtin.debug:
         msg: "Node CPU: {{ ES_lscpu.stdout }}"
       when: ES_lscpu is defined and ES_lscpu.stdout is defined
+</code>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+</pre>
+      </details>
 
-                </code>
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                </pre>
-            </section>
-
-            <!-- 🔹 Add another playbook section like this -->
-            <section class="playbook">
-                <h2>3. SED Replace Playbook</h2>
-                <p><strong>Description:</strong> This playbook can be used to find and replace text of a file on mutiple
-                    devices.</p>
-
-                <pre><code>
+      <!-- ================= PLAYBOOK 6 ================= -->
+      <details>
+        <summary>6. SED Replace Playbook</summary>
+        <p>Uses sed to find and replace a line in a file across multiple devices (e.g., journald.conf).</p>
+        <pre><code>
 ---
-- name: Add persitance to journald.conf
+- name: Add persistence to journald.conf
   hosts: all
   vars_files:
-    - <path to secrets file>
+    - /path/to/secrets.yml
   gather_facts: no
   vars:
     ansible_password: "{{ sensors_pwd2 }}"
@@ -354,58 +506,23 @@
       become_method: sudo
       ignore_errors: yes
       changed_when: false
-                </code>
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                </pre>
-            </section>
+</code>
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+</pre>
+      </details>
 
-            <!--Creating user accounts/Groups/add to priv user / Deploy rsyslog / Deleting user accounts and home dir / unlocking a user account / disable a user account -->
-
-            <!-- 🔹 Add another playbook section like this --><!-- 🔹 Add another playbook section like this 
-            <section class="playbook">
-                <h2>Title</h2>
-                <p><strong>Description:</strong> Simple playbook to create a new user with a home directory and SSH key.</p>
-
-                <pre><code>
----
-- name: Create new user
-  hosts: all
-  become: true
-  vars:
-    username: devuser
-
-  tasks:
-    - name: Create user
-      user:
-        name: "{{ username }}"
-        shell: /bin/bash
-        create_home: yes
-
-    - name: Add authorized SSH key
-      authorized_key:
-        user: "{{ username }}"
-        key: "{{ lookup('file', '/home/{{ username }}/.ssh/id_rsa.pub') }}"
-                </code>
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                </pre>
-            </section>
-
-
-            Keep adding more <section> blocks here for new playbooks -->
-
-
-        </div>
     </div>
+  </div>
 
-    <script>
-        // Copy button functionality
-        function copyCode(button) {
-            const code = button.parentElement.querySelector("code").innerText;
-            navigator.clipboard.writeText(code);
-            button.textContent = "Copied!";
-            setTimeout(() => button.textContent = "Copy", 1500);
-        }
-    </script>
+  <script>
+    function copyCode(button) {
+      const code = button.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code);
+      button.textContent = "Copied!";
+      setTimeout(() => button.textContent = "Copy", 1500);
+    }
+  </script>
+
 </body>
 
 </html>

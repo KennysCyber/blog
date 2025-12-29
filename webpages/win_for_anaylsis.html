@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>TTP for DFIR Windows Incident Processing - 18gi0n's Tech Lair</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .opaque-bg {
+            background-color: rgba(13, 13, 13, 0.6);
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .content .left-aligned-content {
+            text-align: left !important;
+            max-width: 800px;
+            margin: 0 20px !important;
+            padding: 20px 0 !important;
+        }
+
+        .content .left-aligned-content h1,
+        h2,
+        p,
+        ul,
+        ol,
+        li {
+            text-align: left !important;
+        }
+
+        .content .left-aligned-content a {
+            color: #ff9933 !important;
+            text-decoration: underline;
+        }
+
+        .content .left-aligned-content a:hover {
+            color: #ff007a !important;
+            text-shadow: 0 0 5px #ff007a;
+        }
+
+        .content .left-aligned-content pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .content .left-aligned-content code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .content .left-aligned-content .copy-btn {
+            display: none;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff9933;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .content .left-aligned-content pre:hover .copy-btn {
+            display: block;
+        }
+
+        .content .left-aligned-content .copy-btn:hover {
+            background: #ff007a;
+        }
+
+        .content .left-aligned-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        @media (max-width:600px) {
+            .content .left-aligned-content {
+                margin: 0 10px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Nav Bar -->
+    <nav>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/code.html">Code & Tools</a></li>
+            <li><a href="/ctf.html">Write-ups</a></li>
+            <li><a href="/research.html">Research</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+        <div class="left-aligned-content">
+            <h1>DFIR Windows Incident Processing PT II</h1>
+            <img src="/assets/images/win_analysis_guide/title.png" alt="Title">
+            <p>I built this collection guide/walkthrough as:</p>
+            <ol>
+                <li>A reinforcement of knowledge from my GCFE course</li>
+                <li>A future reference for myself and others on processing of Windows evidence from disk images. All
+                    tools seen here are free for download from vendor websites.</li>
+            </ol>
+            <p>This is just my personal method — if things could be improved upon I would love to hear from you on X.
+                (Handle on About Page)</p>
+
+            <h2>Disclaimer</h2>
+            <p>Windows OS is constantly changing with weekly patches and major version updates. Methods and techniques
+                will need to be adapted over time. I will inevitably miss stuff — it is on the individual to validate
+                current best practices.</p>
+
+            <h2>Tools</h2>
+            <ul>
+                <li><a href="https://www.nirsoft.net/utils/index.html" target="_blank">NirSoft Utilities and
+                        NirLauncher</a> (for BrowsingHistoryView, BrowserDownloadsView, WinPrefetchView)</li>
+                <li><a href="https://arsenalrecon.com/downloads/" target="_blank">Arsenal Image Mounter</a></li>
+                <li><a href="https://www.sans.org/tools/registry-explorer/" target="_blank">Registry Explorer</a> (for
+                    analyzing registry hives like SYSTEM, NTUSER.DAT, AmCache.hve)</li>
+                <li><a href="https://www.sans.org/tools/sift-workstation" target="_blank">SANS GCFE Windows Forensics
+                        VM</a> (or similar forensic workstation setup)<img src="/assets/images/win_analysis_guide/5.png"
+                        alt="sans"></li>
+                <li><a href="https://github.com/EricZimmerman/PECmd" target="_blank">PECmd</a> (for Prefetch analysis)
+                </li>
+                <li><a href="https://github.com/markbaggett/srum-dump" target="_blank">SRUM-Dump</a> (for SRUM analysis)
+                </li>
+            </ul>
+
+            <h2>Scenario Overview</h2>
+            <p>Now that we have collected the evidence and hashed originals and copies, we are ready for processing.
+                Please see the <a href="/webpages/forensicscollection.html">first section of this writeup</a> which
+                covers the collection of the artifacts that will be referenced here.</p>
+            <p>Customer states that the user was terminated for selling company secrets. They have asked us to look for
+                any evidence that might corroborate this charge.</p>
+            <p>**Admin Note** Two things were done on the image prior to capture:</p>
+            <ol>
+                <li>EXE download</li>
+                <li>Suspicious Google searches</li>
+            </ol>
+            <p>We are going to go over finding these two things. We will also cover some things that the OS did on
+                reboot that could trip you up during an investigation. The goal of this writeup is to show a few common
+                artifact locations and how you can investigate them from disk. Memory analysis section is still in
+                progress.</p>
+            <p>Note: The employee was caught selling company IP and pulled away from his computer while still using it.
+                We need to deconflict our actions from his, as collection was done on-scene from his account. Times are
+                in local time, but most evidence is in UTC (GMT +10).</p>
+            <img src="/assets/images/win_analysis_guide/6.png" alt="Timeline of collection actions in local time">
+
+            <h2>Preparation Steps</h2>
+            <ol>
+                <li>Verify Hashes of Files: Verify integrity of memory capture, triage image, and logical image capture.
+                    Use sha256sum command to pull hashes and verify against the initial collection hashes. All hashes
+                    should match to ensure no tampering.</li>
+                <img src="/assets/images/win_analysis_guide/1.png"
+                    alt="sha256sum verification of memory dump, triage image, and logical image">
+                <img src="/assets/images/win_analysis_guide/2.png"
+                    alt="sha256sum verification of memory dump, triage image, and logical image">
+                <img src="/assets/images/win_analysis_guide/3.png"
+                    alt="sha256sum verification of memory dump, triage image, and logical image">
+                <p>Additional Info: Hash verification is crucial to maintain chain of custody. Any mismatch could
+                    indicate corruption or alteration, invalidating the evidence in court. In the image, we see commands
+                    like sha256sum on files like COMEANDINDME-20251129-233712.dmp, case1.vhdx, and logical.E01, with
+                    matching hashes.</p>
+                <li>Make a Copy of Originals to Work From: Create a folder for originals and a working folder for
+                    processing to avoid modifying source files.</li>
+                <img src="/assets/images/win_analysis_guide/4.png"
+                    alt="Folder structure showing Original Case Files and Working Case Files">
+                <p>Additional Info: The image shows 'TOOLKIT NTFS > Cases' with 'Original Case Files' and 'Working Case
+                    Files' folders.</p>
+                <li>Move Files to Processing Machine: Use a dedicated forensic workstation, such as the SANS GCFE
+                    Windows Forensics VM.</li>
+                <li>Mount Images: Mount the logical image (.E01) with Arsenal Image Mounter. For the triage image,
+                    navigate to the VHDX in the case folder and double-click to mount it to the local file system (e.g.,
+                    under KAPE (2025*))</li>
+                <img src="/assets/images/win_analysis_guide/7.png"
+                    alt="Mounting logical image with Arsenal and triage VHDX">
+                <p>Additional Info: The image shows Arsenal Image Mounter with the .E01 mounted as E:, and Explorer with
+                    KAPE VHDX mounted as F:, displaying system volume info and other files.</p>
+                <p>Now we have: Logical = E: drive, Triage = F: drive.</p>
+                <img src="/assets/images/win_analysis_guide/8.png" alt="Mounted drives: Logical on E and Triage on F">
+                <p>Additional Info: The image confirms the drive letters and introduces the history analysis section
+                    with NirLauncher.</p>
+            </ol>
+
+            <h2>Browser History Analysis</h2>
+            <p>First thing we want to look at is the browser history. We know he was using Edge when we showed up, so we
+                start by examining Chromium-based artifacts for history. Use NirSoft utilities and NirLauncher to run
+                BrowsingHistoryView.</p>
+            <p>Open the tool and click on Advanced Options to select time frame and evidence to parse. Use the local
+                drive user folder (e.g., E:\Users) to pull data.</p>
+            <img src="/assets/images/win_analysis_guide/10.png"
+                alt="BrowsingHistoryView Advanced Options for time frame and user folder selection">
+            <img src="/assets/images/win_analysis_guide/11.png"
+                alt="BrowsingHistoryView Advanced Options for time frame and user folder selection">
+            <img src="/assets/images/win_analysis_guide/12.png"
+                alt="BrowsingHistoryView Advanced Options for time frame and user folder selection">
+            <p>Here we see a list of URLs visited on the device.</p>
+            <img src="/assets/images/win_analysis_guide/13.png"
+                alt="List of visited URLs in BrowsingHistoryView showing suspect URLs like AnyDesk download, anti-forensics searches, crypto instructions, and flights to Russia">
+            <p>We can see several suspect URLs visited by the user, including an RMM tool download page ("AnyDesk"),
+                anti-forensics methods Google searches, crypto currency exchange instructions, and plane tickets to
+                Russia from the US. None of this is direct evidence of crime but all useful to prosecutors.</p>
+            <p>Additional Info: Anti-forensics searches suggest intent to cover tracks, which can corroborate malicious
+                activity. Crypto exchanges might indicate payment for stolen IP, and flight searches could imply flight
+                risk. The image lists URLs like anydesk.com/en/downloads/windows, searches for deleting browser history,
+                bitcoin exchange, and flights from US to Russia.</p>
+            <p>We also note the user profile and visit duration for direct attribution—it was the "vboxuser" profile and
+                shows how long he was on each site.</p>
+            <img src="/assets/images/win_analysis_guide/14.png"
+                alt="BrowsingHistoryView showing user profiles, durations, and browsers">
+
+
+            <h2>Downloads Analysis</h2>
+            <p>From our previous discovery, we see that he visited the AnyDesk download page, but now we need to confirm
+                if anything was actually downloaded. He visited the page at 11:27:45 Local.</p>
+            <p>Use NirSoft BrowserDownloadsView from NirSoft utilities to examine these artifacts. Use Advanced Options
+                again to select the user directory as before.</p>
+            <img src="/assets/images/win_analysis_guide/15.png" alt="BrowserDownloadsView Advanced Options">
+            <img src="/assets/images/win_analysis_guide/16.png" alt="BrowserDownloadsView Advanced Options">
+            <p>We see here that there is one download that did occur at 11:27 Local time, which directly corresponds
+                with history, and that it succeeded. With this, we can confirm that he did indeed download the RMM
+                software about 30 minutes before the computer was seized.</p>
+            <img src="/assets/images/win_analysis_guide/17.png"
+                alt="Download details in BrowserDownloadsView showing AnyDesk.exe download at 11:27, succeeded, path C:\Users\vboxuser\Downloads\AnyDesk.exe">
+            <img src="/assets/images/win_analysis_guide/18.png"
+                alt="Download details in BrowserDownloadsView showing AnyDesk.exe download at 11:27, succeeded, path C:\Users\vboxuser\Downloads\AnyDesk.exe">
+            <p>Here we can see the directory it was downloaded to (e.g., C:\Users\vboxuser\Downloads\AnyDesk.exe).</p>
+            <p>Additional Info: Download artifacts include file name AnyDesk.exe, URL
+                https://download.anydesk.com/AnyDesk.exe, size 7.84 MB, speed 1052.8 KiB/sec, status Succeeded. This
+                confirms the file was fully transferred and could have been executed if not interrupted. The image shows
+                the tool interface with these details.</p>
+
+            <h2>Application Execution Analysis</h2>
+            <p>Now we want to see if he was able to execute the software and give someone remote access. We use Registry
+                Explorer to run this down. We are specifically looking for application execution or interaction. We can
+                see this a couple of ways.</p>
+            <p>In Registry Explorer, open the SYSTEM and NTUSER.DAT hives. Clean them when prompted with the transaction
+                logs.</p>
+            <img src="/assets/images/win_analysis_guide/19.png"
+                alt="Registry Explorer loading SYSTEM and NTUSER.DAT hives">
+            <p>Additional Info: The image shows Registry Explorer with SYSTEM.clean and NTUSER.DAT.clean loaded.</p>
+
+            <h3>BAM (Background Activity Moderator)</h3>
+            <p>First up, explore the Background Activity Moderator (BAM), designed to control the activity of background
+                applications. We want to see if maybe it was started, closed, and running in the background.</p>
+            <p>Subkey location: ROOT\ControlSet001\Services\bam\State\UserSettings\S-1-5-21-... (remember, the key is
+                the SID for the user account).</p>
+            <img src="/assets/images/win_analysis_guide/20.png" alt="BAM subkey location in Registry Explorer">
+            <p>Here we only have one user on the device, so it's easy. Otherwise, check Windows Registry Location of
+                SIDs: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList. Each subkey starting
+                with S-1-5 corresponds to a user profile. Match ProfileImagePath to identify the user SID.</p>
+            <p>Additional Info: BAM tracks execution times of background apps to manage power and performance. It's
+                useful for detecting hidden or persistent processes, but in this case, it shows no AnyDesk activity—only
+                IR tools from responders starting at 13:30 Local (23:30Z).</p>
+            <p>We find the user SID subkey and inspect to find full paths and times. We see where the incident
+                responders ran several tools, but no activity for the AnyDesk RMM tool.</p>
+            <img src="/assets/images/win_analysis_guide/21.png"
+                alt="BAM artifacts showing IR tools executions but no AnyDesk">
+
+            <h3>UserAssist</h3>
+            <p>Next up, check UserAssist, which shows user-initiated application executions via GUI.</p>
+            <p>Here we see corresponding and matching evidence to the BAM artifacts with IR tools being used, but none
+                others that really stick out. No AnyDesk execution.</p>
+            <p>Additional Info: UserAssist is stored in NTUSER.DAT under
+                Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist. Entries are ROT13 encoded for
+                obfuscation; decode them to reveal app paths and run counts/timestamps. The image shows executions like
+                PowerShell, Memory Dump, but no AnyDesk.</p>
+
+            <img src="/assets/images/win_analysis_guide/22.png" alt="UserAssist">
+
+            <h3>Prefetch Files</h3>
+            <p>Next, we can check prefetch files for AnyDesk or suspicious execution. None are found.</p>
+            <img src="/assets/images/win_analysis_guide/23.png"
+                alt="Prefetch files in Explorer, sorted, no ANYDESK.EXE pf file">
+            <p>Location: C:\Windows\Prefetch\*.pf</p>
+            <p>Why: Definitive evidence of program execution. If AnyDesk.exe was run even once, a prefetch file (e.g.,
+                ANYDESK.EXE-*.pf) would be created with execution count and last run time.</p>
+            <p>Tool: PECmd or WinPrefetchView (NirSoft)</p>
+            <p>Impact: This would have been the smoking gun to confirm whether AnyDesk was actually launched.</p>
+            <p>Additional Info: The image shows prefetch files like AUDIODG.EXE, BACKGROUNDTRANSFERHOST.EXE, but no
+                AnyDesk-related files, confirming no execution. Sorted by last executed time, shows recent IR tools.</p>
+
+            <h3>ShimCache / AppCompatCache</h3>
+            <p>Here if we sort by modified time we can see the apps that were executed. No signs of AnyDesk, just Edge
+                and Windows OS apps.</p>
+            <img src="/assets/images/win_analysis_guide/24.png"
+                alt="ShimCache in Registry Explorer, sorted by modified time, no AnyDesk">
+            <p>Location: Registry → SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache</p>
+            <p>Why: Tracks every executable that has ever been run on the system (even if no prefetch). Excellent for
+                confirming execution when prefetch is missing or disabled.</p>
+            <p>Tool: AppCompatCacheParser or Registry Explorer</p>
+            <p>Impact: Another strong execution indicator—would show AnyDesk path and last modified/execution timestamp.
+            </p>
+            <p>Additional Info: The image shows entries like msedge.exe, explorer.exe, but no AnyDesk.exe. Sorted by
+                modified time, recent entries are OS and browser related.</p>
+
+            <h3>AmCache.hve</h3>
+            <p>We can see there is no signs of AnyDesk in AmCache installed applications and installed application
+                files.</p>
+            <img src="/assets/images/win_analysis_guide/25.png"
+                alt="AmCache.hve in Registry Explorer, no AnyDesk entries">
+            <img src="/assets/images/win_analysis_guide/26.png"
+                alt="AmCache.hve loaded, showing inventory applications with no AnyDesk">
+            <img src="/assets/images/win_analysis_guide/27.png" alt="AmCache installed apps view">
+            <p>Location: C:\Windows\AppCompat\Programs\AmCache.hve</p>
+            <p>Why: Records program installations and first executions, including full path, SHA-1 hash, and timestamps.
+                Great for confirming if AnyDesk was executed or just downloaded.</p>
+            <p>Tool: AmCacheParser or Registry Explorer</p>
+            <p>Impact: Often survives anti-forensics better than prefetch.</p>
+            <p>Additional Info: Images show AmCache.hve file selection, loaded hive with no AnyDesk in program IDs or
+                file entries. Only standard Windows apps listed.</p>
+
+            <h3>PowerShell/Command History</h3>
+            <p>Next, let's look if commands were run in PowerShell. The path below leads to a TXT file of commands run
+                during the session.</p>
+            <pre><code>File Location: %userprofile%\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt</code></pre>
+            <p>As we visit the file location, we see only commands that were run by the DFIR team. This shows the user
+                didn't run any commands in this session.</p>
+            <img src="/assets/images/win_analysis_guide/28.png"
+                alt="ConsoleHost_history.txt open, showing DFIR commands like Get-FileHash, no user commands">
+            <p>Additional Info: This history persists across sessions unless cleared, making it valuable for detecting
+                scripted actions or exfiltration attempts. Absence here suggests no CLI-based activity by the user. The
+                image shows commands like Get-FileHash on triage and logical images.</p>
+
+            <h3>SRUM (System Resource Usage Monitor)</h3>
+            <p>Here we use srum_dump to parse the SRUM dat file into an Excel. Once we have output, I searched in the
+                app column for AnyDesk and showed no results.</p>
+            <img src="/assets/images/win_analysis_guide/29.png" alt="SRUM Dump tool interface with paths set">
+            <img src="/assets/images/win_analysis_guide/30.png"
+                alt="SRUM output Excel, searched for AnyDesk, no results">
+            <img src="/assets/images/win_analysis_guide/31.png"
+                alt="SRUM output Excel, searched for AnyDesk, no results">
+            <p>Location: C:\Windows\System32\sru\SRUDB.dat</p>
+            <p>Why: Tracks application network usage (bytes sent/received per executable). If AnyDesk connected out,
+                you'd see network activity tied to the EXE.</p>
+            <p>Tool: SRUM-Dump or SrumECmd</p>
+            <p>Impact: Could show actual data transfer (exfiltration) via AnyDesk—even if briefly.</p>
+            <p>Additional Info: The images show SRUM Dump configuration with paths to SRUDB.dat, output folder,
+                template, and SOFTWARE hive. Output files generated, and Excel sheet with no AnyDesk in application
+                network usage, confirming no network activity from it.</p>
+
+            <h2>Registry Analysis: Recent Documents and MRU</h2>
+            <p>Exploring NTUSER.DAT for recent docs, MRU (Most Recently Used), and file openings.</p>
+            <p>Here we load the NTUSER hive and clean it with transaction logs.</p>
+            <img src="/assets/images/win_analysis_guide/32.png"
+                alt="Loading NTUSER.DAT in Registry Explorer and cleaning">
+            <img src="/assets/images/win_analysis_guide/33.png"
+                alt="Loading NTUSER.DAT in Registry Explorer and cleaning">
+            <p>First, we look at recent documents interacted with. We see several .LNK files, which are link files
+                evidencing folders and files that have been interacted with. Several are from the responders, but none
+                raise concern. Use the timeline to filter files based on when responders were collecting.</p>
+            <img src="/assets/images/win_analysis_guide/34.png"
+                alt="Recent documents in Registry Explorer showing .LNK files">
+            <img src="/assets/images/win_analysis_guide/35.png"
+                alt="Recent documents in Registry Explorer showing .LNK files">
+            <p>Nothing of concern in recent docs—only one PS1 file associated with DFIR responders.</p>
+            <img src="/assets/images/win_analysis_guide/36.png"
+                alt="Subkeys in NTUSER.DAT, few artifacts like no RunMRU">
+            <p>If we look at all subkeys, we see very few artifacts on the machine, such as no RunMRU entries.</p>
+            <p>Additional Info: RecentDocs key (Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs) tracks
+                opened files by extension. MRU lists like OpenSaveMRU show file dialogs. Sparse entries here indicate
+                minimal user activity beyond browsing/downloads. Images show .LNK for Dump It, KAPE, etc., but no
+                suspicious files.</p>
+
+            <h2>Event Logs Analysis</h2>
+            <p>Next, look at event codes to track any other logins and logoffs from the user or others that may have had
+                remote access. Load files from E:\Windows\System32\winevt\Logs and grab the Security event logs.</p>
+            <img src="/assets/images/win_analysis_guide/37.png" alt="Event logs folder in Explorer">
+            <img src="/assets/images/win_analysis_guide/38.png" alt="Event Viewer showing multiple 4624 logins">
+            <p>Of note, we had over 20+ 4624 logins from local and system accounts for services prior to the first
+                login. This is interesting—several logins are done by Windows OS as it boots up.</p>
+            <p>We look for 4647 (user-initiated logoffs) and 4634 (actual session ends from shutdown). We don't find
+                any, which tells us that the responders were able to grab the machine prior to the user shutting it off.
+            </p>
+            <p>Additional Info: Event ID 4624 indicates successful logons (e.g., Type 3 for network, Type 10 for remote
+                interactive). Absence of remote logons (e.g., from AnyDesk) confirms no execution. Boot-time logons are
+                normal for services but can mask anomalies if not deconflicted. Images show 4624 events for system
+                accounts like SYSTEM, COMEANDFINDME\WORKGROUP, and details of a logon event.</p>
+            <img src="/assets/images/win_analysis_guide/40.png" alt="Explanation of 4647 and 4634 events, no findings">
+
+            <h2>Summary of Findings</h2>
+            <p>From what we have investigated, we can say that the user did have suspicious internet visits on Edge that
+                should be reported to investigators, as well as his successful download of the RMM tool AnyDesk—but he
+                was not able to execute the file; it was only a download. We can also see from a quick look that he did
+                not run any commands from a shell and that he did not interact with any files on the machine that showed
+                concern or suspicion.</p>
+            <p>All evidence should be reported as found, and we let the prosecutor paint the picture. We must remember
+                we speak in facts from what we find, not to paint a narrative on what we think happened or weigh
+                judgment—we are the collectors and fact finders.</p>
+
+            <h2>Final Notes & Best Practices</h2>
+            <ul>
+                <li>Always document every single action, including timestamps and tools used.</li>
+                <li>Never work on originals — only verified copies.</li>
+                <li>Hash everything, verify everything.</li>
+                <li>When in doubt → do less, document more.</li>
+                <li>Deconflict investigator actions from user actions using timelines.</li>
+                <li>Expand analysis to other artifacts like $MFT/$UsnJrnl for file timelines, Jump Lists, ShellBags if
+                    needed.</li>
+            </ul>
+
+            <p>Happy hunting!</p>
+        </div>
+    </div>
+</body>
+
+</html>
