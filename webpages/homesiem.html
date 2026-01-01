@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Setting Up Elastic Stack Locally for Log Ingestion - 18gi0n's Tech Lair</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -72,6 +74,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Nav Bar -->
     <nav>
@@ -93,11 +96,17 @@
             <img src="/assets/images/homesiem/title.png" alt="Elastic Cover">
             <h2>1. Overview</h2>
             <p>
-                This guide covers setting up the Elastic Stack (Elasticsearch and Kibana) locally using Docker, configuring it for network access, setting up Fleet for agent management, installing Elastic Agents, and integrating system and Zeek logs. It's ideal for building a home lab SIEM or testing log ingestion pipelines. We'll use scripts and commands to get everything running quickly, including data views and dashboards for visualization.
+                This guide covers setting up the Elastic Stack (Elasticsearch and Kibana) locally using Docker,
+                configuring it for network access, setting up Fleet for agent management, installing Elastic Agents, and
+                integrating system and Zeek logs. It's ideal for building a home lab SIEM or testing log ingestion
+                pipelines. We'll use scripts and commands to get everything running quickly, including data views and
+                dashboards for visualization.
             </p>
             <ul>
-                <li><strong>Objective:</strong> Install and configure Elastic Stack for local log collection, including system and Zeek integrations via Fleet agents.</li>
-                <li><strong>Skills Developed:</strong> Docker setup, Elastic configuration, Fleet management, agent enrollment, log integration, and Kibana data views.</li>
+                <li><strong>Objective:</strong> Install and configure Elastic Stack for local log collection, including
+                    system and Zeek integrations via Fleet agents.</li>
+                <li><strong>Skills Developed:</strong> Docker setup, Elastic configuration, Fleet management, agent
+                    enrollment, log integration, and Kibana data views.</li>
                 <li><strong>Platform:</strong> Ubuntu (or similar Linux), Docker, Elastic Stack.</li>
             </ul>
 
@@ -106,12 +115,15 @@
             <ul>
                 <li>
                     <strong>Resource:</strong><br>
-                    Title: <a href="https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository">Docker Installation Guide</a><br>
+                    Title: <a href="https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository">Docker
+                        Installation Guide</a><br>
                     Usage: Install Docker and Docker Compose on Ubuntu.
                 </li>
                 <li>
                     <strong>Resource:</strong><br>
-                    Title: <a href="https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart">Elastic Local Quickstart</a><br>
+                    Title: <a
+                        href="https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart">Elastic
+                        Local Quickstart</a><br>
                     Usage: Official guide for running Elastic Stack locally with a script.
                 </li>
                 <li>
@@ -126,12 +138,14 @@
 
             <h3>Step 1: Prerequisites</h3>
             <p>
-                Ensure Docker is installed on OS. I will be using Debain 12 in this writeup. Also, install Docker Compose if not already present.
+                Ensure Docker is installed on OS. I will be using Debain 12 in this writeup. Also, install Docker
+                Compose if not already present.
             </p>
             <p><strong>Commands:</strong></p>
             <pre><code>sudo apt-get install docker-compose</code></pre>
             <p>
-                <strong>Why:</strong> Docker is required to run Elasticsearch and Kibana containers. Follow the linked guide for full Docker installation.
+                <strong>Why:</strong> Docker is required to run Elasticsearch and Kibana containers. Follow the linked
+                guide for full Docker installation.
             </p>
             <img src="/assets/images/homesiem/1.png" alt="docker">
 
@@ -143,11 +157,12 @@
             <pre><code>curl -fsSL https://elastic.co/start-local | sh</code></pre>
             <img src="/assets/images/homesiem/2.png" alt="Script completion">
             <p>
-                <strong>Why:</strong> This script automates the creation of a Docker Compose setup for Elastic Stack. Watch for errors and wait for completion. It creates a directory like 'elastic-start-local'.
+                <strong>Why:</strong> This script automates the creation of a Docker Compose setup for Elastic Stack.
+                Watch for errors and wait for completion. It creates a directory like 'elastic-start-local'.
             </p>
             <img src="/assets/images/homesiem/3 (1).png" alt="Script completion">
             <img src="/assets/images/homesiem/4.png" alt="Script completion">
-        
+
 
             <h3>Step 3: Edit docker-compose.yml for Network Access</h3>
             <p>
@@ -161,7 +176,8 @@
             <pre><code>ports:
   - ${KIBANA_LOCAL_PORT}:5601</code></pre>
             <p>
-                <strong>Why:</strong> By default, Kibana is bound to localhost. This change exposes it to the network for access from other devices.
+                <strong>Why:</strong> By default, Kibana is bound to localhost. This change exposes it to the network
+                for access from other devices.
             </p>
             <img src="/assets/images/homesiem/5.png" alt="docker-compose edit">
             <img src="/assets/images/homesiem/6.png" alt="docker-compose edit">
@@ -174,36 +190,52 @@
             <p><strong>Command:</strong></p>
             <pre><code>./start.sh</code></pre>
             <p>
-                <strong>Why:</strong> The .env file stores variables like passwords. Updating it secures your setup. Then, restart with start.sh and access Kibana at https://&lt;docker-device-ip&gt;:5601.
+                <strong>Why:</strong> The .env file stores variables like passwords. Updating it secures your setup.
+                Then, restart with start.sh and access Kibana at https://&lt;docker-device-ip&gt;:5601.
             </p>
             <img src="/assets/images/homesiem/8.png" alt="Password change and login">
             <img src="/assets/images/homesiem/9.png" alt="Password change and login">
             <img src="/assets/images/homesiem/10.png" alt="Password change and login">
             <img src="/assets/images/homesiem/11.png" alt="kibana access">
 
-            <h3>Step 5: Download Elastic Agent</h3>
+            <h3>Step 5: Change New Workspace to Classic Mode</h3>
+            <p>
+                Once logged in, select the settings icon on the bottom left and select "spaces".
+            </p>
+            <p>
+                Once in spaces edit default, and select Classic Solution View, and select all features below.
+            </p>
+            <img src="/assets/images/homesiem/28.png" alt="Classic Mode">
+            <img src="/assets/images/homesiem/29.png" alt="Classic Mode">
+            <img src="/assets/images/homesiem/30.png" alt="Classic Mode">
+            <img src="/assets/images/homesiem/31.png" alt="Classic Mode">
+
+            <h3>Step 6: Download Elastic Agent</h3>
             <p>
                 Download the Elastic Agent for your OS and Elastic version.
             </p>
             <p>
-                <strong>Why:</strong> The agent collects system logs and integrates with other tools like Zeek. Choose the appropriate package (e.g., for Debian).
+                <strong>Why:</strong> The agent collects system logs and integrates with other tools like Zeek. Choose
+                the appropriate package (e.g., for Debian).
             </p>
             <img src="/assets/images/homesiem/12.png" alt="Agent download">
 
-            <h3>Step 6: Set Up Fleet Server Policy</h3>
+            <h3>Step 7: Set Up Fleet Server Policy</h3>
             <p>
                 In Kibana, create a Fleet server policy using the quick start option.
             </p>
             <p>
-                <strong>Steps:</strong> Choose a name and add the IP of the device to act as the Fleet server (e.g., the Debian server running Elastic).
+                <strong>Steps:</strong> Choose a name and add the IP of the device to act as the Fleet server (e.g., the
+                Debian server running Elastic).
             </p>
             <p>
-                <strong>Why:</strong> Fleet manages agents centrally. Using the same device simplifies the setup for a local lab.
+                <strong>Why:</strong> Fleet manages agents centrally. Using the same device simplifies the setup for a
+                local lab.
             </p>
             <img src="/assets/images/homesiem/13.png" alt="Fleet policy setup">
             <img src="/assets/images/homesiem/14.png" alt="Fleet policy setup">
 
-            <h3>Step 7: Install and Enroll Elastic Agent</h3>
+            <h3>Step 8: Install and Enroll Elastic Agent</h3>
             <p>
                 Install the agent package and enroll it with Fleet.
             </p>
@@ -217,55 +249,61 @@ sudo elastic-agent enroll \
   --fleet-server-policy=fleet-server-policy \
   --fleet-server-port=8220 --insecure</code></pre>
             <p>
-                <strong>Why:</strong> This installs the agent, enables it on boot, and enrolls it with the Fleet server. You'll see confirmation in the terminal and in Kibana's Fleet UI.
+                <strong>Why:</strong> This installs the agent, enables it on boot, and enrolls it with the Fleet server.
+                You'll see confirmation in the terminal and in Kibana's Fleet UI.
             </p>
             <img src="/assets/images/homesiem/15.png" alt="Agent enrollment">
             <img src="/assets/images/homesiem/16.png" alt="Agent enrollment">
             <img src="/assets/images/homesiem/17.png" alt="Agent enrollment">
 
-            <h3>Step 8: Add Integrations</h3>
+            <h3>Step 9: Add Integrations</h3>
             <p>
                 Add integrations for system logs (default) and Zeek.
             </p>
             <p>
-                <strong>Steps:</strong> Go to Management > Integrations, add Zeek, specify log location (e.g., /zeek/logs/current), and apply to the agent policy.
+                <strong>Steps:</strong> Go to Management > Integrations, add Zeek, specify log location (e.g.,
+                /zeek/logs/current), and apply to the agent policy.
             </p>
             <p>
-                <strong>Why:</strong> Integrations define what logs to collect. System is added by default; Zeek requires custom log path configuration. Wait 5 minutes for collection to start.
+                <strong>Why:</strong> Integrations define what logs to collect. System is added by default; Zeek
+                requires custom log path configuration. Wait 5 minutes for collection to start.
             </p>
             <img src="/assets/images/homesiem/18.png" alt="Adding Zeek integration">
             <img src="/assets/images/homesiem/19.png" alt="Adding Zeek integration">
             <img src="/assets/images/homesiem/20.png" alt="Adding Zeek integration">
             <img src="/assets/images/homesiem/21.png" alt="Adding Zeek integration">
 
-            <h3>Step 9: Verify Agent Health</h3>
+            <h3>Step 10: Verify Agent Health</h3>
             <p>
                 Check the agent in Fleet to ensure integrations are healthy.
             </p>
             <p>
-                <strong>Why:</strong> This confirms logs are being collected without issues. Look for healthy status on the right side of the agent details.
+                <strong>Why:</strong> This confirms logs are being collected without issues. Look for healthy status on
+                the right side of the agent details.
             </p>
             <img src="/assets/images/homesiem/22.png" alt="Agent health check">
 
-            <h3>Step 10: Create Data Views for Zeek Datasets</h3>
+            <h3>Step 11: Create Data Views for Zeek Datasets</h3>
             <p>
                 Find the index naming schema in Stack Management > Index Management, then create data views in Kibana.
             </p>
             <p><strong>Example Index Pattern:</strong></p>
             <pre><code>logs-zeek-connection*</code></pre>
             <p>
-                <strong>Why:</strong> Data views make logs queryable in Discover. Use patterns like .ds-logs-zeek.connection to match Zeek conn logs.
+                <strong>Why:</strong> Data views make logs queryable in Discover. Use patterns like
+                .ds-logs-zeek.connection to match Zeek conn logs.
             </p>
             <img src="/assets/images/homesiem/23.png" alt="Data view creation">
             <img src="/assets/images/homesiem/24.png" alt="Data view creation">
             <img src="/assets/images/homesiem/25.png" alt="Data view creation">
 
-            <h3>Step 11: Explore Dashboards</h3>
+            <h3>Step 12: Explore Dashboards</h3>
             <p>
                 Use the default dashboards created by integrations in Kibana.
             </p>
             <p>
-                <strong>Why:</strong> Dashboards provide visualizations for system and Zeek logs. From here, customize as needed.
+                <strong>Why:</strong> Dashboards provide visualizations for system and Zeek logs. From here, customize
+                as needed.
             </p>
             <img src="/assets/images/homesiem/26.png" alt="Dashboards">
             <img src="/assets/images/homesiem/27.png" alt="Dashboards">
@@ -273,16 +311,22 @@ sudo elastic-agent enroll \
             <h2>4. Lessons Learned and Tips</h2>
             <p>Key insights from this setup:</p>
             <ul>
-                <li><strong>Tip 1:</strong> Always check for errors during script execution and container startup. "docker logs imagename" is the cmd.</li>
+                <li><strong>Tip 1:</strong> Always check for errors during script execution and container startup.
+                    "docker logs imagename" is the cmd.</li>
                 <li><strong>Tip 2:</strong> Use --insecure for local setups, but enable TLS for production.</li>
                 <li><strong>Tip 3:</strong> Monitor index growth; allocate sufficient storage for logs.</li>
-                <li><strong>Key Lesson:</strong> Fleet simplifies agent management, making it easy to scale log collection.</li>
-                <li><strong>Future Goals:</strong> Integrate more sources like Suricata and explore advanced alerting in Kibana.</li>
+                <li><strong>Key Lesson:</strong> Fleet simplifies agent management, making it easy to scale log
+                    collection.</li>
+                <li><strong>Future Goals:</strong> Integrate more sources like Suricata and explore advanced alerting in
+                    Kibana.</li>
             </ul>
 
             <h2>5. Conclusion</h2>
             <p>
-                Setting up the Elastic Stack locally provides a solid foundation for log ingestion and analysis in a home lab. From running the quickstart script to enrolling agents and creating data views, this process gets you ingesting system and Zeek logs quickly. Thanks for following along—now you can customize and expand your setup!
+                Setting up the Elastic Stack locally provides a solid foundation for log ingestion and analysis in a
+                home lab. From running the quickstart script to enrolling agents and creating data views, this process
+                gets you ingesting system and Zeek logs quickly. Thanks for following along—now you can customize and
+                expand your setup!
             </p>
 
             <h2>6. Additional Notes</h2>
@@ -312,4 +356,5 @@ sudo elastic-agent enroll \
         window.addEventListener('resize', setOpaqueBgHeight);
     </script>
 </body>
+
 </html>
