@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>
+      Windows Memory Forensics - SolarMarker Analysis | 18gi0n's Tech Lair
+    </title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        position: relative;
+        min-height: 100vh;
+      }
+
+      .opaque-bg {
+        background-color: rgba(13, 13, 13, 0.6);
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      .content {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        padding-bottom: 20px;
+      }
+
+      .content .left-aligned-content {
+        text-align: left !important;
+        max-width: 800px;
+        margin: 0 20px !important;
+        padding: 20px 0 !important;
+      }
+
+      .content .left-aligned-content h1,
+      h2,
+      h3,
+      p,
+      ul,
+      ol,
+      li {
+        text-align: left !important;
+      }
+
+      .content .left-aligned-content a {
+        color: #ff9933 !important;
+        text-decoration: underline;
+      }
+
+      .content .left-aligned-content a:hover {
+        color: #ff007a !important;
+        text-shadow: 0 0 5px #ff007a;
+      }
+
+      .content .left-aligned-content pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin: 10px 0;
+        position: relative;
+      }
+
+      .content .left-aligned-content code {
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 14px;
+      }
+
+      .content .left-aligned-content .copy-btn {
+        display: none;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff9933;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: "Consolas", "Courier New", monospace;
+      }
+
+      .content .left-aligned-content pre:hover .copy-btn {
+        display: block;
+      }
+
+      .content .left-aligned-content .copy-btn:hover {
+        background: #ff007a;
+      }
+
+      .content .left-aligned-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+
+      details {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      details summary {
+        cursor: pointer;
+        background: #ff9933;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 4px;
+        font-family: Consolas, monospace;
+        font-size: 1.1em;
+      }
+
+      details summary:hover {
+        background: #ff007a;
+      }
+
+      details > div {
+        margin-top: 15px;
+        padding: 0 10px;
+      }
+
+      @media (max-width: 600px) {
+        .content .left-aligned-content {
+          margin: 0 10px !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Nav Bar -->
+    <nav>
+      <ul>
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code & Tools</a></li>
+        <li><a href="/ctf.html">Write-ups</a></li>
+        <li><a href="/research.html">Research</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+      <div class="left-aligned-content">
+        <h1>Windows Forensics Analysis PT III (Memory)<br /></h1>
+        <p>
+          A Step-by-Step Walkthrough: Analyzing a SolarMarker-Infected Memory
+          Dump
+        <p>
+        <img
+          src="/assets/images/windowsmemory/title.jpeg"
+          alt="Memory Forensics Title"
+        />
+
+        <h2>Disclaimer</h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+    <img src="/assets/images/windowsmemory/Sentinels Icon A.png" alt="SANS" style="width: 150px; height: auto;" />
+    <img src="/assets/images/windowsmemory/GCFA.png" alt="GCFA" style="width: 150px; height: auto;" />
+</div>
+        <p>
+          This guide is purely for educational and personal reference. Every
+          technique, plugin, and insight comes directly from the SANS GCFA
+          training I just finished. I’m walking through a real SolarMarker
+          memory sample (solarmarker.img) so you can follow along, understand
+          the “why” behind every step, and see how the pieces fit together. All
+          credit to SANS — their training is phenomenal.
+        </p>
+
+        <h2>What We’re Looking At</h2>
+        <img src="/assets/images/windowsmemory/Solarmarker.jpeg" alt="picture" />
+        <p>
+          We have a memory image from a Windows 10 machine that got hit by
+          SolarMarker (also called Jupyter or Yellow Cockatoo).
+        </p>
+        <p>
+          This malware is sneaky: it’s a .NET infostealer that grabs autofill
+          data, saved passwords, and credit cards from browsers, plus it can
+          download more files and run commands from its C2 server.
+        </p>
+        <p>
+          The infection chain starts with a big fake “flash_installer.msi”,
+          drops PowerShell scripts, creates a weird random folder full of
+          encrypted junk, and plants a .lnk in the Startup folder for
+          persistence.
+        </p>
+        <p>
+          <strong>Great background reads:</strong
+          ><a
+            href="https://www.cybereason.com/blog/research/threat-alert-solarmarker-backdoor"
+            >Cybereason Solarmarker article</a
+          >,
+          <a href="https://unit42.paloaltonetworks.com/solarmarker-malware/"
+            >Palo Alto Unit 42 SolarMarker article</a
+          >
+        </p>
+
+        <h2>Tools I Used</h2>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/volatilityfoundation/volatility3"
+              target="_blank"
+              >Volatility 3</a
+            >
+            (running on SIFT Linux) — super granular, perfect for digging into
+            specific structures.
+          </li>
+          <li>
+            <a
+              href="https://github.com/volatilityfoundation/volatility/wiki/installation"
+              target="_blank"
+              >Volatility 2</a
+            >(a couple plugins still work better here).
+          </li>
+          <img
+            src="/assets/images/windowsmemory/volatility.png"
+            alt="Memory Forensics Title"
+          />
+          <li>
+            <a href="https://github.com/ufrisk/MemProcFS" target="_blank"
+              >MemProcFS</a
+            >
+            (on Windows SIFT) — my favorite for this case because it mounts the
+            entire memory dump as a normal drive (M:) and gives you every
+            artifact in one folder structure. Run it once and you’re done.
+          </li>
+          <img
+            src="/assets/images/windowsmemory/memprofs.png""
+            alt="Memory Forensics Title"
+          />
+        </ul>
+
+        <h2>Why Memory Analysis Matters</h2>
+        <img src="/assets/images/windowsmemory/whymemory.png" alt="picture" />
+        <p>
+          Everything that happens on a computer touches memory: running
+          processes, threads, network connections, open files, passwords,
+          encryption keys, registry values — even things that were deleted from
+          disk. If you only look at the hard drive, you miss the full story.
+          Memory shows you what was actually executing right when the snapshot
+          was taken.
+        </p>
+
+        <h2>The Standard Analysis Flow We’ll Follow</h2>
+        <ol>
+          <li>
+            Profile the system (know what OS and kernel we’re dealing with)
+          </li>
+          <li>Find rogue processes</li>
+          <li>
+            Dig into those processes objects (DLLs, command lines, tokens,
+            handles)
+          </li>
+          <li>Check network activity</li>
+          <li>Look for code injection / anomalies</li>
+          <li>Audit drivers / Rootkit detection</li>
+          <li>Dump anything suspicious</li>
+        </ol>
+
+        <h2>Quick Windows Memory 101 (Why This Stuff Matters)</h2>
+        <img src="/assets/images/windowsmemory/Quick Windows.png" alt="picture" />
+        <p>Think of memory like a big linked list:</p>
+        <ul>
+          <li>
+            <strong>KDBG</strong> is the starting point — the kernel debugger
+            block that points to every active process.
+          </li>
+          <li>
+            <strong>EPROCESS</strong> blocks are chained together like a linked
+            list. Each block represents one running process (PID, creation time,
+            threads, etc.).
+          </li>
+          <li>
+            <strong>VAD Tree</strong> tells you what’s actually loaded in that
+            process’s memory (code sections, heap, mapped files).
+          </li>
+          <li>
+            <strong>PEB</strong> is the process’s own “ID card” — it lists
+            loaded DLLs and the exact command line that was used to start it.
+          </li>
+          <li>
+            <strong>Handles</strong> show every file, registry key, or socket
+            the process is touching.
+          </li>
+          <li>
+            <strong>Access Tokens</strong> tell you who the process is running
+            as (SYSTEM vs. domain user).
+          </li>
+          <li>
+            <strong>Threads</strong> are the actual lines of code executing
+            right now.
+          </li>
+        </ul>
+        <p><strong>Analyst mental model I always use:</strong></p>
+        <pre><code>EPROCESS
+├── PEB     → “What the process claims is loaded”
+├── VAD     → “What is really in memory”
+├── Handles → “What it’s touching”
+├── Token   → “Who it’s running as”
+└── Threads → “What is actually executing”
+
+Identity  → EPROCESS
+Intent    → Command line (PEB)
+Execution → Threads + VAD
+Access    → Handles
+Authority → Token</code></pre>
+
+        <img src="/assets/images/windowsmemory/eproccessblock.png" alt="picture" />
+        <!-- ================= STEP 1 ================= -->
+
+<h2>Analysis Steps</h2>
+
+        <details>
+          <summary>Step 1: Profile the System</summary>
+          <div>
+            <h3>Why this matters</h3>
+            <p>
+              Profiling the system is the very first step because it tells
+              Volatility exactly how to interpret the memory image. Memory
+              layouts, kernel structures, and offsets can vary between Windows
+              versions and builds. Without the correct profile, all subsequent
+              analysis could be inaccurate or even completely misleading.
+            </p>
+            <p>
+              Additionally, taking note of the system timestamp and other
+              environment details helps us begin building a timeline of
+              activity. This context is crucial when correlating suspicious
+              processes, network connections, or artifacts to specific points in
+              time during an investigation.
+            </p>
+            <p>
+              In short, profiling ensures that the tools know what “normal”
+              looks like for this system, making it much easier to spot
+              anomalies in later steps.
+            </p>
+            <p>
+              I always start here so Volatility knows exactly which symbols and
+              offsets to use.
+            </p>
+            <pre><code># Step 1: Check the memory image info
+vol -f solarmarker.img windows.info
+
+# Step 2: Based on output, set profile (Volatility 2 example)
+vol -f solarmarker.img --profile=Win10x64_19041 pslist</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+            <p>
+              We get: Windows 10 x64, build details, Kernel Base address, DTB,
+              system time (2022-06-01 09:39:50 UTC), etc. Everything lines up —
+              good to go.
+            </p>
+            <p>
+              A good notes as well to take away from this output is the
+              timestamp of the memory sample. This will help us start to build
+              the foundation of our timeline.
+            </p>
+
+            <img
+              src="/assets/images/windowsmemory/1a.png"
+              alt="Volatility windows.info output"
+            />
+          </div>
+        </details>
+
+        <!-- ================= STEP 2 ================= -->
+        <details>
+          <summary>Step 2: Identify Rogue Processes</summary>
+          <div>
+            <h3>Why this matters</h3>
+            <p>
+              Identifying rogue processes is a critical first step in memory
+              analysis because processes represent the active execution layer of
+              an attack. By analyzing what is running (and what may have
+              recently run), we can begin to uncover how an attacker gained
+              execution, escalated privileges, and moved within the system.
+            </p>
+            <p>
+              Many attack techniques—such as fileless malware,
+              living-off-the-land binaries (LOLBins), and process injection—rely
+              on abusing legitimate processes to blend in with normal system
+              activity. This makes it essential to closely examine process
+              relationships, execution context, and anomalies in behavior rather
+              than relying solely on known malicious filenames.
+            </p>
+            <img src="/assets/images/windowsmemory/2a.png" alt="2a" />
+            <p>
+              Let’s begin by examining the list of currently running processes.
+              We will use two Volatility plugins for this step: pslist and
+              psscan.
+            </p>
+            <p>
+              <strong>windows.pslist</strong> (running processes) +
+              <strong>windows.psscan</strong> (scans for terminated/hidden
+              processes) + Volatility 2 <strong>pstree</strong> for the tree
+              view.
+            </p>
+
+            <h3>When reviewing the results, look for anomalies such as:</h3>
+            <ul>
+              <li>Unusual or unexpected process names</li>
+              <li>Processes running from suspicious locations</li>
+              <li>Duplicate or misspelled system process names</li>
+              <li>Processes with abnormal parent-child relationships</li>
+              <li>Recently terminated processes that appear suspicious</li>
+            </ul>
+            <p>IOCs noted:</p>
+            <ul>
+              <li>
+                services.exe → svchost.exe → msiexec.exe (PID 5340, SYSTEM)
+              </li>
+              <li>msiexec (5340) → msiexec.exe (PID 6872, now domain user)</li>
+              <li>
+                msiexec (6872) → powershell.exe (PID 5352) + conhost.exe (PID
+                6388)
+              </li>
+            </ul>
+            <img src="/assets/images/windowsmemory/2b.png" alt="2b" />
+            <img src="/assets/images/windowsmemory/2c.png" alt="2c" />
+            <p>
+              Classic red flag: msiexec spawning PowerShell + privilege context
+              switch.
+            </p>
+          </div>
+        </details>
+
+        <!-- ================= STEP 3 ================= -->
+        <details>
+          <summary>Step 3: Analyze Process Objects</summary>
+          <div>
+            <p>
+              In this step, we aim to build context around previously identified
+              Indicators of Compromise (IOCs) while also looking for potential
+              signs of additional IOCs.
+            </p>
+            <p>To do this, we will examine several key details:</p>
+            <ul>
+              <li>
+                <strong>Associated DLLs:</strong>Identify dynamic link libraries
+                loaded by the process, as these can reveal malicious behavior or
+                relationships with other compromised components.
+              </li>
+              <li>
+                <strong>Command Line Arguments:</strong>Review the command-line
+                arguments used by the process to uncover potentially suspicious
+                flags, payloads, or obfuscation techniques.
+              </li>
+              <li>
+                <strong>Security Content:</strong>Assess what security content
+                (e.g., antivirus, firewall, or endpoint protection tools) the
+                process is interacting with, which could provide insights into
+                the attack’s evasion tactics.
+              </li>
+              <li>
+                <strong>Handles/Objects Accessed:</strong>Look into the handles
+                or objects the process is interacting with (files, registry
+                keys, network connections, etc.), as these may provide clues
+                about the process’s intentions and any malicious activity.
+              </li>
+            </ul>
+            <img src="/assets/images/windowsmemory/3a.png" alt="3a" />
+
+            <p>
+              The first thing we’ll examine is windows.cmdline, as this is
+              relevant to the IOC we’re investigating. This particular IOC
+              triggered a PowerShell session that, in turn, spawned a conhost
+              process. By analyzing the command line arguments associated with
+              this process, we can gain further insight into how the PowerShell
+              session was executed and whether any suspicious or malicious flags
+              were used.
+            </p>
+
+            <p>
+              Unfortunately, there were no command-line arguments observed for
+              the PowerShell or conhost processes (via cmdline in Volatility 2),
+              nor did we see any relevant output from the dlllist plugin.
+            </p>
+            <img src="/assets/images/windowsmemory/3d.png" alt="3d" />
+            <p>
+              Next, we need to examine the security context in which the
+              PowerShell and conhost processes were running. Both processes are
+              running as a domain user, which, depending on the user, may not be
+              out of the ordinary. However, what stands out is the parent
+              process—it appears that powershell and conhost were both spawned
+              by msiexec.exe and subsequently by services.exe. This raises some
+              questions: Why was msiexec.exe involved in launching these
+              processes, and what triggered it to do so, especially when
+              considering the normal behavior of these processes?
+            </p>
+
+            <img src="/assets/images/windowsmemory/3b.png" alt="3b" />
+            <img src="/assets/images/windowsmemory/3c.png" alt="3c" />
+
+            <p>IOCs Noted:</p>
+            <ul>
+              <li>
+                We see the suspicious process chain (6872,5340,5352,6388)
+                running under security context of a domain user
+                S-1-5-21-2601604243-3364590713-1171799579-1001
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- ================= STEP 4 ================= -->
+        <details>
+          <summary>Step 4: Review Network Objects</summary>
+          <div>
+            <p>
+              Here, we have two main plugins for examining network connections.
+              Netstat displays all currently allocated and active connections
+              that are still present. Netscan, on the other hand, scans memory
+              to identify remnants of ended or unallocated connections
+            </p>
+            <img src="/assets/images/windowsmemory/4a.png" alt="4a" />
+            <p>
+              By using both tools together, we can build a clearer picture of
+              whether processes were communicating with external systems. This
+              helps us identify suspicious external IPs, unusual ports, and
+              processes that should not be communicating externally but stand
+              out.
+            </p>
+
+            <h3>When reviewing the results, look for anomalies such as:</h3>
+            <ul>
+              <li>
+                Unusual or unexpected external IP addresses (especially rare,
+                foreign, or known malicious ranges)
+              </li>
+              <li>
+                Connections to suspicious or uncommon ports (e.g., high-numbered
+                ports, non-standard service ports)
+              </li>
+              <li>
+                Processes that should not normally communicate over the network
+                (e.g., lsass.exe, winlogon.exe)
+              </li>
+              <li>
+                Multiple outbound connections from a single process to different
+                IPs (possible C2 beaconing or scanning behavior)
+              </li>
+              <li>
+                Repeated connections to the same external IP (potential
+                command-and-control communication)
+              </li>
+              <li>
+                Short-lived or rapidly opening/closing connections (beaconing,
+                failed callbacks, or scanning activity)
+              </li>
+              <li>
+                Connections using uncommon protocols or address types (e.g.,
+                unexpected IPv6 usage in an IPv4-dominant environment)
+              </li>
+              <li>
+                Network activity from previously identified suspicious processes
+                or IOCs
+              </li>
+              <li>
+                Connections occurring under unusual user contexts (e.g., SYSTEM
+                processes making external connections unexpectedly)
+              </li>
+              <li>Listening ports opened by suspicious or unknown processes</li>
+            </ul>
+
+            <img
+              src="/assets/images/windowsmemory/4b.png"
+              alt="4b"
+            />
+
+            <p>
+              Here, we see the output from Netscan. There are no connections
+              tied to our previous IOC chain. However, we do observe three
+              external closed connections, all using IPv6. Only one of these has
+              a single user report of suspicious activity, but none have enough
+              evidence to be labeled as having a bad reputation. Aside from that
+              nothing in particular stands out for network connections on this
+              host.
+            </p>
+          </div>
+        </details>
+
+        <!-- ================= STEP 5 ================= -->
+        <details>
+          <summary>Step 5: Look for code injection</summary>
+          <div>
+            <p>
+              <strong>What is Code Injection?</strong> At its core code
+              injection aims to execute malcious code in a target "victim"
+              process. Some examples of that are below.
+            </p>
+            <img src="/assets/images/windowsmemory/5b.png" alt="5b" />
+
+            <p>Common Code Injection Types:</p>
+            <ul>
+              <li>
+                <strong>Simple DLL Injection</strong> Write a DLL path into
+                remote process → force it to api call LoadLibrary(path) via
+                remote thread. (Easiest, but leaves obvious artifacts such as
+                (disk file + loaded module list).)
+              </li>
+              <li>
+                <strong>Reflective DLL Injection</strong> Write entire DLL
+                binary into remote process → remote thread jumps to custom
+                ReflectiveLoader export → DLL manually maps/fixes/loads itself
+                (no LoadLibrary needed). (Popular because it's fileless and
+                skips standard loader APIs.)
+              </li>
+              <li>
+                <strong>Process Hollowing</strong> Create legit process
+                suspended → gut/hollow its original code → write full malicious
+                EXE → fix headers/PEB/context → resume thread. (Makes malicious
+                code appear as if it's the legitimate program (great for
+                blending in).)
+              </li>
+            </ul>
+
+            <table border="1" cellspacing="0" cellpadding="6">
+              <thead>
+                <tr>
+                  <th>Aspect</th>
+                  <th>Simple/Classic DLL Injection</th>
+                  <th>Reflective DLL Injection</th>
+                  <th>Process Hollowing (RunPE)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Also known as</strong></td>
+                  <td>Classic DLL injection, LoadLibrary injection</td>
+                  <td>Reflective DLL loading / injection</td>
+                  <td>Process replacement, RunPE, hollow process</td>
+                </tr>
+                <tr>
+                  <td><strong>Malicious payload</strong></td>
+                  <td>Path to a DLL file on disk</td>
+                  <td>Full DLL binary (PE) in memory only</td>
+                  <td>Full PE executable (EXE) in memory</td>
+                </tr>
+                <tr>
+                  <td><strong>Writes to disk?</strong></td>
+                  <td>Yes – malicious DLL must exist on disk</td>
+                  <td>No – fileless / memory-only</td>
+                  <td>No – fileless / memory-only</td>
+                </tr>
+                <tr>
+                  <td><strong>Target process</strong></td>
+                  <td>Usually already running (e.g. explorer.exe)</td>
+                  <td>Usually already running</td>
+                  <td>New process created in suspended state</td>
+                </tr>
+                <tr>
+                  <td><strong>Main Windows APIs</strong></td>
+                  <td>
+                    OpenProcess → VirtualAllocEx → WriteProcessMemory (path) →
+                    CreateRemoteThread → LoadLibrary
+                  </td>
+                  <td>
+                    OpenProcess → VirtualAllocEx → WriteProcessMemory (full DLL)
+                    → CreateRemoteThread → calls custom ReflectiveLoader
+                  </td>
+                  <td>
+                    CreateProcess (SUSPENDED) → NtUnmapViewOfSection →
+                    VirtualAllocEx → WriteProcessMemory (full PE) → fix
+                    PEB/relocs/context → ResumeThread
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Detection visibility</strong></td>
+                  <td>
+                    High – disk file + LoadLibrary call + new module in process
+                  </td>
+                  <td>
+                    Medium – no disk file, no LoadLibrary, but RWX memory +
+                    custom loader code
+                  </td>
+                  <td>
+                    Medium-High – suspicious suspended process + major memory
+                    changes + PEB tampering
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Evasion strength</strong></td>
+                  <td>Low – easily caught by AV/EDR (disk + API monitoring)</td>
+                  <td>Good – bypasses disk &amp; LoadLibrary monitoring</td>
+                  <td>Good – runs full EXE under legit process name/image</td>
+                </tr>
+                <tr>
+                  <td><strong>Typical use case</strong></td>
+                  <td>
+                    Quick &amp; dirty injection when disk write is acceptable
+                  </td>
+                  <td>
+                    Fileless malware, post-exploitation payloads (e.g.
+                    Meterpreter)
+                  </td>
+                  <td>
+                    Running full malicious EXE (backdoors, ransomware droppers)
+                    under trusted process name
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Complexity</strong></td>
+                  <td>Simple / beginner-friendly</td>
+                  <td>Moderate (needs custom loader in DLL)</td>
+                  <td>
+                    Higher (handle PE headers, relocations, PEB, thread context)
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>MITRE ATT&amp;CK</strong></td>
+                  <td>T1055.001 (Process Injection: DLL Injection)</td>
+                  <td>T1055.001 (usually sub-technique or fileless variant)</td>
+                  <td>T1055.012 (Process Injection: Process Hollowing)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>
+              Here, we focus on two powerful Volatility plugins for hunting code
+              injection:
+              <strong>windows.ldrmodules</strong> and
+              <strong>windows.malfind</strong>.
+            </p>
+            <img src="/assets/images/windowsmemory/5a.png" alt="5a" />
+            <p>
+              <strong>windows.ldrmodules</strong> compares the three PEB loader
+              lists (InLoad, InMemory, InInit) to detect
+              <strong>unlinked/hidden DLLs</strong> — malware often removes
+              itself from one or more of these lists to evade
+              <code>dlllist</code> while still remaining loaded in memory. Look
+              for discrepancies where a module appears in one list but not
+              others; that's a classic sign of stealthy DLL injection.
+            </p>
+
+            <p>
+              <strong>windows.malfind</strong> is often the golden ticket for
+              spotting injected code. It scans process memory for suspicious
+              regions that are:
+            </p>
+            <ul>
+              <li>
+                Marked executable (e.g., PAGE_EXECUTE_READWRITE — RWX is almost
+                always suspicious in user-mode processes)
+              </li>
+              <li>
+                Not backed by a file on disk (private memory, no mapped EXE/DLL)
+              </li>
+              <li>
+                Often containing MZ/PE headers, shellcode patterns, or anomalous
+                VAD tags
+              </li>
+            </ul>
+            <p>
+              Malfind highlights potential injected shellcode, reflective DLLs,
+              or manually mapped PE files that standard module enumeration
+              misses. Use the <code>--dump-dir</code> option to extract
+              suspicious memory sections for YARA scanning, strings analysis, or
+              reverse engineering — many analysts consider this the single most
+              valuable step for confirming in-memory-only malware.
+            </p>
+
+            <p>
+              Together, these plugins catch both
+              <strong>hidden DLLs</strong> (ldrmodules) and
+              <strong>generic injected code/shellcode</strong> (malfind), giving
+              you broad coverage against common injection techniques like
+              reflective loading, process hollowing artifacts, and classic code
+              caves.
+            </p>
+
+            <h3>When reviewing the results, look for anomalies such as:</h3>
+            <ul>
+              <li>
+                Processes with memory regions marked as RWX
+                (Read-Write-Execute), which may indicate injected or shellcode
+                regions
+              </li>
+              <li>
+                Presence of injected DLLs that do not exist on disk or are not
+                linked through normal module loading mechanisms
+              </li>
+              <li>
+                Processes with abnormal or missing entries in their loaded
+                module lists (e.g., unlinked or hidden modules)
+              </li>
+              <li>
+                Threads starting at suspicious memory addresses (e.g., not
+                within known module boundaries)
+              </li>
+              <li>
+                Evidence of API patterns associated with injection (e.g.,
+                VirtualAllocEx, WriteProcessMemory, CreateRemoteThread)
+              </li>
+              <li>
+                Processes whose in-memory image does not match the expected
+                executable on disk (possible process hollowing)
+              </li>
+              <li>
+                Suspicious parent-child relationships combined with memory
+                anomalies (e.g., legitimate process spawning unusual child with
+                injected code)
+              </li>
+              <li>
+                Indicators of manual PE loading (e.g., missing headers, improper
+                section alignment, or absence of LoadLibrary usage)
+              </li>
+              <li>
+                Processes with unusually high memory entropy (potential packed
+                or encrypted payloads)
+              </li>
+              <li>
+                Signs of tampering with the Process Environment Block (PEB) or
+                thread context
+              </li>
+            </ul>
+
+            <p>
+              Unfortunately for us Volatility did not show any results
+              for either module. It happens and the reason why we use mutiple
+              tools and techniques.
+            </p>
+            <img src="/assets/images/windowsmemory/5c.png" alt="5c" />
+            <img src="/assets/images/windowsmemory/5d.png" alt="5d" />
+          </div>
+        </details>
+
+        <!-- ================= STEP 6 ================= -->
+        <details>
+          <summary>Step 6: Audit Drivers</summary>
+          <div>
+            <p>
+              The next step in our memory analysis process is to focus on the
+              drivers loaded into the system. Drivers are critical system
+              components that run in kernel mode and can be exploited by
+              attackers to maintain persistence, escalate privileges, or even
+              execute arbitrary code. By auditing the drivers present in memory,
+              we can identify any suspicious or rogue drivers that may have been
+              loaded by malicious actors.
+            </p>
+            <img src="/assets/images/windowsmemory/6a.png" alt="6a" />
+            <p>
+              Driver manipulation is a common tactic for rootkits, fileless
+              malware, and other advanced threats, as they operate at the kernel
+              level and can evade detection by traditional endpoint protection
+              tools. Therefore, we need to ensure we are examining both active
+              drivers and any potentially hidden or unloaded drivers that may be
+              lurking in memory.
+            </p>
+
+            <h3>Key Artifacts to Review:</h3>
+            <ul>
+              <li>
+                <strong>Driver Names and File Paths:</strong> Suspicious or
+                unusual driver names can indicate the presence of malware.
+                Attackers often hide malicious drivers with names resembling
+                legitimate system files, or use random, obfuscated names to
+                evade detection.
+              </li>
+              <li>
+                <strong>Driver Memory Locations:</strong> Checking the memory
+                addresses of loaded drivers is crucial. A driver loaded into
+                unexpected memory ranges could be indicative of manipulation or
+                injection.
+              </li>
+              <li>
+                <strong>Driver Signed Status:</strong> Legitimate drivers are
+                typically signed with a valid certificate. Drivers that are
+                unsigned or have invalid signatures may be malicious or tampered
+                with.
+              </li>
+              <li>
+                <strong>Process Creation from Drivers:</strong> Drivers are
+                often used to spawn malicious processes or maintain control over
+                the system. Investigating any processes that were created by
+                drivers can uncover covert attacks.
+              </li>
+            </ul>
+
+            <p>
+              In this step, we’ll use Volatility plugins to extract driver
+              information and analyze it for any signs of malicious activity.
+            </p>
+
+            <h3>Volatility Plugins for Rootkit & Driver Auditing</h3>
+            <p>
+              The following plugins help detect kernel-level anomalies, hidden
+              drivers, hooked tables, and rootkit techniques. Compare Volatility
+              2 and 3 equivalents for cross-version reference.
+            </p>
+
+            <table
+              border="1"
+              cellspacing="0"
+              cellpadding="8"
+              style="
+                border-collapse: collapse;
+                width: 100%;
+                margin: 15px 0;
+                background: #1e1e1e;
+                color: #d4d4d4;
+                font-family: Consolas, monospace;
+              "
+            >
+              <thead>
+                <tr style="background: #333; color: #ff9933">
+                  <th>Volatility 2 Plugin</th>
+                  <th>Volatility 3 Plugin</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>apihooks</td>
+                  <td>N/A</td>
+                  <td>
+                    Find userland IAT, inline, and trampoline hooks (user-mode
+                    API hooking often used by rootkits/malware).
+                  </td>
+                </tr>
+                <tr>
+                  <td>idt</td>
+                  <td>N/A</td>
+                  <td>
+                    Display Interrupt Descriptor Table entries (check for IDT
+                    hooks that redirect interrupts).
+                  </td>
+                </tr>
+                <tr>
+                  <td>ssdt</td>
+                  <td>windows.ssdt</td>
+                  <td>
+                    Display System Service Descriptor Table entries (detect SSDT
+                    hooks that alter kernel system calls — a classic rootkit
+                    technique).
+                  </td>
+                </tr>
+                <tr>
+                  <td>driverirp</td>
+                  <td>windows.driverirp</td>
+                  <td>
+                    Identify I/O Request Packets (IRP) hooks (malicious drivers
+                    often hook IRPs to intercept file/network/registry
+                    operations).
+                  </td>
+                </tr>
+                <tr>
+                  <td>psxview</td>
+                  <td>windows.psxview</td>
+                  <td>
+                    Find hidden processes via cross-view techniques (compares
+                    multiple process enumeration methods to spot
+                    DKOM/rootkit-hidden processes; can indirectly reveal
+                    driver-based hiding).
+                  </td>
+                </tr>
+                <tr>
+                  <td>modules</td>
+                  <td>windows.modules</td>
+                  <td>
+                    View list of loaded kernel drivers/modules (baseline for
+                    detecting anomalies or mismatches).
+                  </td>
+                </tr>
+                <tr>
+                  <td>modscan</td>
+                  <td>windows.modscan</td>
+                  <td>
+                    Find drivers via pool tag scanning (uncovers hidden/unlinked
+                    drivers that evade normal module lists — key for rootkit
+                    detection).
+                  </td>
+                </tr>
+                <tr>
+                  <td>N/A</td>
+                  <td>windows.drivermodule</td>
+                  <td>
+                    Find loaded drivers hidden by a rootkit (specialized
+                    cross-view check for stealthy kernel modules).
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3>Sample Commands (Volatility 3)</h3>
+            <pre><code># Check SSDT for hooks (kernel system call redirection)
+vol -f solarmarker.img windows.ssdt
+
+# Identify IRP hooks in drivers
+vol -f solarmarker.img windows.driverirp
+
+# Cross-view hidden processes (helps spot driver/rootkit hiding)
+vol -f solarmarker.img windows.psxview
+
+# List loaded kernel modules/drivers
+vol -f solarmarker.img windows.modules
+
+# Scan for hidden/unlinked drivers via pool tags
+vol -f solarmarker.img windows.modscan
+
+# Detect drivers specifically hidden by rootkit techniques
+vol -f solarmarker.img windows.drivermodule</code></pre>
+
+            <p>
+              Run these plugins if you suspect kernel-level manipulation (e.g.,
+              after spotting anomalies in processes, network, or memory
+              regions). Look for mismatches between list vs. scan results,
+              unusual hooks, or drivers not backed by expected files.
+            </p>
+
+            <p>
+              By running these commands, we gather the list of drivers loaded
+              into memory, including their names, memory addresses, and other
+              critical metadata. For example, if we notice a driver loaded at an
+              unusual address or a driver with an odd name that doesn’t match
+              typical Windows drivers, it could be a potential indicator of
+              compromise (IOC).
+            </p>
+
+            <h3>Red Flags to Look For:</h3>
+            <ul>
+              <li>
+                Drivers with suspicious or obfuscated names (e.g., random
+                alphanumeric strings or names resembling legitimate system
+                drivers with small variations).
+              </li>
+              <li>
+                Drivers loaded from unusual locations (e.g., non-system
+                directories like `C:\Windows\Temp` or `C:\Users\Public\`).
+              </li>
+              <li>Unsigned drivers or drivers with invalid signatures.</li>
+              <li>
+                Drivers that spawn suspicious processes or exhibit abnormal
+                behavior (e.g., they initiate outbound network connections or
+                manipulate system settings).
+              </li>
+              <li>
+                Presence of hidden drivers detected by tools such as
+                <strong>modscan</strong> or <strong>drivermodule</strong>.
+              </li>
+              <li>
+                I/O request packet (IRP) hooks that indicate possible rootkit
+                activity.
+              </li>
+            </ul>
+
+            <p>
+              If any of these red flags are found, further investigation should
+              be conducted to analyze the potential malicious driver’s behavior.
+              You may need to extract the driver and perform static or dynamic
+              analysis to understand its full capabilities and intent.
+            </p>
+            <p>Here we see output of <strong>ssdt</strong> plugin ran on memory. This plugin displays hooked functions within the system service descriptor table. In windows there is two options commonly seen in this table if any others are found they are sure a sign of investigation. (ntoskrnl.exe,win32k.sys) this anaylsis easier because we can grep out these objects to id anomalies. </p>
+            <img
+              src="/assets/images/windowsmemory/6b.png"
+              alt="6b"
+            />
+            <p>Next up we we had results for was <strong>modules</strong> plugin. Here we see a list of kernel drivers and where they are loaded. We can see the vast majorirty of drivers are loaded from "\systemroot\system32\drivers\*" this allows us to filter out this location to id anomalies for investigation as seen below. (Outlier in picture is a beign postive)</p>
+             <img
+              src="/assets/images/windowsmemory/6c.png"
+              alt="6c"
+            />
+          </div>
+        </details>
+
+        <!-- ================= STEP 7 ================= -->
+        <details>
+          <summary>Step 7: Dump Suspicious Artifacts</summary>
+          <div>
+            <p>
+              Once we’ve identified suspicious artifacts, the next step is to
+              extract them from the larger memory sample and perform in-depth
+              analysis on each item. This can include techniques such as static
+              code analysis to better understand the artifact’s behavior and
+              intent.
+            </p>
+
+            <img
+              src="/assets/images/windowsmemory/7a.png"
+              alt="7a"
+            />
+
+            <p>There are four main types of artifacts we can extract:</p>
+
+            <ul>
+              <li>
+                <strong>Process Memory Sections:</strong> Useful for examining
+                the raw data in memory, including hex and ASCII representations
+                of what was present at runtime.
+              </li>
+              <li>
+                <strong>Image-Mapped Files (DLL/EXE/SYS):</strong> Critical for
+                determining code intent and identifying malicious indicators of
+                compromise (IOCs) within binaries.
+              </li>
+              <li>
+                <strong>Cached File Objects:</strong> These may include files or
+                objects accessed by a malicious process. For example, a
+                PowerShell process may reference a file containing commands or
+                arguments for execution.
+              </li>
+              <li>
+                <strong>Specialized Objects (MFT, Registry Hives):</strong>
+                Useful for correlating file activity through MFT entries or
+                extracting registry data when investigating persistence
+                mechanisms, such as obfuscated PowerShell stored in registry
+                keys.
+              </li>
+            </ul>
+
+            <img
+              src="/assets/images/windowsmemory/7b.png"
+              alt="7b"
+            />
+
+            <p>
+              <strong>Dumping with MemProcFS:</strong> This chart highlights key
+              locations within the MemProcFS output where you can find artifacts
+              of interest.
+            </p>
+
+            <img
+              src="/assets/images/windowsmemory/7c.png"
+              alt="7c"
+            />
+
+            <p>
+              <strong>Dumping with Volatility:</strong> The image above shows
+              examples of Volatility plugins that can be used to extract
+              artifacts directly from memory.
+            </p>
+          </div>
+        </details>
+
+        <!-- ================= MemProcFS Section ================= -->
+        <details open>
+          <summary>MemProcFS — The All-in-One View</summary>
+
+<p><img src="/assets/images/windowsmemory/m1.png" alt="M1"></p>
+
+<p>Moving on to <strong>MemProcFS</strong>, this tool works differently from Volatility. Instead of running individual plugins to examine memory piece by piece, MemProcFS processes the entire memory image and effectively runs multiple plugins at once. It mounts the results to a virtual file system (typically the <code>M:</code> drive), allowing you to explore memory artifacts using a familiar Windows folder structure. You’ll see output similar to Volatility plugins but in a single, unified view. This method is advantageous because you can run it once and have everything you need to start your investigation.</p>
+
+<p><img src="/assets/images/windowsmemory/m2.png" alt="M2"></p>
+
+<h3>Initial Pivot Points</h3>
+
+<p>When exploring MemProcFS output, the first place to look is:</p>
+
+<pre>\forensics\findevil.txt</pre>
+
+<p>This file combines outputs from multiple plugins and signature-based checks to highlight suspicious anomalies within the noise of a full memory image. It also helps confirm IOCs already discovered.</p>
+
+<p><img src="/assets/images/windowsmemory/m3.png" alt="m3"></p>
+
+<p>Immediately, we see an indicator for a previously identified PowerShell process associated with <strong>SolarMarker</strong>. Even if unidentified at first, this is a key pivot point to document and research the malware and its typical TTPs.</p>
+
+<p><img src="/assets/images/windowsmemory/m4.png" alt="m4"></p>
+
+<h3>YARA Matches</h3>
+
+<p>Another useful file in the same folder is:</p>
+
+<pre>yara.txt</pre>
+
+<p>This file runs processes in memory against YARA rules and outputs matches. <em>(Note: you must accept the Elastic license the first time you run MemProcFS.exe.)</em></p>
+
+<p>Opening <code>yara.txt</code> shows alerts for a suspicious PowerShell process (PID 5352) executing a script with arguments passed via separate files:</p>
+
+<p><img src="/assets/images/windowsmemory/m5.png" alt="m5"></p>
+
+<p>We see four alerts: two for SolarMarker and two for Deimos, also reflected in <code>findevil.txt</code>.</p>
+
+
+<h3>Reconstructing Files</h3>
+
+<p>With filenames in hand, we can examine what the scripts are doing. Inside the Forensics folder, navigate to:</p>
+
+<pre>\ntfs\</pre>
+
+<p>This represents the reconstructed file system captured from memory. You can browse to locations referenced in the PowerShell commands to see if the files were present:</p>
+
+<p><img src="/assets/images/windowsmemory/m6.png" alt="m6"></p>
+
+<p>Files are reconstructed from memory, so if a file wasn’t loaded, you’ll only have placeholders derived from artifacts such as the NTFS <code>$MFT</code>.</p>
+
+<h3>Timeline Artifacts</h3>
+
+<p>Timestamps are key for building a timeline, even if the exact event type (creation, modification, access) is unknown. The complete timeline can be found in:</p>
+
+<pre>/forensics/timeline/timeline_all.txt</pre>
+
+<p>Searching for IOCs lets you follow events chronologically:</p>
+
+<p><img src="/assets/images/windowsmemory/m9.png" alt="m9"></p>
+
+<p>Prefetch files indicate execution of <code>msiexec.exe</code> and <code>powershell.exe</code>, gives us a pivot point to examinin events before and after these events. We see a .lnk file created after exectution of powershell (which is known ttp for SolarMarker persisntance) we also alot of random string value files being created:</p>
+
+<p><img src="/assets/images/windowsmemory/m10.png" alt="m10"></p>
+
+<p>10 seconds prior, we observe what we think are the creation of the PowerShell scripts and temporary folders referenced by the scripts in:</p>
+
+<pre>\Users\Admin\AppData\Local\Temp\*</pre>
+
+<p><img src="/assets/images/windowsmemory/m8.png" alt="m8"></p>
+
+<p>Lastly if we trace it back to 4 mins prior at (2022-06-01 09:35:05 UTC) we see the file flash_installer.msi which is a know alias for solarmarker stager. </p>
+<p><img src="/assets/images/windowsmemory/m7.png" alt="m7"></p>
+
+<h3>Next Steps</h3>
+
+<p>Now that we have a pivot point with <strong>SolarMarker</strong>, we can research its behavior on a system. This provides a roadmap for identifying confirmation factors and determining whether an alert is a true positive.</p>
+
+          </div>
+        </details>
+
+        <h2>The Timeline — This Is Where It All Comes Together</h2>
+        <p>From <code>\forensics\timeline\timeline_all.txt</code>:</p>
+        <ul>
+          <li>09:35:05 UTC — flash_installer.msi created & executed</li>
+          <li>09:39:30 UTC — PowerShell scripts dropped</li>
+          <li>
+            09:39:38–09:39:40 UTC — Random folder created:
+            <code
+              >C:\Users\Admin\AppData\Roaming\Microsoft\NsaCWeSQcZlTKFVOHq\</code
+            >
+          </li>
+          <li>
+            09:39:40 UTC — Persistence:
+            <code>abfe9e9acdd4c183ad426abc88479.lnk</code> in Startup
+          </li>
+        </ul>
+        <!-- <img src="/assets/images/memory_analysis/04_timeline.png" alt="Infection timeline excerpt"> -->
+
+        <h2>Pivoting from Memory to Disk: Confirming Everything</h2>
+        <ol>
+          <li>
+            <strong>Persistence</strong>: Check Startup folder for
+            <code>abfe9e9acdd4c183ad426abc88479.lnk</code>
+          </li>
+          <li>
+            <strong>Staging Folder</strong>:
+            <code
+              >C:\Users\Admin\AppData\Roaming\Microsoft\NsaCWeSQcZlTKFVOHq\</code
+            >
+            — dozens of gibberish files
+          </li>
+          <li>
+            <strong>Dropper</strong>:
+            <code>C:\Windows\flash_installer.msi</code>
+          </li>
+          <li>
+            <strong>Temp Scripts</strong>:
+            <code>C:\Users\Admin\AppData\Local\Temp\pss*.ps1</code> etc.
+          </li>
+          <li>
+            <strong>PowerShell Evidence</strong>: Transcript in Documents +
+            Operational.evtx
+          </li>
+          <li>
+            <strong>Prefetch</strong>: FLASH_INSTALLER.MSI-*.pf,
+            POWERSHELL.EXE-*.pf, etc.
+          </li>
+        </ol>
+
+        <h2>Quick IOC Cheat Sheet</h2>
+        <ul>
+          <li>
+            Folder: <code>%AppData%\Roaming\Microsoft\NsaCWeSQcZlTKFVOHq\</code>
+          </li>
+          <li>
+            LNK: <code>abfe9e9acdd4c183ad426abc88479.lnk</code> in Startup
+          </li>
+          <li>MSI: <code>flash_installer.msi</code> in \Windows\</li>
+          <li>Temp: <code>pss*.ps1</code>, <code>Pro*.tmp</code> in \Temp\</li>
+          <li>Transcript: Documents\PowerShell_transcript.*.txt</li>
+        </ul>
+
+        <h2>Closing Thoughts</h2>
+        <p>
+          This was a perfect example of why you never rely on just one tool.
+          Volatility gave the process chain and tokens; MemProcFS gave the
+          timeline, filenames, and random folder that sealed the deal.
+        </p>
+        <p>
+          Memory analysis feels like detective work: start with one suspicious
+          PowerShell, follow the breadcrumbs, and the entire infection story
+          appears.
+        </p>
+        <p>
+          If you have the full disk image too, hunt that random folder and the
+          .lnk — they’ll still be there.
+        </p>
+        <p>
+          Hope this walkthrough feels like you’re right there in the lab with
+          me. Let me know if you want process dumps, more YARA rules, or a clean
+          PDF version!
+        </p>
+        <p>Happy hunting — see you on the next memory dump! 🚀</p>
+      </div>
+    </div>
+
+    <script>
+      function copyCode(button) {
+        const code = button.parentElement.querySelector("code").innerText;
+        navigator.clipboard.writeText(code);
+        button.textContent = "Copied!";
+        setTimeout(() => (button.textContent = "Copy"), 1500);
+      }
+    </script>
+  </body>
+</html>

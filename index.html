@@ -1,128 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <title>18gi0n's Tech Lair</title>
     <link rel="stylesheet" href="styles1.css" />
-    <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
-</head>
+    <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico" />
+  </head>
 
-<body>
-
+  <body>
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">18gi0n's Tech Blog</div>
-            <ul class="nav-links">
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="projects.html">Projects</a></li>
-                <li><a href="code.html">Code & Tools</a></li>
-                <li><a href="ctf.html">Write-ups</a></li>
-                <li><a href="research.html">Research</a></li>
-            </ul>
-        </div>
+      <div class="nav-container">
+        <div class="nav-logo">18gi0n's Tech Blog</div>
+        <ul class="nav-links">
+          <li><a href="index.html" class="active">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="code.html">Code & Tools</a></li>
+          <li><a href="ctf.html">Write-ups</a></li>
+          <li><a href="research.html">Research</a></li>
+        </ul>
+      </div>
     </nav>
 
     <!-- Header Section -->
     <header class="hero">
-        <h1>Welcome to 18gi0n's Tech Blog</h1>
-        <p class="subtitle">
-            This is my personal cyber blog — my living notebook, training ground, and memory backup in case my brain
-            bluescreens. I learn best by teaching and writing things down, so I publish it all here: red team ops, blue
-            team defense, DFIR, cloud, threat intel, coding experiments… basically every corner of cyber. See you out
-            there in cyberspace.
-        </p>
+      <h1>Welcome to 18gi0n's Tech Blog</h1>
+      <p class="subtitle">
+        This is my personal cyber blog — my living notebook, training ground,
+        and memory backup in case my brain bluescreens. I learn best by teaching
+        and writing things down, so I publish it all here: red team ops, blue
+        team defense, DFIR, cloud, threat intel, coding experiments… basically
+        every corner of cyber. See you out there in cyberspace.
+      </p>
     </header>
 
     <main class="container">
-
-        <!-- Featured Posts -->
-        <section>
-            <h2 class="section-title">Featured Posts</h2>
-            <div class="card-grid">
-
-                <a href="/webpages/win_for_anaylsis.html" class="card">
-                    <img src="assets/images/win_analysis_guide/thumbnail.png" alt="DFIR" />
-                    <div class="card-content">
-                        <h3>Windows Forensics Walkthrough</h3>
-                    </div>
-                </a>
-
-                <a href="/webpages/awsseclab.html" class="card">
-                    <img src="assets/images/seclab/thumbnail.jpg" alt="AWS" />
-                    <div class="card-content">
-                        <h3>AWS Cyber Home Lab</h3>
-                    </div>
-                </a>
-
-                <a href="/webpages/expressway.html" class="card">
-                    <img src="assets/images/ctf/express/thumbnail.png" alt="Expressway" />
-                    <div class="card-content">
-                        <h3> Expressway – Hack The Box</h3>
-                    </div>
-                </a>
-
+      <!-- Featured Posts -->
+      <section>
+        <h2 class="section-title">Featured Posts</h2>
+        <div class="card-grid">
+          <a href="/webpages/memoryanalysis.html" class="card">
+            <img src="assets/images/windowsmemory/title.jpeg" alt="DFIR" />
+            <div class="card-content">
+              <h3>Windows Memory Forensics Walkthrough</h3>
             </div>
-        </section>
+          </a>
 
-        <!-- Video of the Month -->
-        <section class="video-section">
-            <h2 class="section-title">Video of the Month</h2>
-
-            <div class="video-wrapper">
-                <iframe src="https://www.youtube.com/embed/fxqcwK5OMag?si=Ud4yD_0YuWy7gQPk" title="YouTube video"
-                    allowfullscreen></iframe>
+          <a href="/webpages/awsseclab.html" class="card">
+            <img src="assets/images/seclab/thumbnail.jpg" alt="AWS" />
+            <div class="card-content">
+              <h3>AWS Cyber Home Lab</h3>
             </div>
-        </section>
+          </a>
 
-        <!-- Latest Posts -->
-        <section>
-            <h2 class="section-title">Quick Access</h2>
-
-            <div class="card-grid wide">
-
-                <a href="/webpages/defconn33.html" class="wide-card">
-                    <img src="/assets/images/defcon33/logo.png" alt="">
-                    <div class="wide-card-content">
-                        <h3>DEFCON 33 Recap / Write-up</h3>
-                    </div>
-                </a>
-
-                <a href="/webpages/Resources.html" class="wide-card">
-                    <img src="/assets/images/research/CyberR (1).jpg" alt="">
-                    <div class="wide-card-content">
-                        <h3>My Go-To Cyber Resources</h3>
-                    </div>
-                </a>
-
-                <a href="/webpages/threatintel.html" class="wide-card">
-                    <img src="/assets/images/research/threat intel.jpg" alt="">
-                    <div class="wide-card-content">
-                        <h3>Threat Intel Quick Guide</h3>
-                    </div>
-                </a>
-
+          <a href="/webpages/expressway.html" class="card">
+            <img
+              src="assets/images/ctf/express/thumbnail.png"
+              alt="Expressway"
+            />
+            <div class="card-content">
+              <h3>Expressway – Hack The Box</h3>
             </div>
-        </section>
-
-        <!-- Under Construction Section -->
-        <section class="construction">
-            <h2 class="section-title">Site Status: Under Construction</h2>
-            <p class="warning">
-                This site is "hand-coded" from scratch — no frameworks, all caffeine.
-                Expect bugs, 404s, and rapid updates.
-            </p>
-        </section>
-        <div style="text-align:center;">
-            <img src="assets/images/HP1.jpg" class="construction-img">
+          </a>
         </div>
+      </section>
 
+      <!-- Video of the Month -->
+      <section class="video-section">
+        <h2 class="section-title">Video of the Month</h2>
 
+        <div class="video-wrapper">
+          <iframe
+            src="https://www.youtube.com/embed/fxqcwK5OMag?si=Ud4yD_0YuWy7gQPk"
+            title="YouTube video"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+
+      <!-- Latest Posts -->
+      <section>
+        <h2 class="section-title">Quick Access</h2>
+
+        <div class="card-grid wide">
+          <a href="/webpages/defconn33.html" class="wide-card">
+            <img src="/assets/images/defcon33/logo.png" alt="" />
+            <div class="wide-card-content">
+              <h3>DEFCON 33 Recap / Write-up</h3>
+            </div>
+          </a>
+
+          <a href="/webpages/Resources.html" class="wide-card">
+            <img src="/assets/images/research/CyberR (1).jpg" alt="" />
+            <div class="wide-card-content">
+              <h3>My Go-To Cyber Resources</h3>
+            </div>
+          </a>
+
+          <a href="/webpages/threatintel.html" class="wide-card">
+            <img src="/assets/images/research/threat intel.jpg" alt="" />
+            <div class="wide-card-content">
+              <h3>Threat Intel Quick Guide</h3>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- Under Construction Section -->
+      <section class="construction">
+        <h2 class="section-title">Site Status: Under Construction</h2>
+        <p class="warning">
+          This site is "hand-coded" from scratch — no frameworks, all caffeine.
+          Expect bugs, 404s, and rapid updates.
+        </p>
+      </section>
+      <div style="text-align: center">
+        <img src="assets/images/HP1.jpg" class="construction-img" />
+      </div>
     </main>
-
-
-</body>
-
+  </body>
 </html>
