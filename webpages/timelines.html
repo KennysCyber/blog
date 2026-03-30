@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>
+      Super Timelines | From Triage Image or Memory Dump to CSV → Elastic SIEM |
+      18gi0n's Tech Lair
+    </title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        position: relative;
+        min-height: 100vh;
+      }
+      .opaque-bg {
+        background-color: rgba(13, 13, 13, 0.6);
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+      .content {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        padding-bottom: 20px;
+      }
+      .content .left-aligned-content {
+        text-align: left !important;
+        max-width: 800px;
+        margin: 0 20px !important;
+        padding: 20px 0 !important;
+      }
+      .content .left-aligned-content h1,
+      h2,
+      h3,
+      p,
+      ul,
+      ol,
+      li {
+        text-align: left !important;
+      }
+      .content .left-aligned-content a {
+        color: #ff9933 !important;
+        text-decoration: underline;
+      }
+      .content .left-aligned-content a:hover {
+        color: #ff007a !important;
+        text-shadow: 0 0 5px #ff007a;
+      }
+      .content .left-aligned-content pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin: 10px 0;
+        position: relative;
+      }
+      .content .left-aligned-content code {
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 14px;
+      }
+      .content .left-aligned-content .copy-btn {
+        display: none;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff9933;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: "Consolas", "Courier New", monospace;
+      }
+      .content .left-aligned-content pre:hover .copy-btn {
+        display: block;
+      }
+      .content .left-aligned-content .copy-btn:hover {
+        background: #ff007a;
+      }
+      .content .left-aligned-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+      details {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      details summary {
+        cursor: pointer;
+        background: #ff9933;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 4px;
+        font-family: Consolas, monospace;
+        font-size: 1.1em;
+      }
+      details summary:hover {
+        background: #ff007a;
+      }
+      details > div {
+        margin-top: 15px;
+        padding: 0 10px;
+      }
+      @media (max-width: 600px) {
+        .content .left-aligned-content {
+          margin: 0 10px !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Nav Bar -->
+    <nav>
+      <ul>
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code & Tools</a></li>
+        <li><a href="/ctf.html">Write-ups</a></li>
+        <li><a href="/research.html">Research</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+      <div class="left-aligned-content">
+        <h1>Super Timelines<br /></h1>
+        <p>
+          A Complete Step-by-Step Workflow: From Triage Image or Memory Dump →
+          CSV Timelines → Elastic SIEM for Scalable Analysis
+        </p>
+        <img
+          src="/assets/images/supertimelines/title.png"
+          alt="Super Timelines Title"
+        />
+
+        <h2>Disclaimer</h2>
+        <p>
+          This guide is purely for educational and personal reference. It walks
+          you through the exact workflow I use to turn any triage image or
+          memory dump into clean CSV timelines and ingest them into Elastic SIEM
+          for fast, scalable analysis.
+        </p>
+
+        <h2>Tools You’ll Need</h2>
+        <ul>
+          <li>
+            <a
+              href="https://plaso.readthedocs.io/en/latest/sources/user/Ubuntu-Packaged-Release.html"
+              target="_blank"
+              >Plaso (log2timeline / psteal)</a
+            >
+          </li>
+          <li>
+            <a href="https://www.sans.org/tools/kape" target="_blank">KAPE</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/volatilityfoundation/volatility/wiki/installation"
+              target="_blank"
+              >Volatility 2</a
+            >
+          </li>
+          <li>
+            <a href="https://github.com/ufrisk/MemProcFS" target="_blank"
+              >MemProcFS (Windows)</a
+            >
+          </li>
+          <li>
+            <a href="https://18gi0n.org/webpages/homesiem.html" target="_blank"
+              >Elastic Quick SIEM</a
+            >
+          </li>
+        </ul>
+
+        <h2>What Is a Super Timeline?</h2>
+        <img
+          src="/assets/images/supertimelines/whatistimeline.png"
+          alt="Super Timeline Overview"
+        />
+        <p>
+          A Super Timeline is the process of converting disk artifacts (e.g.,
+          FTK, KAPE) or memory artifacts (e.g., Volatility 2, MemProcFS) into
+          clean CSV files. These files can be directly ingested into a SIEM or
+          used for manual analysis. This approach provides a unified, searchable
+          timeline, eliminating the need to switch between tools. It enables
+          better collaboration within your team, as multiple analysts can
+          contribute to the analysis, rather than relying on a single analyst
+          running the tool.
+        </p>
+
+        <h2>The Workflow</h2>
+        <ol>
+            <li><strong>Gather Artifacts</strong> (Disk/Memory images)</li>
+            <li><strong>Process Artifacts</strong> to extract revelant items.</li>
+          <li>
+            <strong>Generate CSV timeline(s)</strong> — choose any (or all) of
+            the three methods below
+          </li>
+          <li><strong>Ingest the CSV(s) into Elastic SIEM</strong></li>
+        </ol>
+        <p>If you havent already captured the images here is my writeup outlining collection of the artifacts.</p>
+        <a
+              href="https://18gi0n.org/webpages/forensicscollection.html"
+              target="Windows Artifact Collection"
+              >Windows Artifact Collection</a
+            >
+
+        <h2>Analysis Steps</h2>
+
+        <!-- STEP 1-3: Alternative CSV Generation Methods -->
+        <details open>
+          <summary>
+            Step 1-3: Generate Your CSV Timelines (Choose Any or All)
+          </summary>
+          <div>
+            <p>
+              <strong>You only need one method</strong> to get usable CSVs, but
+              many analysts run all three for maximum coverage.
+            </p>
+
+            <h3>Option A — Disk Timeline with Plaso (Recommended for speed)</h3>
+            <p>
+              Why a triage image and not a full image? Plaso works on both, but
+              a full image takes substantially longer to process. A refined
+              triage image (collected with KAPE) gives you a short kill chain
+              for analysis and far less noise for the analyst to filter through. Below is a captured triage image in .vdhx format.
+            </p>
+            <img
+              src="/assets/images/supertimelines/1.png"
+              alt="1"
+            />
+            <p>
+              Next well use the Plaso tools suite to process this image into a workable csv:
+              <strong>log2timeline</strong> (extracts events),
+              <strong>pinfo</strong> (info about the storage file),
+              <strong>psort</strong> (post-process), and
+              <strong>psteal</strong> (combines log2timeline + psort into one
+              easy command).
+            </p>
+            <img
+              src="/assets/images/supertimelines/2.png"
+              alt="2"
+            />
+            <p>Here we use psteal.py as the all in one tool to process image.</p>
+            <pre><code>psteal.py --source 2025-11-30T000142_case1.vhdx --output-format csv --output triagetimeline.csv</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+            <p>
+              Processing time on a triage image: ~5 minutes. You’ll get a clean
+              CSV ready for Elastic.
+            </p>
+            <img
+              src="/assets/images/supertimelines/3.png"
+              alt="3"
+            />
+            <img
+              src="/assets/images/supertimelines/4.png"
+              alt="4"
+            />
+            <img
+              src="/assets/images/supertimelines/5.png"
+              alt="5"
+            />
+          </div>
+        </details>
+
+        <details>
+          <summary>Step 2: Memory Timeline with Volatility 2</summary>
+          <div>
+            <p>
+              Now lets change it up for a memory image. We can also process a memory image into a timeine for analysis. First we use volatility2, always run <code>windows.info</code> plugin to confirm the profile
+              and system details.
+            </p>
+            <pre><code>┌──(vol2env)─(john㉿system32)-[~/Documents/tools/volatility]  
+└─$ python2 vol.py -f /home/john/Documents/tools/samples/solarmarker.img kdbgscan  
+Volatility Foundation Volatility Framework 2.6.1  
+**************************************************  
+Instantiating KDBG using: Kernel AS Win10x64_14393 (6.4.14393 64bit)  
+Offset (V)                    : 0xf802dd1bd4f0  
+Offset (P)                    : 0x100bbd4f0  
+KdCopyDataBlock (V)           : 0xf802dd07d91c  
+Block encoded                 : No  
+Wait never                    : 0x3f3c19400e62e7f0  
+Wait always                   : 0xcc5c1651783f8001  
+KDBG owner tag check          : True  
+Profile suggestion (KDBGHeader): Win10x64_14393  
+Version64                     : 0xf802dd1bfff0 (Major: 15, Minor: 15063)  
+Service Pack (CmNtCSDVersion) : 0  
+Build string (NtBuildLab)     : 15063.0.amd64fre.rs2_release.170  
+PsActiveProcessHead           : 0xfffff802dd1cb000 (64 processes)  
+PsLoadedModuleList            : 0xfffff802dd1d15a0 (186 modules)  
+KernelBase                    : 0xfffff802dce85000 (Matches MZ: True)  
+Major (OptionalHeader)        : 10  
+Minor (OptionalHeader)        : 0  
+KPCR                          : 0xfffff802dc0d9000 (CPU 0)  
+KPCR                          : 0xffffe700e9176000 (CPU 1)  
+  
+**************************************************</code></pre>
+<p>Once we have profile we can then use the timeliner plugin to generate a body file from the memory image.</p>
+            <pre><code>python2 vol.py -f memory.img --profile=Win10x64_14393 timeliner --output=body --output-file=vol2timeliner.body</code></pre>
+            <p>Then feed the bodyfile into log2timeline to create the .plaso file needed for psort to process:</p>
+            <pre><code>log2timeline.py --parsers=bodyfile --status_view window --storage-file ./output.plaso  vol2timeline.body</code></pre>
+            <img
+              src="/assets/images/supertimelines/6.png"
+              alt="6"
+            />
+            <p>Once we have the .plaso file we can they use psort to parse into a csv.</p>
+<pre><code></code>psort.py --output-time-zone 'UTC' -o l2csv -w vol2timeliner.csv output.plaso</code></pre>
+            <img
+              src="/assets/images/supertimelines/7.png"
+              alt="7"
+            />
+            <p>Lastly this gives us a workable format to input into SIEM or another analytical platform.</p>
+            <img
+              src="/assets/images/supertimelines/8.png"
+              alt="8"
+            />
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            Step 3: MemProcFS Timeline CSVs (Easiest for memory)
+          </summary>
+          <div>
+            <p>
+              MemProcFS is a windows based tool the process memory images in a all in one go style. It mounts the memory dump as a normal drive (usually
+              <code>M:</code>) and instantly gives you pre-parsed CSV timelines
+              for every artifact type. We want to make sure when running the tool we specify the "-forensics" option so we get then additional processing to generate needed CSVs.
+            </p>
+        
+            <pre><code>MemProcFS.exe -f memory.img -forensics 1 -license-accept-elastic-license-2.0</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+            <img
+              src="/assets/images/supertimelines/9.png"
+              alt="9"
+            />
+            
+            <p>After it finishes, navigate to:</p>
+            <pre><code>M:\forensics\csv\</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+            <p>You’ll see many ready-to-use files:</p>
+            <ul>
+              <li><code>timeline_all.csv</code> — the most complete</li>
+              <li><code>timeline_prefetch.csv</code></li>
+              <li><code>timeline_registry.csv</code></li>
+              <li>
+                <code>timeline_process.csv</code>,
+                <code>timeline_thread.csv</code>, etc.
+              </li>
+            </ul>
+            <img
+              src="/assets/images/supertimelines/11.png"
+              alt="11"
+            />
+          </div>
+        </details>
+
+<!-- COMBINED STEP 4 + 5 - EXACTLY as you asked -->
+        <details open>
+          <summary>Step 4: Ingest into Elastic</summary>
+          <div>
+            <h3>Overview</h3>
+            <p>
+              So lets talk scale. Now that we have timelines we can use a tool like timeline explorer or even notepad++ to allow analyst to start digging into it for evidence. This is perfectly fine. A more scalable approach is to ingest this data into a SIEM for them to create filters and queries on. So in this step of the blog we will be going over ingesting these timelines into a SIEM.
+            </p>
+            <p>
+              First off we are going to use Elastic Search. If you haven’t stood up a SIEM or are looking to I have a blog on an easy setup for Elastic Search quick install SIEM here. 
+              <a href="https://18gi0n.org/webpages/homesiem.html" target="Quick ELK SIEM">https://18gi0n.org/webpages/homesiem.html</a>.
+            </p>
+
+            <h3>Steps</h3>
+            <p>
+              Once you have your SIEM up there is a couple options you have to ingesting the data. We are only going to cover 3 here from easiest manual to more automated approaches for doing this at scale.
+            </p>
+            <p>
+              The fastest option without needing to setup any scripts or tooling is to use the data visualizer below with csvs straight from Kibana.
+            </p>
+
+            <h3>1. Data Visualizer</h3>
+            <p>
+              Once in Elastic and logged in you want to go to the home page here you will see an option to upload a file.
+            </p>
+            <img src="/assets/images/supertimelines/12.png" alt="12" />
+            <p>
+              You want to click upload a file. Of note this is restricted to 1 GB file max size.
+            </p>
+            <img src="/assets/images/supertimelines/13.png" alt="13" />
+            <p>
+              Here you are going to want to name your index and then select and upload file.
+            </p>
+            <p>
+              Now you might get an error if your admin hasn’t changed the max file size from 60mb. If so report to them and have them change in stack management-kibana-adv settings.
+            </p>
+            <img src="/assets/images/supertimelines/14.png" alt="14" />
+            <p>
+              Then click through and import index. You can customize options here for parsing and datamapping but I’ll leave that to the individual use case.
+            </p>
+            <img src="/assets/images/supertimelines/15.png" alt="15" />
+            <p>
+              If we go to index management we can then see index and view in discover.
+            </p>
+            <img src="/assets/images/supertimelines/16.png" alt="16" />
+            <img src="/assets/images/supertimelines/17.png" alt="17" />
+
+            <h3>2. API POST (Bulk)</h3>
+            <p>
+              Now let’s say we want to automate this by collecting sample output to a dir and the auto ingest into SIEM all without user interaction. Let’s do this. We have two ways: one via api direct calls and one via elastic agent. First let look at direct calls.
+            </p>
+            <p>
+              Elastic will let you create an index via api call. This does require us to have the proper file formats. So first thing we want to do is convert the timelines csv to ndjson. Here is a script I had AI make to do so.
+            </p>
+            <pre><code>#!/usr/bin/env python3
+import csv
+import json
+import sys
+
+def csv_to_ndjson(csv_file_path, ndjson_file_path):
+    """
+    Converts a CSV file to NDJSON format for ingestion with helpers.bulk().
+    Each line in the NDJSON is a document JSON object.
+    Completely empty rows are skipped.
+    """
+    # Handle very large CSV fields
+    import sys
+    max_int = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(max_int)
+            break
+        except OverflowError:
+            max_int = int(max_int / 10)
+
+    with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csv_file:
+        reader = csv.DictReader(csv_file)
+
+        with open(ndjson_file_path, mode='w', encoding='utf-8') as ndjson_file:
+            for row in reader:
+                # Skip empty rows
+                if not any(row.values()):
+                    continue
+
+                # Write only the document line
+                ndjson_file.write(json.dumps(row) + '\n')
+
+    print(f"Conversion complete! NDJSON saved to: {ndjson_file_path}")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python csv2ndjson.py input.csv output.ndjson")
+        sys.exit(1)
+
+    csv_path = sys.argv[1]
+    ndjson_path = sys.argv[2]
+
+    csv_to_ndjson(csv_path, ndjson_path)</code></pre>
+            <p>To run it use the command syntax like this:</p>
+            <pre><code>python3 csv2ndjson.py "csv location" "outputfile" "indexname"</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+            <p>Once we have the script we can then make a post to api to write index.</p>
+            <img
+              src="/assets/images/supertimelines/18.png"
+              alt="18"
+            />
+            <pre><code>curl -X POST -H "Authorization: ApiKey $APIKEY" -H "Content-Type: application/x-ndjson" -d @triage.ndjson "http://192.168.1.2:9200/_bulk"</code></pre>
+            <p>
+              Note that Elasticsearch limits the maximum size of a HTTP request to 100mb by default so clients must ensure that no request exceeds this size. If you do have files larger than that limit you can use the below Lage file script.
+            </p>
+
+
+            <!---bulk ingest-->
+            <p>
+              Before you run the Large File script you are going to want to prepare environment to run the script.
+            </p>
+            <pre><code># Step 1: create a virtual environment
+python3 -m venv ~/plaso/venv
+
+# Step 2: activate the virtual environment
+source ~/plaso/venv/bin/activate
+
+# Step 3: upgrade pip inside the venv
+pip install --upgrade pip
+
+# Step 4: install Elasticsearch client
+pip install elasticsearch</code></pre>
+<p>
+Once dependicies and environment is setup we can use this python script I had AI create to bulk index a large file. <bold>You will need to update the static configuration section with your specific environment variables.</bold> 
+</p>
+            <pre><code>#!/usr/bin/env python3
+import json
+import argparse
+from elasticsearch import Elasticsearch, helpers
+
+# -----------------------------
+# Static configuration
+# -----------------------------
+ES_HOST = "http://localhost:9200"
+API_KEY = "$APIKEY$"
+BATCH_SIZE = 5000
+# -----------------------------
+
+def bulk_ingest_large_file(file_path, index_name):
+    """
+    Reads a large NDJSON or JSON file and ingests it into Elasticsearch in batches.
+    Only file_path and index_name are dynamic.
+    """
+    # Connect to Elasticsearch
+    es = Elasticsearch(hosts=[ES_HOST], api_key=API_KEY)
+
+    actions = []
+    line_count = 0
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        first_char = f.read(1)
+        f.seek(0)
+
+        if first_char == '[':
+            # JSON array
+            data = json.load(f)
+            for doc in data:
+                actions.append({"_index": index_name, "_source": doc})
+                line_count += 1
+
+                if len(actions) >= BATCH_SIZE:
+                    helpers.bulk(es, actions)
+                    actions = []
+        else:
+            # NDJSON
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                doc = json.loads(line)
+                actions.append({"_index": index_name, "_source": doc})
+                line_count += 1
+
+                if len(actions) >= BATCH_SIZE:
+                    helpers.bulk(es, actions)
+                    actions = []
+
+    # Send any remaining documents
+    if actions:
+        helpers.bulk(es, actions)
+
+    print(f"Ingested {line_count} documents into index '{index_name}' successfully.")
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Bulk ingest large JSON/NDJSON into Elasticsearch")
+    parser.add_argument("file", help="Path to NDJSON or JSON file")
+    parser.add_argument("index", help="Elasticsearch index name")
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    args = parse_args()
+    bulk_ingest_large_file(file_path=args.file, index_name=args.index)</code></pre>
+
+<ul>
+  <li>Script takes <strong>file path</strong> + <strong>index name</strong> as inputs.</li>
+  <li>Connects to Elasticsearch using <strong>hardcoded host + API key</strong>.</li>
+  <li>Reads file <strong>line by line</strong> (NDJSON or JSON array).</li>
+  <li>Collects documents into <strong>batches</strong> (<code>BATCH_SIZE</code>).</li>
+  <li>Sends each batch to Elasticsearch via <strong><code>helpers.bulk()</code></strong>.</li>
+  <li>Sends <strong>any remaining docs</strong> after last batch.</li>
+  <li>Prints <strong>total documents ingested</strong> and target index.</li>
+</ul>
+
+            <p>The syntax to run it is as below:</p>
+            <pre><code>python3 elkbulkingest2.py "file" "desiredindexname"</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+            <p>Once Complete you will see this output.</p>
+            <img
+              src="/assets/images/supertimelines/19.png"
+              alt="19"
+            />
+
+
+            <p>They to verify you can go to Stack management - index management and search for index name and open in discover to verify you data.</p>
+<img
+              src="/assets/images/supertimelines/20.png"
+              alt="20"
+            />
+            <img
+              src="/assets/images/supertimelines//21.png"
+              alt="21"
+            />
+
+            <!---Elastic Agent-->
+
+            <h3>3. Elastic Agent Filestream</h3>
+            <p>
+              Another option we have is with Elastic Agent. This is not the most ideal since it’s meant for a file stream input from file being written to over time where our files are static but it can still be used.
+            </p>
+            <p>
+              Here we want to enroll an agent in Fleet and add the custom file stream integration to the agent policy with desired agent.
+            </p>
+            <img
+              src="/assets/images/supertimelines/22.png"
+              alt="22"
+            />
+            <p>
+              We are going to add integration to desired policy.
+            </p>
+            <img
+              src="/assets/images/supertimelines/23.png"
+              alt="23"
+            />
+            <p>
+              Inside the integration we want to specify the directory the files we are going to be ingesting (timelines) live in.
+            </p>
+            <img
+              src="/assets/images/supertimelines/24.png"
+              alt="24"
+            />
+            <p>
+              Also for organization sake give the dataset name a distinct name to help id indexes.
+            </p>
+            <img
+              src="/assets/images/supertimelines/25.png"
+              alt="25"
+            />
+            <p>
+              Click and deploy new policy. Then after agent is healthy and integration is showing healthy.
+            </p>
+            <img
+              src="/assets/images/supertimelines/26.png"
+              alt="26"
+            />
+            <p>
+              Go to stack management → index management and look for index by search plaso.
+            </p>
+            <img
+              src="/assets/images/supertimelines/27.png"
+              alt="27"
+            />
+            <p>
+              If we click and explore in discover we can see all events in the message field. This can be parsed to your teams liking but from here we can do searches on the data at mass.
+            </p>
+            <img
+              src="/assets/images/supertimelines/28.png"
+              alt="18"
+            />
+            <p>
+              <strong>Key notes here is now going forward any timelines you put in that directory will be ingested into Elastic via this pipeline we just setup.</strong>
+            </p>
+          </div>
+        </details>
+
+
+        <h2>Closing Thoughts</h2>
+        <p>
+          That’s the complete Super Timeline workflow. Generate your CSV(s)
+          using whichever method fits your case (Plaso, Volatility 2, or
+          MemProcFS), then ingest into Elastic SIEM. From there you have a fast,
+          scalable, searchable timeline ready for analysis.
+        </p>
+        <section class="forensics-nav">
+  <h2>Forensics Blog Collection</h2>
+  <p>Quickly navigate through different sections of the forensic blog collection:</p>
+  <ul class="forensics-links">
+    <li><a href="https://18gi0n.org/webpages/fcssdsetup.html" target="_blank">1. Making Collection Suite</a></li>
+    <li><a href="https://18gi0n.org/webpages/forensicscollection.html" target="_blank">2. Steps to Collection</a></li>
+    <li><a href="https://18gi0n.org/webpages/win_for_anaylsis.html" target="_blank">3. Disk Analysis</a></li>
+    <li><a href="https://18gi0n.org/webpages/memoryanalysis.html" target="_blank">4. Memory Analysis</a></li>
+    <li><a href="https://18gi0n.org/webpages/timelines.html" target="_blank">5. Timelines</a></li>
+  </ul>
+</section>
+        <p>Happy timeline building — Good Hunting! </p>
+      </div>
+    </div>
+
+  </body>
+</html>
