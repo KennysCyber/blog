@@ -229,11 +229,13 @@
             >
 
         <h2>Analysis Steps</h2>
+        <h3>Step 1 - Pick your Timeline </h3>
+        <p> Options A-C : Generate Your CSV Timelines (Choose Any or All)</p>
 
         <!-- STEP 1-3: Alternative CSV Generation Methods -->
-        <details open>
+        <details>
           <summary>
-            Step 1-3: Generate Your CSV Timelines (Choose Any or All)
+            Option A - Disk Triage Image Timeline
           </summary>
           <div>
             <p>
@@ -241,7 +243,7 @@
               many analysts run all three for maximum coverage.
             </p>
 
-            <h3>Option A — Disk Timeline with Plaso (Recommended for speed)</h3>
+            <h3> Disk Timeline with Plaso (Recommended for speed)</h3>
             <p>
               Why a triage image and not a full image? Plaso works on both, but
               a full image takes substantially longer to process. A refined
@@ -286,7 +288,7 @@
         </details>
 
         <details>
-          <summary>Step 2: Memory Timeline with Volatility 2</summary>
+          <summary>Option B: Memory Timeline with Volatility 2</summary>
           <div>
             <p>
               Now lets change it up for a memory image. We can also process a memory image into a timeine for analysis. First we use volatility2, always run <code>windows.info</code> plugin to confirm the profile
@@ -341,7 +343,7 @@ KPCR                          : 0xffffe700e9176000 (CPU
 
         <details>
           <summary>
-            Step 3: MemProcFS Timeline CSVs (Easiest for memory)
+            Option C: MemProcFS Timeline CSVs (Easiest for memory)
           </summary>
           <div>
             <p>
@@ -376,8 +378,8 @@ KPCR                          : 0xffffe700e9176000 (CPU
         </details>
 
 <!-- COMBINED STEP 4 + 5 - EXACTLY as you asked -->
-        <details open>
-          <summary>Step 4: Ingest into Elastic</summary>
+        <details>
+          <summary>Step 2: Ingest into Elastic</summary>
           <div>
             <h3>Overview</h3>
             <p>
