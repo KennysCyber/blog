@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>
+      n8n Cyber Threat Intelligence Workflow | RSS → AI Summary → Discord |
+      18gi0n's Tech Lair
+    </title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        position: relative;
+        min-height: 100vh;
+      }
+      .opaque-bg {
+        background-color: rgba(13, 13, 13, 0.6);
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+      .content {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        padding-bottom: 20px;
+      }
+      .content .left-aligned-content {
+        text-align: left !important;
+        max-width: 800px;
+        margin: 0 20px !important;
+        padding: 20px 0 !important;
+      }
+      .content .left-aligned-content h1,
+      h2,
+      h3,
+      p,
+      ul,
+      ol,
+      li {
+        text-align: left !important;
+      }
+      .content .left-aligned-content a {
+        color: #ff9933 !important;
+        text-decoration: underline;
+      }
+      .content .left-aligned-content a:hover {
+        color: #ff007a !important;
+        text-shadow: 0 0 5px #ff007a;
+      }
+      .content .left-aligned-content pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin: 10px 0;
+        position: relative;
+      }
+      .content .left-aligned-content code {
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 14px;
+      }
+      .content .left-aligned-content .copy-btn {
+        display: none;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff9933;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .content .left-aligned-content pre:hover .copy-btn {
+        display: block;
+      }
+      .content .left-aligned-content .copy-btn:hover {
+        background: #ff007a;
+      }
+      .content .left-aligned-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+      details {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      details summary {
+        cursor: pointer;
+        background: #ff9933;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 4px;
+        font-family: Consolas, monospace;
+        font-size: 1.1em;
+      }
+      details summary:hover {
+        background: #ff007a;
+      }
+      details > div {
+        margin-top: 15px;
+        padding: 0 10px;
+      }
+      @media (max-width: 600px) {
+        .content .left-aligned-content {
+          margin: 0 10px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code & Tools</a></li>
+        <li><a href="/ctf.html">Write-ups</a></li>
+        <li><a href="/research.html">Research</a></li>
+      </ul>
+    </nav>
+
+    <div class="opaque-bg" id="opaqueBg"></div>
+    <div class="content">
+      <div class="left-aligned-content">
+        <h1>n8n Cyber Threat Intelligence Workflow<br /></h1>
+        <p>
+          RSS Feeds → 24h Filter → LLM Summarization (Ollama) → Clean Discord
+          Messages
+        </p>
+        <img
+          src="/assets/images/n8n/cyberthreatfeed/title.png"
+          alt="Cyber Threat Workflow"
+        />
+
+        <h2>Pre-Reqs</h2>
+        <ul>
+          <li>
+            Gather a list of cyber threat feed sites and their RSS feed URLs
+            (SANS, Hacker News, etc.)
+          </li>
+          <li>
+            Local LLM running with Ollama (recommended: Llama 3.1 or 3.2)
+            <strong>OR</strong> an API key + endpoint for OpenAI / Grok / Claude
+          </li>
+          <li>Discord account + a dedicated channel for threat intel</li>
+          <li>
+            Discord webhook URL created for that channel (created in the final
+            step)
+          </li>
+        </ul>
+
+        <h2>Setup</h2>
+        <p>
+          ← Return to the <a href="/webpages/n8n-setup.html">N8N Setup</a> page
+          if you haven’t installed n8n yet.
+        </p>
+
+        <h2>High-Level Workflow</h2>
+        <ol>
+          <li>Schedule Trigger (5am daily)</li>
+          <li>RSS Feed nodes</li>
+          <li>24h Filter nodes</li>
+          <li>Merge node</li>
+          <li>LLM Chain (Ollama)</li>
+          <li>Set Fields</li>
+          <li>Function node (split messages for Discord)</li>
+          <li>Discord Webhook</li>
+        </ol>
+
+        <details>
+          <summary>1. Schedule Trigger</summary>
+          <div>
+            <p>
+              Go ahead and start a new workflow. First click the
+              <strong>+</strong> icon in the top-left of the canvas and search
+              for “Schedule Trigger”.
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/1.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Double-click the node and set desired configuration for schedule:
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/1a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <pre><code>Trigger Interval: Days
+Days Between Triggers: 1
+Trigger at Hour: 5am
+Trigger at Minute: 0</code></pre>
+            <p>
+              This makes the workflow run automatically every morning at 5am.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>2. RSS Feed Nodes</summary>
+          <div>
+            <p>Add one RSS Feed node for each threat feed you want.</p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/2.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>Double-click the node and paste the RSS URL. Example feeds:</p>
+            <pre><code>https://isc.sans.edu/rssfeed_full.xml
+https://thehackernews.com/feed</code></pre>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/2a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Click <strong>Execute Step</strong> on each node to test that the
+              feed works and returns items. After that you rince and reapeat
+              till you have all your desired feeds added.
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/2b.png"
+              alt="Cyber Threat Workflow"
+            />
+          </div>
+        </details>
+
+        <details>
+          <summary>3. 24-Hour Filter</summary>
+          <div>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/3.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Add a Filter node after each RSS node so you only keep articles
+              from the last 24 hours.
+            </p>
+            <p>In the filter condition use this expression:</p>
+            <pre><code>{{ new Date(Date.now() - 24*60*60*1000) }}</code></pre>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/3a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Keep only items where <strong>isoDate</strong> is after the value
+              above. Repeat for every RSS feed node.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>4. Merge Node</summary>
+          <div>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/4.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Add a Merge node and set it to <strong>Append</strong> mode with
+              the number of inputs matching your RSS feeds.
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/4a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              This combines all filtered articles into one clean list for the
+              LLM.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>5. LLM Chain (Summarization)</summary>
+          <div>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/5.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              With our feed filtered and merged, we can now leverage AI to
+              create concise, two-sentence summaries perfect for fitting within
+              the 2000-character limit of Discord.
+            </p>
+            <p>
+              Add a <strong>Basic LLM Chain</strong> node and connect it to the
+              Merge node.
+            </p>
+            <p>
+              Set up your Ollama credential (Base URL: http://localhost:11434)
+              and choose your model. If you dont have a local model running you
+              can always tie in a node to connect to any of your favoirte LLMs
+              (OpenAI,Grok,Claude)
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/5a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/5b.png"
+              alt="Cyber Threat Workflow"
+            />
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/5c.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Next I had AI help generate a prompt to accomplish what I was
+              looking for. Feel free to prompt enginner something that aligns
+              closer to your goals.
+            </p>
+            <pre><code>Summarize the following text in **2000 characters or less**. 
+Do **not** include any introductory phrases like "Here is your summary". 
+Only provide the concise summary:</code></pre>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/5d.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>Execute the step to test the summaries.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>6. Set Fields</summary>
+          <div>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/6.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Up next is to set fields here we are going to designate what all
+              fields we want from our feeds, and form out our desired summarized
+              content to be sent.
+            </p>
+            <p>Manually map these fields:</p>
+            <pre><code>title  →  {{ $json.title }}
+link   →  {{ $json.link }}
+text   →  {{ $json.text }}</code></pre>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/6a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>This keeps only the clean data we want to send to Discord.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>7. Function Node – Split for Discord</summary>
+          <div>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/6b.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Dealing with Discord's 2000-character limit proved to be our next
+              hurdle. We had 14 items ready to go, and we needed a way to
+              package them efficiently. I leveraged AI to generate a custom
+              JavaScript function designed to solve this. It formats our data by
+              splitting long entries into individual messages. This approach
+              guarantees that no data is lost and keeps our data pipeline
+              completely unbroken.
+            </p>
+            <pre><code>const MAX_LENGTH = 2000;
+let messages = [];
+for (const item of $items()) {
+  const title = item.json.title;
+  const link = item.json.link;
+  const text = item.json.text;
+  const firstChunkMax = MAX_LENGTH - title.length - link.length - 10;
+  const firstChunk = text.slice(0, firstChunkMax);
+  messages.push({ text: `**${title}**\n${link}\n\n${firstChunk}` });
+  for (let i = firstChunkMax; i < text.length; i += MAX_LENGTH) {
+    messages.push({ text: `**continued**\n${text.slice(i, i + MAX_LENGTH)}` });
+  }
+}
+return messages;</code></pre>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/6c.png"
+              alt="Cyber Threat Workflow"
+            />
+          </div>
+        </details>
+
+        <details>
+          <summary>8. Discord Webhook Node</summary>
+          <div>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/7.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              Add a Discord node → Connection Type: <strong>Webhook</strong>.
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/7a.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>
+              In discord you will need to go to the desired server and channel
+              you want message to be delieved to. Go to Settings-> Integrations
+              on the desired channel, and create a new webook url. Now you can
+              paste your Discord webhook URL into Discord n8n node url form.
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/7c.png"
+              alt="Cyber Threat Workflow"
+            />
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/7b.png"
+              alt="Cyber Threat Workflow"
+            />
+            <p>In the Message field use:</p>
+            <pre><code>{{ $json.text }}</code></pre>
+            <p>
+              Execute the whole workflow to test it. You should now see clean
+              threat intel in your Discord channel every morning.
+            </p>
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/7d.png"
+              alt="Cyber Threat Workflow"
+            />
+            <img
+              src="/assets/images/n8n/cyberthreatfeed/7e.png"
+              alt="Cyber Threat Workflow"
+            />
+          </div>
+        </details>
+
+        <h2>Final Result Example</h2>
+        <img
+          src="/assets/images/n8n/cyberthreatfeed/finalexample.png"
+          alt="Cyber Threat Workflow"
+        />
+
+        <p>Happy automating — Good Hunting!</p>
+      </div>
+    </div>
+
+    <script>
+      function copyCode(btn) {
+        const pre = btn.parentElement;
+        const code = pre.querySelector("code") || pre;
+        const text = code.textContent || code.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          const original = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>
