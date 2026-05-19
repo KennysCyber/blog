@@ -670,7 +670,6 @@ details > *:not(summary) {
     padding: 0 2px;
 }
 
-.snake-label      { color: var(--accent-green); letter-spacing: 1px; }
 .snake-score-wrap { opacity: 0.75; }
 
 .snake-container {
