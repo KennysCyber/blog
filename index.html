@@ -1,126 +1,124 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="styles1.css" />
-    <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="18gi0n's cybersecurity blog — red team ops, DFIR, homelabs, threat intel, and everything in between." />
+  <title>18gi0n's Tech Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+</head>
 
-  <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="nav-logo">18gi0n's Tech Blog</div>
-        <ul class="nav-links">
-          <li><a href="index.html" class="active">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="projects.html">Projects</a></li>
-          <li><a href="code.html">Code & Tools</a></li>
-          <li><a href="ctf.html">Write-ups</a></li>
-          <li><a href="research.html">Research</a></li>
-        </ul>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html" aria-current="page">Home</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <h1>18gi0n's Tech Blog</h1>
+    <p class="subtitle">
+      Red team ops, blue team defense, DFIR, homelabs, and whatever I'm breaking this week.
+      Written down so it sticks.
+    </p>
+    <a href="/blog.html" class="btn-primary">Browse All Posts &rarr;</a>
+  </header>
+
+  <main class="container">
+
+    <!-- Category Quick-Links -->
+    <section>
+      <h2 class="section-title">Explore by Category</h2>
+      <div class="category-grid">
+        <a href="/blog.html?filter=ctf"          class="cat-card cat-ctf">CTF Write-ups</a>
+        <a href="/blog.html?filter=blue-team"    class="cat-card cat-blue">Blue Team / DFIR</a>
+        <a href="/blog.html?filter=homelab"      class="cat-card cat-home">Homelab / Infra</a>
+        <a href="/blog.html?filter=threat-intel" class="cat-card cat-ti">Threat Intel</a>
+        <a href="/blog.html?filter=code"         class="cat-card cat-code">Code &amp; Tools</a>
+        <a href="/blog.html?filter=ai"           class="cat-card cat-ai">AI / Hardware</a>
       </div>
-    </nav>
+    </section>
 
-    <!-- Header Section -->
-    <header class="hero">
-      <h1>Welcome to 18gi0n's Tech Blog</h1>
-      <p class="subtitle">
-        This is my personal cyber blog — my living notebook, training ground,
-        and memory backup in case my brain bluescreens. I learn best by teaching
-        and writing things down, so I publish it all here: red team ops, blue
-        team defense, DFIR, cloud, threat intel, coding experiments… basically
-        every corner of cyber. See you out there in cyberspace.
-      </p>
-    </header>
+    <!-- Featured Posts -->
+    <section>
+      <h2 class="section-title">Featured Posts</h2>
+      <div class="card-grid">
+        <a href="/webpages/memoryanalysis.html" class="card">
+          <img src="/assets/images/windowsmemory/title.jpeg" alt="Windows Memory Forensics" />
+          <div class="card-content">
+            <span class="badge badge-blue-team">Blue Team</span>
+            <h3>Windows Memory Forensics Walkthrough</h3>
+            <p>SolarMarker malware analysis using Volatility 3 and MemProcFS.</p>
+          </div>
+        </a>
 
-    <main class="container">
-      <!-- Featured Posts -->
-      <section>
-        <h2 class="section-title">Featured Posts</h2>
-        <div class="card-grid">
-          <a href="/webpages/memoryanalysis.html" class="card">
-            <img src="assets/images/windowsmemory/title.jpeg" alt="DFIR" />
-            <div class="card-content">
-              <h3>Windows Memory Forensics Walkthrough</h3>
-            </div>
-          </a>
+        <a href="/webpages/cyberthreatfeedn8n.html" class="card">
+          <img src="/assets/images/n8n/cyberthreatfeed/thumbnail.jpg" alt="n8n Threat Feed" />
+          <div class="card-content">
+            <span class="badge badge-threat-intel">Threat Intel</span>
+            <h3>n8n Cyber Threat Feed Automation</h3>
+            <p>Building an automated threat feed workflow with n8n and open-source intel sources.</p>
+          </div>
+        </a>
 
-          <a href="/webpages/cyberthreatfeedn8n.html" class="card">
-            <img
-              src="assets/images/n8n/cyberthreatfeed/thumbnail.jpg"
-              alt="n8n"
-            />
-            <div class="card-content">
-              <h3>n8n Cyber Threat Feed Workflow Automation</h3>
-            </div>
-          </a>
-
-          <a href="/webpages/timelines.html" class="card">
-            <img
-              src="assets/images/supertimelines/plasothumbnail.jpeg"
-              alt="Timelines"
-            />
-            <div class="card-content">
-              <h3>Creating Super Timelines</h3>
-            </div>
-          </a>
-        </div>
-      </section>
-
-      <!-- Video of the Month -->
-      <section class="video-section">
-        <h2 class="section-title">Video of the Month</h2>
-
-        <div class="video-wrapper">
-          <iframe
-            src="https://www.youtube.com/embed/fxqcwK5OMag?si=Ud4yD_0YuWy7gQPk"
-            title="YouTube video"
-            allowfullscreen
-          ></iframe>
-        </div>
-      </section>
-
-      <!-- Latest Posts -->
-      <section>
-        <h2 class="section-title">Quick Access</h2>
-
-        <div class="card-grid wide">
-          <a href="/webpages/defconn33.html" class="wide-card">
-            <img src="/assets/images/defcon33/logo.png" alt="" />
-            <div class="wide-card-content">
-              <h3>DEFCON 33 Recap / Write-up</h3>
-            </div>
-          </a>
-
-          <a href="/webpages/Resources.html" class="wide-card">
-            <img src="/assets/images/research/CyberR (1).jpg" alt="" />
-            <div class="wide-card-content">
-              <h3>My Go-To Cyber Resources</h3>
-            </div>
-          </a>
-
-          <a href="/webpages/threatintel.html" class="wide-card">
-            <img src="/assets/images/research/threat intel.jpg" alt="" />
-            <div class="wide-card-content">
-              <h3>Threat Intel Quick Guide</h3>
-            </div>
-          </a>
-        </div>
-      </section>
-
-      <!-- Under Construction Section -->
-      <section class="construction">
-        <h2 class="section-title">Site Status: Under Construction</h2>
-        <p class="warning">
-          This site is "hand-coded" from scratch — no frameworks, all caffeine.
-          Expect bugs, 404s, and rapid updates.
-        </p>
-      </section>
-      <div style="text-align: center">
-        <img src="assets/images/HP1.jpg" class="construction-img" />
+        <a href="/webpages/timelines.html" class="card">
+          <img src="/assets/images/supertimelines/plasothumbnail.jpeg" alt="Super Timelines" />
+          <div class="card-content">
+            <span class="badge badge-blue-team">Blue Team</span>
+            <h3>Creating Super Timelines</h3>
+            <p>Using Plaso and log2timeline to build forensic super timelines for DFIR investigations.</p>
+          </div>
+        </a>
       </div>
-    </main>
-  </body>
+    </section>
+
+    <!-- Quick Access -->
+    <section>
+      <h2 class="section-title">Quick Access</h2>
+      <div class="card-grid wide">
+        <a href="/webpages/defconn33.html" class="wide-card">
+          <img src="/assets/images/defcon33/logo.png" alt="DEFCON 33" />
+          <div class="wide-card-content">
+            <h3>DEFCON 33 Recap / Write-up</h3>
+            <p>Notes and highlights from DEFCON 33 in Las Vegas.</p>
+          </div>
+        </a>
+
+        <a href="/webpages/Resources.html" class="wide-card">
+          <img src="/assets/images/research/CyberR (1).jpg" alt="Cyber Resources" />
+          <div class="wide-card-content">
+            <h3>My Go-To Cyber Resources</h3>
+            <p>Curated list of SOC tools, OSINT resources, threat intel platforms, and pentesting references.</p>
+          </div>
+        </a>
+
+        <a href="/webpages/threatintel.html" class="wide-card">
+          <img src="/assets/images/research/threat intel.jpg" alt="Threat Intel" />
+          <div class="wide-card-content">
+            <h3>Threat Intel Quick Guide</h3>
+            <p>Overview of threat intelligence resources and the automated n8n threat feed project.</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/assets/js/post.js"></script>
+</body>
 </html>
