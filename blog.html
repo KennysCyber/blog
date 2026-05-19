@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="All posts from 18gi0n's tech blog — CTF writeups, blue team DFIR, homelabs, threat intel, code, and more." />
+  <title>Blog | 18gi0n</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/blog.html" aria-current="page">Blog</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="blog-header">
+      <h1>All Posts</h1>
+      <p>CTF writeups, blue team DFIR, homelabs, threat intel, and everything in between.</p>
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="ctf">CTF</button>
+      <button class="filter-btn" data-filter="blue-team">Blue Team</button>
+      <button class="filter-btn" data-filter="homelab">Homelab</button>
+      <button class="filter-btn" data-filter="threat-intel">Threat Intel</button>
+      <button class="filter-btn" data-filter="ai">AI / Hardware</button>
+      <button class="filter-btn" data-filter="code">Code &amp; Tools</button>
+    </div>
+
+    <div class="search-wrap">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search posts..." autocomplete="off" />
+    </div>
+
+    <div class="post-grid" id="postGrid"></div>
+
+  </div>
+
+  <script src="/assets/js/post.js"></script>
+  <script>
+    const CATEGORY_LABELS = {
+      'ctf':          'CTF',
+      'blue-team':    'Blue Team',
+      'homelab':      'Homelab',
+      'threat-intel': 'Threat Intel',
+      'ai':           'AI / Hardware',
+      'code':         'Code & Tools',
+    };
+
+    const POSTS = [
+      // ── Blue Team / DFIR ───────────────────────────────────────────
+      {
+        title: 'Windows Memory Forensics — SolarMarker Analysis',
+        url: '/webpages/memoryanalysis.html',
+        category: 'blue-team',
+        tags: ['DFIR', 'Volatility', 'MemProcFS', 'Memory Forensics'],
+        description: 'Step-by-step walkthrough of analyzing a SolarMarker-infected Windows memory dump using Volatility 3 and MemProcFS.',
+        thumb: '/assets/images/windowsmemory/title.jpeg',
+        date: '2025-05',
+      },
+      {
+        title: 'Windows Forensics Analysis — Disk & Artifact Collection',
+        url: '/webpages/win_for_anaylsis.html',
+        category: 'blue-team',
+        tags: ['DFIR', 'Windows Forensics', 'Disk Analysis'],
+        description: 'Deep dive into Windows disk forensics — NTFS artifacts, registry hives, event logs, and the full analysis workflow.',
+        thumb: '/assets/images/win_analysis_guide/title.png',
+        date: '2025-04',
+      },
+      {
+        title: 'Forensic Collection SSD (T7) Setup',
+        url: '/webpages/fcssdsetup.html',
+        category: 'blue-team',
+        tags: ['DFIR', 'Forensics', 'Collection', 'SANS'],
+        description: 'How I set up my Samsung T7 SSD as a portable forensic collection drive with all the tools needed in the field.',
+        thumb: '/assets/images/fcssdsetup/1.png',
+        date: '2025-03',
+      },
+      {
+        title: 'Windows Forensic Collection — Steps & Process',
+        url: '/webpages/forensicscollection.html',
+        category: 'blue-team',
+        tags: ['DFIR', 'Forensics', 'Collection', 'Chain of Custody'],
+        description: 'Practical guide to collecting forensic evidence from a Windows system — imaging, triage collection, and chain of custody.',
+        thumb: '/assets/images/windowsmemory/title.jpeg',
+        date: '2025-03',
+      },
+      {
+        title: 'Creating Super Timelines with Plaso',
+        url: '/webpages/timelines.html',
+        category: 'blue-team',
+        tags: ['DFIR', 'Plaso', 'log2timeline', 'Timelines'],
+        description: 'Using Plaso and log2timeline to build forensic super timelines for DFIR investigations. From installation to analysis.',
+        thumb: '/assets/images/supertimelines/plasothumbnail.jpeg',
+        date: '2025-02',
+      },
+      {
+        title: 'Home SIEM — Elastic Stack Setup',
+        url: '/webpages/homesiem.html',
+        category: 'blue-team',
+        tags: ['SIEM', 'Elastic', 'Blue Team', 'Homelab'],
+        description: 'Building a home SIEM lab with Elastic Stack — ingesting logs, writing detection rules, and hunting for threats.',
+        thumb: '/assets/images/homesiem/title.png',
+        date: '2025-01',
+      },
+      {
+        title: 'Centralized Logging with Rsyslog',
+        url: '/webpages/rsyslog.html',
+        category: 'blue-team',
+        tags: ['Logging', 'Rsyslog', 'Syslog', 'Blue Team'],
+        description: 'Setting up rsyslog for centralized log forwarding from Linux hosts to a central collector.',
+        thumb: '/assets/images/rsyslog/thumbnail (1).png',
+        date: '2024-12',
+      },
+      {
+        title: 'Microsoft KQL Queries — Blue Team Reference',
+        url: '/webpages/KQL.html',
+        category: 'blue-team',
+        tags: ['KQL', 'Microsoft Sentinel', 'Detection', 'Blue Team'],
+        description: 'My compiled KQL query reference for Microsoft Sentinel — detection, hunting, and investigation queries.',
+        thumb: '/assets/images/homesiem/elasticlogo.png',
+        date: '2024-11',
+      },
+      {
+        title: 'Blue Team Queries Hub',
+        url: '/webpages/bluequery.html',
+        category: 'blue-team',
+        tags: ['KQL', 'Splunk', 'Elastic', 'Detection'],
+        description: 'Index of blue team detection queries for Microsoft KQL, Elastic ES|QL, and Splunk SPL.',
+        thumb: '/assets/images/homesiem/elasticlogo.png',
+        date: '2024-10',
+      },
+      {
+        title: 'Setting Up AWS Security Lab',
+        url: '/webpages/awsseclab.html',
+        category: 'blue-team',
+        tags: ['AWS', 'Cloud Security', 'Security Lab'],
+        description: 'Setting up an AWS security lab environment for cloud threat detection and incident response practice.',
+        thumb: '/assets/images/seclab/thumbnail.jpg',
+        date: '2024-09',
+      },
+      {
+        title: 'Digital Forensics — Collection Hub',
+        url: '/webpages/digitalforensics.html',
+        category: 'blue-team',
+        tags: ['DFIR', 'Forensics', 'Collection'],
+        description: 'Overview of the full Windows digital forensics collection series — from setup to super timelines.',
+        thumb: '/assets/images/windowsmemory/title.jpeg',
+        date: '2024-08',
+      },
+      {
+        title: 'CVE Proofs of Concept',
+        url: '/webpages/cve.html',
+        category: 'blue-team',
+        tags: ['CVE', 'Vulnerability', 'PoC'],
+        description: 'Documented CVE proofs of concept for research, testing, and defensive understanding.',
+        thumb: '/assets/images/homesiem/elasticlogo.png',
+        date: '2024-07',
+      },
+      {
+        title: 'Cyber Resources — My Go-To List',
+        url: '/webpages/Resources.html',
+        category: 'blue-team',
+        tags: ['Resources', 'SOC Tools', 'OSINT', 'Threat Intel'],
+        description: 'Curated list of 28 cyber resources organized by category — SOC tools, OSINT, threat intel, pentesting references.',
+        thumb: '/assets/images/research/CyberR (1).jpg',
+        date: '2024-06',
+      },
+      // ── CTF Writeups ───────────────────────────────────────────────
+      {
+        title: 'Brutus Sherlock Writeup — Hack The Box',
+        url: '/webpages/Brutus.html',
+        category: 'ctf',
+        tags: ['Hack The Box', 'Sherlocks', 'Log Analysis', 'SSH Brute Force'],
+        description: 'Investigating a compromised Confluence server — SSH brute-force via auth.log, persistence via account creation, post-exploitation enumeration.',
+        thumb: '/assets/images/ctf/Sherlocks/brutus/Title.png',
+        date: '2025-03',
+      },
+      {
+        title: 'Cap CTF Writeup — Hack The Box',
+        url: '/webpages/Cap.html',
+        category: 'ctf',
+        tags: ['Hack The Box', 'Linux', 'PCAP', 'Linux Capabilities'],
+        description: 'Cap is an easy HTB Linux box involving IDOR on a PCAP endpoint leaking FTP credentials, then Linux capabilities privilege escalation.',
+        thumb: '/assets/images/ctf/Cap/capcover.png',
+        date: '2025-02',
+      },
+      {
+        title: 'DC-4 Pentest Writeup',
+        url: '/webpages/DC-4.html',
+        category: 'ctf',
+        tags: ['DC Series', 'Burp Suite', 'Brute Force', 'Privilege Escalation'],
+        description: 'Rooting DC-4: Burp Intruder credential stuffing on the admin portal, command injection, Jim\'s email pivot, then teehee sudo escape.',
+        thumb: '/assets/images/ctf/DC-4/DC-4 Cover.png',
+        date: '2025-01',
+      },
+      {
+        title: 'Djinn3 Pentest Writeup',
+        url: '/webpages/Djinn3.html',
+        category: 'ctf',
+        tags: ['SSTI', 'Jinja2', 'Privilege Escalation', 'Meterpreter'],
+        description: 'Exploiting Jinja2 SSTI on a ticket system, lateral movement, and PwnKit for root on Djinn3.',
+        thumb: '/assets/images/ctf/Djin3/SSTI.png',
+        date: '2024-12',
+      },
+      {
+        title: '2Million — Hack The Box',
+        url: '/webpages/2m.html',
+        category: 'ctf',
+        tags: ['Hack The Box', 'API', 'OverlayFS', 'Linux Kernel'],
+        description: 'Rooting the HTB 2Million retro box — API endpoint auth bypass, OverlayFS CVE-2023-0386 kernel privilege escalation.',
+        thumb: '/assets/images/ctf/2m/2million cover.png',
+        date: '2024-11',
+      },
+      {
+        title: 'Soulmate CTF Writeup',
+        url: '/webpages/soulmate.html',
+        category: 'ctf',
+        tags: ['CTF', 'Exploit Development'],
+        description: 'Soulmate CTF walkthrough — enumeration, exploitation, and root.',
+        thumb: '/assets/images/ctf/soulmate/title.png',
+        date: '2024-10',
+      },
+      {
+        title: 'Expressway CTF Writeup',
+        url: '/webpages/expressway.html',
+        category: 'ctf',
+        tags: ['CTF', 'Web', 'Exploitation'],
+        description: 'Expressway CTF writeup — web enumeration, exploitation chain, and root flag.',
+        thumb: '/assets/images/ctf/express/title.png',
+        date: '2024-09',
+      },
+      {
+        title: 'Outbound CTF Writeup',
+        url: '/webpages/outbound.html',
+        category: 'ctf',
+        tags: ['CTF', 'Network', 'Exploitation'],
+        description: 'Outbound CTF challenge — network pivoting and exploitation techniques.',
+        thumb: '/assets/images/ctf/outbound/title.png',
+        date: '2024-08',
+      },
+      {
+        title: 'Titanic — Hack The Box',
+        url: '/webpages/titanic.html',
+        category: 'ctf',
+        tags: ['Hack The Box', 'Linux', 'Web'],
+        description: 'Titanic HTB machine writeup — enumeration, web exploitation, and privilege escalation to root.',
+        thumb: '/assets/images/ctf/titanic/cover_titanic.png',
+        date: '2024-07',
+      },
+      {
+        title: 'Fluffy — Hack The Box',
+        url: '/webpages/fluffy.html',
+        category: 'ctf',
+        tags: ['Hack The Box', 'Active Directory', 'Windows'],
+        description: 'Fluffy HTB machine walkthrough — Active Directory exploitation and privilege escalation.',
+        thumb: '/assets/images/ctf/fluffy/cover.png',
+        date: '2024-06',
+      },
+      {
+        title: 'Editor CTF Writeup',
+        url: '/webpages/editor.html',
+        category: 'ctf',
+        tags: ['CTF', 'Linux', 'Web Exploitation'],
+        description: 'Editor CTF machine — web exploitation, file upload abuse, and privilege escalation.',
+        thumb: '/assets/images/ctf/editor/title.png',
+        date: '2024-05',
+      },
+      {
+        title: 'Code CTF Writeup — Hack The Box',
+        url: '/webpages/code.html',
+        category: 'ctf',
+        tags: ['Hack The Box', 'Python', 'Code Execution'],
+        description: 'HTB Code machine — sandboxed Python code execution bypass and privilege escalation.',
+        thumb: '/assets/images/ctf/code/codethumbnail.png',
+        date: '2024-04',
+      },
+      {
+        title: 'DEFCON 33 Recap',
+        url: '/webpages/defconn33.html',
+        category: 'ctf',
+        tags: ['DEFCON', 'Conference', 'Villages', 'CTF'],
+        description: 'Notes and highlights from DEFCON 33 in Las Vegas — villages, talks, Wall of Sheep, and the hacker community.',
+        thumb: '/assets/images/defcon33/logo.png',
+        date: '2025-08',
+      },
+      // ── Homelab / Infra ────────────────────────────────────────────
+      {
+        title: 'Travel Router & Jellyfin Server',
+        url: '/webpages/travelrouter.html',
+        category: 'homelab',
+        tags: ['Raspberry Pi', 'Jellyfin', 'OpenWRT', 'Travel Router'],
+        description: 'Building a travel router and Jellyfin media server on a Raspberry Pi with OpenWRT — portable network control anywhere.',
+        thumb: '/assets/images/small_trouter/Covertrouter.jpg',
+        date: '2025-04',
+      },
+      {
+        title: 'DIY WiFi Pineapple Project',
+        url: '/webpages/wifipineapple.html',
+        category: 'homelab',
+        tags: ['WiFi', 'Pineapple', 'Wireless', 'Pentesting Hardware'],
+        description: 'Building a DIY WiFi Pineapple Mango for wireless security testing — setup, configuration, and use cases.',
+        thumb: '/assets/images/wifipineapple/mango_cover.jpg',
+        date: '2025-02',
+      },
+      {
+        title: 'Bjorn Project — Network Recon Device',
+        url: '/webpages/Bjorn.html',
+        category: 'homelab',
+        tags: ['Raspberry Pi', 'Network Recon', 'Hardware', 'Bjorn'],
+        description: 'Setting up Bjorn — a Raspberry Pi Zero 2W-based autonomous network recon and vulnerability scanning device.',
+        thumb: '/assets/images/Bjorn/bjorn_cover.JPG',
+        date: '2025-01',
+      },
+      {
+        title: 'P4wnP1 A.L.O.A. Project',
+        url: '/webpages/p4wn.html',
+        category: 'homelab',
+        tags: ['P4wnP1', 'Raspberry Pi', 'HID', 'BadUSB'],
+        description: 'Setting up P4wnP1 A.L.O.A. on a Raspberry Pi Zero W for HID attacks, network backdoors, and wireless evil twin attacks.',
+        thumb: '/assets/images/aloa/aloa_cover.JPG',
+        date: '2024-12',
+      },
+      {
+        title: 'Pwnagotchi Project',
+        url: '/webpages/pwnagotchi.html',
+        category: 'homelab',
+        tags: ['Pwnagotchi', 'Raspberry Pi', 'WiFi', 'AI'],
+        description: 'Building and training a Pwnagotchi AI on a Raspberry Pi Zero for passive WiFi handshake capture.',
+        thumb: '/assets/images/pwnagotchi/pwna_cover.JPG',
+        date: '2024-11',
+      },
+      {
+        title: 'Kali NetHunter on TicWatch Pro 3',
+        url: '/webpages/nh_twp3.html',
+        category: 'homelab',
+        tags: ['Kali NetHunter', 'WearOS', 'TicWatch', 'Mobile Pentesting'],
+        description: 'Installing Kali NetHunter on the TicWatch Pro 3 — full setup walkthrough for wearable pentesting.',
+        thumb: '/assets/images/Nethunter/recovery.jpg',
+        date: '2024-10',
+      },
+      {
+        title: 'Setting Up Ansible Environment',
+        url: '/webpages/ansible_setup.html',
+        category: 'homelab',
+        tags: ['Ansible', 'Automation', 'Homelab', 'Linux'],
+        description: 'Setting up a full Ansible control node and managed hosts environment for homelab automation.',
+        thumb: '/assets/images/Code/ansibleHS/ansibleslogo.png',
+        date: '2024-09',
+      },
+      // ── Threat Intel ───────────────────────────────────────────────
+      {
+        title: 'n8n Cyber Threat Feed Automation',
+        url: '/webpages/cyberthreatfeedn8n.html',
+        category: 'threat-intel',
+        tags: ['n8n', 'Threat Intel', 'Automation', 'OSINT'],
+        description: 'Building an automated cyber threat feed with n8n — pulling IOCs from open-source feeds and pushing to Slack and email.',
+        thumb: '/assets/images/n8n/cyberthreatfeed/thumbnail.jpg',
+        date: '2025-05',
+      },
+      {
+        title: 'Threat Intel Overview & Resources',
+        url: '/webpages/threatintel.html',
+        category: 'threat-intel',
+        tags: ['Threat Intel', 'OSINT', 'Feeds', 'Resources'],
+        description: 'Overview of threat intelligence — what it is, how to consume it, and the n8n automated feed project.',
+        thumb: '/assets/images/research/threat intel.jpg',
+        date: '2024-08',
+      },
+      // ── AI / Hardware ──────────────────────────────────────────────
+      {
+        title: 'Artificial CTF — AI Prompt Injection',
+        url: '/webpages/artifical.html',
+        category: 'ai',
+        tags: ['CTF', 'AI Security', 'Prompt Injection', 'LLM'],
+        description: 'Writeup for the Artificial CTF challenge — exploiting AI LLM prompt injection vulnerabilities to bypass security controls.',
+        thumb: '/assets/images/ctf/artificial/6.png',
+        date: '2025-04',
+      },
+      {
+        title: 'n8n Setup — Workflow Automation',
+        url: '/webpages/n8nsetup.html',
+        category: 'ai',
+        tags: ['n8n', 'Automation', 'Workflow', 'Self-hosted'],
+        description: 'Setting up n8n for self-hosted workflow automation — installation, configuration, and first workflows.',
+        thumb: '/assets/images/n8n/cyberthreatfeed/thumbnail.jpg',
+        date: '2025-01',
+      },
+      // ── Code & Tools ───────────────────────────────────────────────
+      {
+        title: 'CREDR — Credential Testing Automation',
+        url: '/webpages/credr.html',
+        category: 'code',
+        tags: ['Python', 'Credentials', 'Automation', 'Security'],
+        description: 'CREDR: a Python script for automating credential testing against services — built for authorized pentesting and red team ops.',
+        thumb: '/assets/images/creder/credr_cover.jpg',
+        date: '2025-03',
+      },
+      {
+        title: 'PowerShell Forensics Script',
+        url: '/webpages/windowsf.html',
+        category: 'code',
+        tags: ['PowerShell', 'Forensics', 'Windows', 'DFIR'],
+        description: 'PowerShell script for rapid Windows forensic artifact collection — event logs, prefetch, registry, and more.',
+        thumb: '/assets/images/Code/windowsf/windowsf.png',
+        date: '2025-01',
+      },
+      {
+        title: 'Linux Forensics Script',
+        url: '/webpages/linuxf.html',
+        category: 'code',
+        tags: ['Bash', 'Forensics', 'Linux', 'DFIR'],
+        description: 'Bash script for Linux forensic triage collection — auth logs, cron, bash history, network state, and running processes.',
+        thumb: '/assets/images/Code/linuxf/linkfcover.jpg',
+        date: '2024-12',
+      },
+      {
+        title: 'Ansible Playbooks',
+        url: '/webpages/ansible.html',
+        category: 'code',
+        tags: ['Ansible', 'Automation', 'Playbooks', 'Linux'],
+        description: 'A collection of Ansible playbooks for automating homelab and infrastructure tasks — package installs, hardening, and more.',
+        thumb: '/assets/images/Code/ansibleHS/ansibleslogo.png',
+        date: '2024-11',
+      },
+      {
+        title: 'Ansible YAML Inventory Builder',
+        url: '/webpages/ymlcreate.html',
+        category: 'code',
+        tags: ['Ansible', 'Python', 'YAML', 'Automation'],
+        description: 'Python tool to interactively build Ansible YAML inventory files — no more hand-editing hosts.yml.',
+        thumb: '/assets/images/Code/ansibleHS/ymlcreate/thumbnail (1).png',
+        date: '2024-10',
+      },
+    ];
+
+    let activeFilter = 'all';
+    let searchTerm = '';
+
+    function renderPosts() {
+      var grid = document.getElementById('postGrid');
+      var filtered = POSTS.filter(function (p) {
+        var matchCat = activeFilter === 'all' || p.category === activeFilter;
+        var q = searchTerm.toLowerCase();
+        var matchSearch = !q ||
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.tags.some(function (t) { return t.toLowerCase().includes(q); });
+        return matchCat && matchSearch;
+      }).sort(function (a, b) {
+        return (b.date || '').localeCompare(a.date || '');
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p class="no-results">No posts found. Try a different search or filter.</p>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(function (p) {
+        var label = CATEGORY_LABELS[p.category] || p.category;
+        var tags = p.tags.slice(0, 2).map(function (t) {
+          return '<span>#' + t + '</span>';
+        }).join('');
+        var imgHtml = p.thumb
+          ? '<img src="' + p.thumb + '" alt="' + p.title + '" loading="lazy" />'
+          : '<div style="height:160px;background:var(--bg-elevated);"></div>';
+        return (
+          '<a href="' + p.url + '" class="post-card">' +
+            imgHtml +
+            '<div class="post-card-body">' +
+              '<span class="badge badge-' + p.category + '">' + label + '</span>' +
+              '<h3>' + p.title + '</h3>' +
+              '<p>' + p.description + '</p>' +
+              '<div class="post-card-meta">' +
+                '<span>' + (p.date || '') + '</span>' +
+                '<span class="post-tags">' + tags + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</a>'
+        );
+      }).join('');
+    }
+
+    // Filter buttons
+    document.getElementById('filterBar').addEventListener('click', function (e) {
+      var btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelector('.filter-btn.active').classList.remove('active');
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderPosts();
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+      searchTerm = e.target.value;
+      renderPosts();
+    });
+
+    // URL param pre-filter (from index category links)
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var preFilter = params.get('filter');
+      if (preFilter && document.querySelector('[data-filter="' + preFilter + '"]')) {
+        document.querySelector('.filter-btn.active').classList.remove('active');
+        var btn = document.querySelector('[data-filter="' + preFilter + '"]');
+        btn.classList.add('active');
+        activeFilter = preFilter;
+      }
+    })();
+
+    renderPosts();
+  </script>
+</body>
+</html>
