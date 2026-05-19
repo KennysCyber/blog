@@ -1,35 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>404 - Page Not Found - 18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Page Not Found | 18gi0n</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
 </head>
 <body>
-    <!-- Nav Bar -->
-    <nav>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="projects.html">Projects</a></li>
-            <li><a href="code.html">Code & Tools</a></li>
-            <li><a href="ctf.html">Write-ups</a></li>
-            <li><a href="research.html">Research</a></li>
-        </ul>
-     </nav>
 
-    <div class="content">
-        <h1 class="error">404 - Access Denied</h1>
-        <p>
-            Whoops! Looks like you tried to hack into a non-existent sector of my lair. 
-            This page is in-progress, or maybe it’s just hiding in the shadows.
-        </p>
-        <img src="assets/images/404.png" alt="Glitchy 404 graphic">
-        <p>
-            Try navigating back to <a href="index.html">base camp</a> or use the nav bar to find your way. 
-            
-        </p>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
     </div>
+  </nav>
+
+  <div class="content" style="text-align: center;">
+    <h1 class="error">404 — Access Denied</h1>
+    <p>Whoops! Looks like you tried to hack into a non-existent sector of my lair. This page is in-progress, or maybe it's just hiding in the shadows.</p>
+    <img src="/assets/images/404.png" alt="Glitchy 404 graphic" />
+    <p>Try navigating back to <a href="/index.html">base camp</a> or use the nav bar to find your way.</p>
+  </div>
+
+  <script src="/assets/js/post.js"></script>
 </body>
 </html>

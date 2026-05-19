@@ -1,76 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Projects - 18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="assets/images/racoon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="18gi0n's hardware and homelab projects — travel routers, WiFi Pineapple, Bjorn, P4wnP1, Pwnagotchi, and more." />
+  <title>Projects | 18gi0n</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
 </head>
 <body>
-   <!-- Nav Bar -->
-   <nav>
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="code.html">Code & Tools</a></li>
-        <li><a href="ctf.html">Write-ups</a></li>
-        <li><a href="research.html">Research</a></li>
-    </ul>
- </nav>
 
-    <div class="content">
-        <h1>Projects</h1>
-        <p>
-            I'll try to keep this updated as often as I can, but like most devs my projects likes to move faster than my documentation sometimes... 
-        </p>
-        <!-- Project Posts Section -->
-        
-        <div class="project-posts">
-            <a href="/webpages/travelrouter.html" class="project-box">
-                <img src="/assets/images/small_trouter/Covertrouter.jpg" alt="trouter">
-                <div class="project-text">
-                    <h3>DIY Travel Router/Media Server</h3>
-                    <p>This project creates a portable travel router using a Raspberry Pi 5, routing traffic through a VPN via RaspAP and hosting a Jellyfin media server for offline movie streaming.</p>
-                </div>
-            </a>
-            <a href="/webpages/wifipineapple.html" class="project-box">
-                <img src="/assets/images/wifipineapple/mango_cover.jpg" alt="Bjorn">
-                <div class="project-text">
-                    <h3>DIY Wifi-Pineapple: Wireless Pentest</h3>
-                    <p>This project involves building a DIY WiFi Pineapple, a wireless auditing tool. The setup enables wireless network penetration testing capabilities, such as rogue access point creation and network scanning, using affordable hardware.</p>
-                </div>
-            </a>
-            <a href="/webpages/Bjorn.html" class="project-box">
-                <img src="/assets/images/Bjorn/bjorn_cover.JPG" alt="Bjorn">
-                <div class="project-text">
-                    <h3>Bjorn: Network Defender</h3>
-                    <p>Bjorn is a «Tamagotchi like» autonomous network scanning, vulnerability assessment, and offensive security tool designed to run on a Raspberry Pi equipped with a 2.13-inch e-Paper HAT. This project provides my personal experince with setup and build of Bjorn.</p>
-                </div>
-            </a>
-            <!-- New Project -->
-            <a href="/webpages/p4wn.html" class="project-box">
-                <img src="assets/images/aloa/aloa_cover.JPG" alt="P4wn A.L.O.A">
-                <div class="project-text">
-                    <h3>P4wnP1 A.L.O.A. - Bad USB </h3>
-                    <p>P4wnP1 A.L.O.A. by MaMe82 is a framework which turns a Rapsberry Pi Zero W into a flexible, low-cost platform for pentesting, red teaming and physical engagements ... or into "A Little Offensive Appliance.</p>
-                </div>
-            </a>
-            <a href="/webpages/pwnagotchi.html" class="project-box">
-                <img src="assets/images/pwnagotchi/pwna_cover.JPG" alt="Pwnagotchi">
-                <div class="project-text">
-                    <h3>Pwnagotchi</h3>
-                    <p>Pwnagotchi is an A2C-based “AI” powered by bettercap and running on a Raspberry Pi Zero 2 W that learns from its surrounding WiFi environment in order to maximize the crackable WPA key material it captures.</p>
-                </div>
-            </a>
-            <a href="/webpages/nh_twp3.html" class="project-box">
-                <img src="assets/images/Nethunter/COVER.jpg" alt="Nethunter_tmp">
-                <div class="project-text">
-                    <h3>Nethunter: Tickwatch Pro 3</h3>
-                    <p>This project entails sideloading a Nethunter APK on a Tick Watch Pro 3 running wearOS. Allowing you to bring a nethunter device around with you on your wrist.</p>
-                </div>
-            </a>
-        </div>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/projects.html" aria-current="page">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
     </div>
+  </nav>
+
+  <div class="content">
+    <h1>Projects</h1>
+    <p>I'll try to keep this updated as often as I can, but like most devs my projects like to move faster than my documentation sometimes...</p>
+
+    <div class="project-posts">
+      <a href="/webpages/travelrouter.html" class="project-box">
+        <img src="/assets/images/small_trouter/Covertrouter.jpg" alt="Travel Router" />
+        <div class="project-text">
+          <h3>DIY Travel Router / Media Server</h3>
+          <p>A portable travel router using a Raspberry Pi 5, routing traffic through a VPN via RaspAP and hosting a Jellyfin media server for offline movie streaming.</p>
+        </div>
+      </a>
+
+      <a href="/webpages/wifipineapple.html" class="project-box">
+        <img src="/assets/images/wifipineapple/mango_cover.jpg" alt="WiFi Pineapple" />
+        <div class="project-text">
+          <h3>DIY WiFi Pineapple — Wireless Pentest</h3>
+          <p>Building a DIY WiFi Pineapple wireless auditing tool. Enables rogue access point creation, network scanning, and wireless penetration testing using affordable hardware.</p>
+        </div>
+      </a>
+
+      <a href="/webpages/Bjorn.html" class="project-box">
+        <img src="/assets/images/Bjorn/bjorn_cover.JPG" alt="Bjorn" />
+        <div class="project-text">
+          <h3>Bjorn: Network Defender</h3>
+          <p>Bjorn is a Tamagotchi-like autonomous network scanning, vulnerability assessment, and offensive security tool running on a Raspberry Pi with a 2.13-inch e-Paper HAT.</p>
+        </div>
+      </a>
+
+      <a href="/webpages/p4wn.html" class="project-box">
+        <img src="/assets/images/aloa/aloa_cover.JPG" alt="P4wnP1 A.L.O.A" />
+        <div class="project-text">
+          <h3>P4wnP1 A.L.O.A. — Bad USB</h3>
+          <p>P4wnP1 A.L.O.A. by MaMe82 turns a Raspberry Pi Zero W into a flexible, low-cost platform for pentesting, red teaming, and physical engagements.</p>
+        </div>
+      </a>
+
+      <a href="/webpages/pwnagotchi.html" class="project-box">
+        <img src="/assets/images/pwnagotchi/pwna_cover.JPG" alt="Pwnagotchi" />
+        <div class="project-text">
+          <h3>Pwnagotchi</h3>
+          <p>An A2C-based AI powered by bettercap running on a Raspberry Pi Zero 2 W that learns from its surrounding WiFi environment to maximize crackable WPA key material captured.</p>
+        </div>
+      </a>
+
+      <a href="/webpages/nh_twp3.html" class="project-box">
+        <img src="/assets/images/Nethunter/recovery.jpg" alt="NetHunter TicWatch" />
+        <div class="project-text">
+          <h3>Kali NetHunter: TicWatch Pro 3</h3>
+          <p>Sideloading Kali NetHunter on a TicWatch Pro 3 running WearOS — bringing a full NetHunter device to your wrist.</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <script src="/assets/js/post.js"></script>
 </body>
 </html>
