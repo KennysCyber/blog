@@ -1,341 +1,248 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
-    <title>Ansible YAML Inventory Builder - 18gi0n's Tech Lair</title>
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico">
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
-        body {
-            position: relative;
-            min-height: 100vh;
-        }
-
-        .opaque-bg {
-            background-color: rgba(13, 13, 13, 0.6);
-            position: fixed;
-            top: 50px;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        .content {
-            position: relative;
-            z-index: 2;
-            min-height: 100vh;
-            padding-bottom: 20px;
-        }
-
-        .content .left-aligned-content {
-            text-align: left !important;
-            max-width: 800px;
-            margin: 0 20px !important;
-            padding: 20px 0 !important;
-        }
-
-        .content .left-aligned-content h1,
-        .content .left-aligned-content h2,
-        .content .left-aligned-content p,
-        .content .left-aligned-content ul,
-        .content .left-aligned-content ol,
-        .content .left-aligned-content li {
-            text-align: left !important;
-        }
-
-        .content .left-aligned-content a {
-            color: #ff9933 !important;
-            text-decoration: underline;
-        }
-
-        .content .left-aligned-content a:hover {
-            color: #ff007a !important;
-            text-shadow: 0 0 5px #ff007a;
-        }
-
-        .content .left-aligned-content pre {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            margin: 10px 0;
-            position: relative;
-        }
-
-        .content .left-aligned-content code {
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-        }
-
-        .content .left-aligned-content .copy-btn {
-            display: none;
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #ff9933;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: 'Consolas', 'Courier New', monospace;
-        }
-
-        .content .left-aligned-content pre:hover .copy-btn {
-            display: block;
-        }
-
-        .content .left-aligned-content .copy-btn:hover {
-            background: #ff007a;
-        }
-
-        .content .left-aligned-content .copy-btn:focus {
-            outline: 2px solid #ff007a;
-            outline-offset: 2px;
-        }
-
-        @media (max-width: 600px) {
-            .content .left-aligned-content {
-                margin: 0 10px !important;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ansible YAML Inventory Builder | 18gi0n</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
 </head>
-
 <body>
-    <!-- Nav Bar -->
-    <nav>
-        <ul>
-            <li><a href="/index.html">Home</a></li>
-            <li><a href="/about.html">About</a></li>
-            <li><a href="/projects.html">Projects</a></li>
-            <li><a href="/code.html">Code & Tools</a></li>
-            <li><a href="/ctf.html">Write-ups</a></li>
-            <li><a href="/research.html">Research</a></li>
-        </ul>
-    </nav>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
+    </div>
+  </nav>
+  <header class="post-header">
+    <a href="/blog.html" class="back-link">&larr; All Posts</a>
+    <h1>Ansible YAML Inventory Builder</h1>
+    <div class="post-meta">
+      <span class="badge badge-code">Code & Tools</span>
+      <span class="reading-time" id="readingTime"></span>
+    </div>
+  </header>
 
-    <!-- Main Content -->
-    <div class="opaque-bg" id="opaqueBg"></div>
-    <div class="content">
-        <div class="left-aligned-content">
-            <h1>Ansible YAML Inventory Builder</h1>
-            <img src="/assets/images/Code/ansibleHS/ymlcreate/thumbnail (1).png"
-                alt="Ansible YAML Inventory Builder cover" width="600" height="400">
+  <nav class="toc" id="toc">
+    <div class="toc-title">// Contents</div>
+    <ol id="tocList"></ol>
+  </nav>
 
-            <h2>Project Overview</h2>
-            <p>
-                This interactive Python script simplifies creating valid Ansible YAML inventories, especially in
-                airgapped environments. It guides you through defining groups, hosts (supporting formats like
-                <code>hostname=ip</code>, hostname-only, or IP-only), and optional child groups. The output is clean,
-                Ansible-compliant YAML ready for immediate use with <code>ansible</code> or
-                <code>ansible-playbook</code> commands.
-            </p>
-            <p>
-                Built quickly with GenAI assistance—perfect for labs, automation pipelines, or teaching Ansible basics.
-                It eliminates manual YAML errors and enforces best practices.
-            </p>
-            <ul>
-                <li><strong>Requirements:</strong> Python 3 with PyYAML (install via <code>pip install pyyaml</code> if
-                    needed).</li>
-                <li><strong>Usage:</strong> Run <code>python3 yml-create.py</code> (or with
-                    <code>--output filename.yml</code> to skip prompt).
-                </li>
-                <li><strong>Features:</strong> Input validation, child group checks, sorted output, and built-in
-                    preview.</li>
-            </ul>
+  <article class="post-body" id="postBody">
+    <img src="/assets/images/Code/ansibleHS/ymlcreate/thumbnail (1).png"
+                    alt="Ansible YAML Inventory Builder cover" width="600" height="400">
 
-            <h2>Full Code</h2>
-            <p><strong>Security Note:</strong> Always review code before executing. SHA256 Hash:
-                51ea38c9041b22416e305b7abeb27ccf8d0ebc13c2d71b424a6cc7dd6c039a30/p>
-            <pre><code id="fullCode">
-import argparse
-import sys
-import yaml
+                <h2>Project Overview</h2>
+                <p>
+                    This interactive Python script simplifies creating valid Ansible YAML inventories, especially in
+                    airgapped environments. It guides you through defining groups, hosts (supporting formats like
+                    <code>hostname=ip</code>, hostname-only, or IP-only), and optional child groups. The output is clean,
+                    Ansible-compliant YAML ready for immediate use with <code>ansible</code> or
+                    <code>ansible-playbook</code> commands.
+                </p>
+                <p>
+                    Built quickly with GenAI assistance—perfect for labs, automation pipelines, or teaching Ansible basics.
+                    It eliminates manual YAML errors and enforces best practices.
+                </p>
+                <ul>
+                    <li><strong>Requirements:</strong> Python 3 with PyYAML (install via <code>pip install pyyaml</code> if
+                        needed).</li>
+                    <li><strong>Usage:</strong> Run <code>python3 yml-create.py</code> (or with
+                        <code>--output filename.yml</code> to skip prompt).
+                    </li>
+                    <li><strong>Features:</strong> Input validation, child group checks, sorted output, and built-in
+                        preview.</li>
+                </ul>
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Interactively build an Ansible YAML inventory (official format)."
-    )
-    parser.add_argument(
-        "--output",
-        default=None,
-        help="Output file for the inventory (skips filename prompt)"
-    )
-    args = parser.parse_args()
+                <h2>Full Code</h2>
+                <p><strong>Security Note:</strong> Always review code before executing. SHA256 Hash:
+                    51ea38c9041b22416e305b7abeb27ccf8d0ebc13c2d71b424a6cc7dd6c039a30/p>
+                <pre><code id="fullCode">
+    import argparse
+    import sys
+    import yaml
 
-    # Internal structure:
-    # groupname: {
-    #   'hosts': {hostname: {vars}},
-    #   'children': set()
-    # }
-    groups = {}
-
-    print("\nInteractive Ansible YAML Inventory Builder")
-    print("Rules:")
-    print("- Top-level keys are group names")
-    print("- Hosts may be 'hostname=ip', hostname-only, or ip-only")
-    print("- Child groups are optional\n")
-
-    while True:
-        group_name = input("Enter group name (or 'done' to finish): ").strip()
-        if group_name.lower() == "done":
-            break
-        if not group_name:
-            print("Group name cannot be empty.\n")
-            continue
-
-        group = groups.setdefault(
-            group_name,
-            {"hosts": {}, "children": set()}
+    def main():
+        parser = argparse.ArgumentParser(
+            description="Interactively build an Ansible YAML inventory (official format)."
         )
+        parser.add_argument(
+            "--output",
+            default=None,
+            help="Output file for the inventory (skips filename prompt)"
+        )
+        args = parser.parse_args()
 
-        hosts_input = input(
-            f"Hosts for '{group_name}' "
-            "(comma-separated, empty for none): "
-        ).strip()
+        # Internal structure:
+        # groupname: {
+        #   'hosts': {hostname: {vars}},
+        #   'children': set()
+        # }
+        groups = {}
 
-        if hosts_input:
-            for item in hosts_input.split(","):
-                item = item.strip()
-                if not item:
-                    continue
+        print("\nInteractive Ansible YAML Inventory Builder")
+        print("Rules:")
+        print("- Top-level keys are group names")
+        print("- Hosts may be 'hostname=ip', hostname-only, or ip-only")
+        print("- Child groups are optional\n")
 
-                # hostname=ip format
-                if "=" in item:
-                    hostname, addr = item.split("=", 1)
-                    hostname = hostname.strip()
-                    addr = addr.strip()
+        while True:
+            group_name = input("Enter group name (or 'done' to finish): ").strip()
+            if group_name.lower() == "done":
+                break
+            if not group_name:
+                print("Group name cannot be empty.\n")
+                continue
 
-                    if not hostname or not addr:
-                        print(f"Ignoring invalid host entry: {item}")
+            group = groups.setdefault(
+                group_name,
+                {"hosts": {}, "children": set()}
+            )
+
+            hosts_input = input(
+                f"Hosts for '{group_name}' "
+                "(comma-separated, empty for none): "
+            ).strip()
+
+            if hosts_input:
+                for item in hosts_input.split(","):
+                    item = item.strip()
+                    if not item:
                         continue
 
-                    group["hosts"][hostname] = {
-                        "ansible_host": addr
-                    }
-                else:
-                    # hostname-only OR ip-only
-                    group["hosts"][item] = {}
+                    # hostname=ip format
+                    if "=" in item:
+                        hostname, addr = item.split("=", 1)
+                        hostname = hostname.strip()
+                        addr = addr.strip()
 
-        children_input = input(
-            f"Child groups for '{group_name}' "
-            "(comma-separated, empty for none): "
-        ).strip()
+                        if not hostname or not addr:
+                            print(f"Ignoring invalid host entry: {item}")
+                            continue
 
-        if children_input:
-            for child in children_input.split(","):
-                child = child.strip()
-                if not child:
-                    continue
-                if child == group_name:
-                    print("A group cannot be its own child — ignored.")
-                else:
-                    group["children"].add(child)
+                        group["hosts"][hostname] = {
+                            "ansible_host": addr
+                        }
+                    else:
+                        # hostname-only OR ip-only
+                        group["hosts"][item] = {}
 
-        print()
+            children_input = input(
+                f"Child groups for '{group_name}' "
+                "(comma-separated, empty for none): "
+            ).strip()
 
-    if not groups:
-        print("No groups defined. Exiting.")
-        sys.exit(0)
+            if children_input:
+                for child in children_input.split(","):
+                    child = child.strip()
+                    if not child:
+                        continue
+                    if child == group_name:
+                        print("A group cannot be its own child — ignored.")
+                    else:
+                        group["children"].add(child)
 
-    # Validate referenced children
-    defined_groups = set(groups.keys())
-    undefined_children = {
-        child
-        for g in groups.values()
-        for child in g["children"]
-        if child not in defined_groups
-    }
+            print()
 
-    if undefined_children:
-        print("\nWarning: These child groups are referenced but not defined:")
-        for name in sorted(undefined_children):
-            print(f"  - {name}")
-        if input("Proceed anyway? (y/n): ").strip().lower() != "y":
-            print("Aborted.")
+        if not groups:
+            print("No groups defined. Exiting.")
+            sys.exit(0)
+
+        # Validate referenced children
+        defined_groups = set(groups.keys())
+        undefined_children = {
+            child
+            for g in groups.values()
+            for child in g["children"]
+            if child not in defined_groups
+        }
+
+        if undefined_children:
+            print("\nWarning: These child groups are referenced but not defined:")
+            for name in sorted(undefined_children):
+                print(f"  - {name}")
+            if input("Proceed anyway? (y/n): ").strip().lower() != "y":
+                print("Aborted.")
+                sys.exit(1)
+
+        # Build final inventory
+        inventory = {}
+
+        for group_name in sorted(groups):
+            data = groups[group_name]
+            entry = {}
+
+            # Hosts (always emitted)
+            entry["hosts"] = dict(sorted(data["hosts"].items()))
+
+            # Children (only if defined)
+            if data["children"]:
+                entry["children"] = {child: {} for child in sorted(data["children"])}
+
+            inventory[group_name] = entry
+
+        # Output filename
+        if args.output:
+            output_file = args.output
+        else:
+            while True:
+                output_file = input("Output filename (inventory.yml): ").strip()
+                if output_file:
+                    break
+
+        # Write YAML
+        try:
+            with open(output_file, "w") as f:
+                yaml.safe_dump(
+                    inventory,
+                    f,
+                    indent=2,
+                    sort_keys=False,
+                    default_flow_style=False
+                )
+        except Exception as e:
+            print(f"Error writing file: {e}")
             sys.exit(1)
 
-    # Build final inventory
-    inventory = {}
+        print(f"\nInventory written to {output_file}\n")
 
-    for group_name in sorted(groups):
-        data = groups[group_name]
-        entry = {}
+        print("Preview:")
+        print("-" * 40)
+        with open(output_file) as f:
+            print(f.read())
 
-        # Hosts (always emitted)
-        entry["hosts"] = dict(sorted(data["hosts"].items()))
+    if __name__ == "__main__":
+        main()
+                </code></pre>
 
-        # Children (only if defined)
-        if data["children"]:
-            entry["children"] = {child: {} for child in sorted(data["children"])}
+                <h2>Execution Demo</h2>
+                <p>Running the script and generating an inventory:</p>
+                <img src="/assets/images/Code/ansibleHS/ymlcreate/1.png" alt="Script execution in terminal" width="600"
+                    height="500">
 
-        inventory[group_name] = entry
+                <p>Verifying the generated inventory with Ansible:</p>
+                <img src="/assets/images/Code/ansibleHS/ymlcreate/2.png" alt="ansible-inventory --list output" width="600"
+                    height="500">
 
-    # Output filename
-    if args.output:
-        output_file = args.output
-    else:
-        while True:
-            output_file = input("Output filename (inventory.yml): ").strip()
-            if output_file:
-                break
+                <h2>Conclusion</h2>
+                <p>
+                    This lightweight tool makes Ansible inventory creation fast, error-free, and repeatable—ideal for
+                    airgapped setups or quick prototyping. Save as <code>yml-create.py</code>, make executable if desired,
+                    and start building inventories effortlessly.
+                </p>
+  </article>
 
-    # Write YAML
-    try:
-        with open(output_file, "w") as f:
-            yaml.safe_dump(
-                inventory,
-                f,
-                indent=2,
-                sort_keys=False,
-                default_flow_style=False
-            )
-    except Exception as e:
-        print(f"Error writing file: {e}")
-        sys.exit(1)
-
-    print(f"\nInventory written to {output_file}\n")
-
-    print("Preview:")
-    print("-" * 40)
-    with open(output_file) as f:
-        print(f.read())
-
-if __name__ == "__main__":
-    main()
-            </code></pre>
-
-            <h2>Execution Demo</h2>
-            <p>Running the script and generating an inventory:</p>
-            <img src="/assets/images/Code/ansibleHS/ymlcreate/1.png" alt="Script execution in terminal" width="600"
-                height="500">
-
-            <p>Verifying the generated inventory with Ansible:</p>
-            <img src="/assets/images/Code/ansibleHS/ymlcreate/2.png" alt="ansible-inventory --list output" width="600"
-                height="500">
-
-            <h2>Conclusion</h2>
-            <p>
-                This lightweight tool makes Ansible inventory creation fast, error-free, and repeatable—ideal for
-                airgapped setups or quick prototyping. Save as <code>yml-create.py</code>, make executable if desired,
-                and start building inventories effortlessly.
-            </p>
-        </div>
-    </div>
+  <script src="/assets/js/post.js"></script>
 </body>
-
 </html>

@@ -1,528 +1,409 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
-  <title>Ansible Playbooks - Tech Lair</title>
-
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
-
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-
-    body {
-      position: relative;
-      min-height: 100vh;
-    }
-
-    .opaque-bg {
-      background-color: rgba(13, 13, 13, 0.6);
-      position: fixed;
-      top: 50px;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    .content {
-      position: relative;
-      z-index: 2;
-      min-height: 100vh;
-      padding-bottom: 20px;
-    }
-
-    .left-aligned-content {
-      max-width: 900px;
-      margin: 0 20px;
-      padding: 20px 0;
-    }
-
-    h1,
-    h2,
-    p {
-      text-align: left;
-    }
-
-    a {
-      color: #ff9933;
-      text-decoration: underline;
-    }
-
-    a:hover {
-      color: #ff007a;
-      text-shadow: 0 0 5px #ff007a;
-    }
-
-    pre {
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      padding: 15px;
-      border-radius: 6px;
-      overflow-x: auto;
-      position: relative;
-      text-align: left;
-      /* Left-aligned content inside pre */
-      white-space: pre-wrap;
-      /* Wrap long lines for better viewing */
-      word-wrap: break-word;
-      /* Prevent text overflow */
-    }
-
-    code {
-      font-family: Consolas, monospace;
-      font-size: 14px;
-    }
-
-    .copy-btn {
-      display: none;
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      background: #ff9933;
-      color: #fff;
-      border: none;
-      padding: 5px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    pre:hover .copy-btn {
-      display: block;
-    }
-
-    .copy-btn:hover {
-      background: #ff007a;
-    }
-
-    details {
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    details summary {
-      cursor: pointer;
-      background: #ff9933;
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 4px;
-      font-family: Consolas, monospace;
-    }
-
-    details summary:hover {
-      background: #ff007a;
-    }
-
-    details pre {
-      margin-top: 10px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ansible Playbooks | 18gi0n</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
 </head>
-
 <body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
+    </div>
+  </nav>
+  <header class="post-header">
+    <a href="/blog.html" class="back-link">&larr; All Posts</a>
+    <h1>Ansible Playbooks Collection</h1>
+    <div class="post-meta">
+      <span class="badge badge-code">Code & Tools</span>
+      <span class="reading-time" id="readingTime"></span>
+    </div>
+  </header>
 
-  <nav>
-    <ul>
-      <li><a href="/index.html">Home</a></li>
-      <li><a href="/about.html">About</a></li>
-      <li><a href="/projects.html">Projects</a></li>
-      <li><a href="/code.html">Code & Tools</a></li>
-      <li><a href="/ctf.html">Write-ups</a></li>
-      <li><a href="/research.html">Research</a></li>
-    </ul>
+  <nav class="toc" id="toc">
+    <div class="toc-title">// Contents</div>
+    <ol id="tocList"></ol>
   </nav>
 
-  <div class="opaque-bg"></div>
+  <article class="post-body" id="postBody">
+    <p>Sanitized, reusable Ansible playbooks with secure defaults and toggleable views.</p>
 
-  <div class="content">
-    <div class="left-aligned-content">
+          <p><strong>Ansible Setup:</strong></p>
+          <p>If you do not have an Ansible controller, inventory, or vault configured, start here:</p>
+          <li><a href="/webpages/ansible_setup.html">Ansible Setup Lab</a></li>
 
-      <h1>Ansible Playbooks Collection</h1>
-      <p>Sanitized, reusable Ansible playbooks with secure defaults and toggleable views.</p>
+          <br></br>
 
-      <p><strong>Ansible Setup:</strong></p>
-      <p>If you do not have an Ansible controller, inventory, or vault configured, start here:</p>
-      <li><a href="/webpages/ansible_setup.html">Ansible Setup Lab</a></li>
+          <!-- ================= PLAYBOOK 1 ================= -->
+          <details>
+            <summary>1. Linux User & Admin Group Provisioning</summary>
+            <p>Creates admin group, configures sudo, and provisions multiple users.</p>
+            <pre><code>
+    ---
+    - name: Configure Admin Group, Sudoers, and Provision Users
+      hosts: wain
+      vars_files:
+        - /path/to/secrets.yml
+      gather_facts: no
 
-      <br></br>
+      vars:
+        ansible_password: "{{ 1_pwd }}"
+        ansible_user: "{{ 1_username }}"
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_become_user: root
+        ansible_become_password: "{{ 1_pwd }}"
+        admin_group: "admin"
+        users:
+          - user1
+          - user2
+        selinux_user: "staff_u"
+        selinux_range: "s0-s0:c0.c1023"
 
-      <!-- ================= PLAYBOOK 1 ================= -->
-      <details>
-        <summary>1. Linux User & Admin Group Provisioning</summary>
-        <p>Creates admin group, configures sudo, and provisions multiple users.</p>
-        <pre><code>
----
-- name: Configure Admin Group, Sudoers, and Provision Users
-  hosts: wain
-  vars_files:
-    - /path/to/secrets.yml
-  gather_facts: no
-  
-  vars:
-    ansible_password: "{{ 1_pwd }}"
-    ansible_user: "{{ 1_username }}"
-    ansible_become: yes
-    ansible_become_method: sudo
-    ansible_become_user: root
-    ansible_become_password: "{{ 1_pwd }}"
-    admin_group: "admin"
-    users:
-      - user1
-      - user2
-    selinux_user: "staff_u"
-    selinux_range: "s0-s0:c0.c1023"
+      tasks:
+        ## SECTION 1: Group & Sudo Configuration ##
 
-  tasks:
-    ## SECTION 1: Group & Sudo Configuration ##
-    
-    - name: Ensure the admin group exists
-      ansible.builtin.group:
-        name: "{{ admin_group }}"
-        state: present
+        - name: Ensure the admin group exists
+          ansible.builtin.group:
+            name: "{{ admin_group }}"
+            state: present
 
-    - name: Create sudoers.d file for the admin group
-      ansible.builtin.copy:
-        dest: "/etc/sudoers.d/{{ admin_group | lower }}"
-        content: "%{{ admin_group }} ALL=(ALL) ALL"
-        mode: '0440'
-        validate: '/usr/sbin/visudo -cf %s'
+        - name: Create sudoers.d file for the admin group
+          ansible.builtin.copy:
+            dest: "/etc/sudoers.d/{{ admin_group | lower }}"
+            content: "%{{ admin_group }} ALL=(ALL) ALL"
+            mode: '0440'
+            validate: '/usr/sbin/visudo -cf %s'
 
-    ## SECTION 2: User Provisioning ##
+        ## SECTION 2: User Provisioning ##
 
-    - name: Ensure per-user private groups exist
-      ansible.builtin.group:
-        name: "{{ item }}"
-        state: present
-      loop: "{{ users }}"
+        - name: Ensure per-user private groups exist
+          ansible.builtin.group:
+            name: "{{ item }}"
+            state: present
+          loop: "{{ users }}"
 
-    - name: Create user accounts and assign groups
-      ansible.builtin.user:
-        name: "{{ item }}"
-        group: "{{ item }}"
-        groups: "{{ admin_group }}"
-        append: yes
-        create_home: yes
-        state: present
-        password: ""
-      loop: "{{ users }}"
+        - name: Create user accounts and assign groups
+          ansible.builtin.user:
+            name: "{{ item }}"
+            group: "{{ item }}"
+            groups: "{{ admin_group }}"
+            append: yes
+            create_home: yes
+            state: present
+            password: ""
+          loop: "{{ users }}"
 
-    - name: Create user .ssh directory
-      ansible.builtin.file:
-        path: "/home/{{ item }}/.ssh"
-        state: directory
-        owner: "{{ item }}"
-        group: "{{ item }}"
-        mode: '0700'
-      loop: "{{ users }}"
+        - name: Create user .ssh directory
+          ansible.builtin.file:
+            path: "/home/{{ item }}/.ssh"
+            state: directory
+            owner: "{{ item }}"
+            group: "{{ item }}"
+            mode: '0700'
+          loop: "{{ users }}"
 
-    - name: Force password change on first login
-      ansible.builtin.command:
-        cmd: "chage -d 0 {{ item }}"
-      loop: "{{ users }}"
-      changed_when: true
+        - name: Force password change on first login
+          ansible.builtin.command:
+            cmd: "chage -d 0 {{ item }}"
+          loop: "{{ users }}"
+          changed_when: true
 
-    - name: Set SELinux login assignments
-      ansible.builtin.command:
-        cmd: "semanage login -a -s {{ selinux_user }} -r {{ selinux_range }} {{ item }}"
-      loop: "{{ users }}"
-</code>
-<button class="copy-btn" onclick="copyCode(this)">Copy</button>
-</pre>
-      </details>
+        - name: Set SELinux login assignments
+          ansible.builtin.command:
+            cmd: "semanage login -a -s {{ selinux_user }} -r {{ selinux_range }} {{ item }}"
+          loop: "{{ users }}"
+    </code>
 
-      <!-- ================= PLAYBOOK 2 ================= -->
-      <details>
-        <summary>2. Elastic Stack Health Checks</summary>
-        <p>Validates core Elastic Stack services across host groups.</p>
-        <pre><code>
----
-- name: Check Elastic Services
-  hosts: elastic_nodes
-  vars_files:
-    - /path/to/vault.yml
-  gather_facts: no
+    </pre>
+          </details>
 
-  vars:
-    ansible_user: "{{ vault_user }}"
-    ansible_password: "{{ vault_password }}"
-    ansible_become: yes
-    ansible_become_method: sudo
-    ansible_become_user: root
-    ansible_become_password: "{{ vault_password }}"
-    services:
-      - elasticsearch
-      - logstash
-      - kibana
-      - elastic-agent
+          <!-- ================= PLAYBOOK 2 ================= -->
+          <details>
+            <summary>2. Elastic Stack Health Checks</summary>
+            <p>Validates core Elastic Stack services across host groups.</p>
+            <pre><code>
+    ---
+    - name: Check Elastic Services
+      hosts: elastic_nodes
+      vars_files:
+        - /path/to/vault.yml
+      gather_facts: no
 
-  tasks:
-    - name: Check service status
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        state: started
-      register: svc
-      ignore_errors: yes
-      changed_when: false
-      loop: "{{ services }}"
-</code>
-<button class="copy-btn" onclick="copyCode(this)">Copy</button>
-</pre>
-      </details>
+      vars:
+        ansible_user: "{{ vault_user }}"
+        ansible_password: "{{ vault_password }}"
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_become_user: root
+        ansible_become_password: "{{ vault_password }}"
+        services:
+          - elasticsearch
+          - logstash
+          - kibana
+          - elastic-agent
 
-      <!-- ================= PLAYBOOK 3 ================= -->
-      <details>
-        <summary>3. Server Reboot Playbook</summary>
-        <p>Safely reboots infrastructure nodes.</p>
-        <pre><code>
----
-- name: Reboot Servers
-  hosts: infrastructure_nodes
-  vars_files:
-    - /path/to/vault.yml
-  gather_facts: no
+      tasks:
+        - name: Check service status
+          ansible.builtin.systemd:
+            name: "{{ item }}"
+            state: started
+          register: svc
+          ignore_errors: yes
+          changed_when: false
+          loop: "{{ services }}"
+    </code>
 
-  vars:
-    ansible_user: "{{ vault_user }}"
-    ansible_password: "{{ vault_password }}"
-    ansible_become: yes
-    ansible_become_method: sudo
-    ansible_become_user: root
-    ansible_become_password: "{{ vault_password }}"
+    </pre>
+          </details>
 
-  tasks:
-    - name: Reboot system
-      ansible.builtin.reboot:
-        reboot_timeout: 600
-</code>
-<button class="copy-btn" onclick="copyCode(this)">Copy</button>
-</pre>
-      </details>
+          <!-- ================= PLAYBOOK 3 ================= -->
+          <details>
+            <summary>3. Server Reboot Playbook</summary>
+            <p>Safely reboots infrastructure nodes.</p>
+            <pre><code>
+    ---
+    - name: Reboot Servers
+      hosts: infrastructure_nodes
+      vars_files:
+        - /path/to/vault.yml
+      gather_facts: no
 
-      <!-- ================= PLAYBOOK 4 ================= -->
-      <details>
-        <summary>4. Sensor Health Check</summary>
-        <p>Checks the health of various services on sensor devices (e.g., Zeek, Tcpdump, Snort) and disk usage.</p>
-        <pre><code>
----
-- name: Sensor Health Check
-  hosts: all
-  vars_files:
-    - -path to secrets file-
-  gather_facts: no
-  vars:
-    ansible_password: "{{ sensors_pwd2 }}"
-    ansible_user: " {{ sensor_health }}"
-    ansible_become_method: sudo
-    ansible_become_user: root
-    ansible_become_password: "{{ sensors_pwd2 }}"
-    ansible_become: yes
-  tasks:
-    - name: Check Zeek service status
-      ansible.builtin.systemd:
-        name: zeek
-        state: started
-      become: yes
-      become_user: root
-      become_method: sudo
-      register: zeek_status
-      ignore_errors: yes
-      changed_when: false
+      vars:
+        ansible_user: "{{ vault_user }}"
+        ansible_password: "{{ vault_password }}"
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_become_user: root
+        ansible_become_password: "{{ vault_password }}"
 
-    - name: Display Zeek status
-      ansible.builtin.debug:
-        msg: "Zeek is {{ 'running' if zeek_status.status.ActiveState == 'active' else 'not running' }}"
-      when: zeek_status.status is defined
+      tasks:
+        - name: Reboot system
+          ansible.builtin.reboot:
+            reboot_timeout: 600
+    </code>
 
-    - name: Check Tcpdump service status
-      ansible.builtin.systemd:
-        name: tcpdump
-        state: started
-      become: yes
-      become_user: root
-      become_method: sudo
-      register: tcpdump_status
-      ignore_errors: yes
-      changed_when: false
+    </pre>
+          </details>
 
-    - name: Display Tcpdump status
-      ansible.builtin.debug:
-        msg: "Tcpdump is {{ 'running' if tcpdump_status.status.ActiveState == 'active' else 'not running' }}"
-      when: tcpdump_status.status is defined
+          <!-- ================= PLAYBOOK 4 ================= -->
+          <details>
+            <summary>4. Sensor Health Check</summary>
+            <p>Checks the health of various services on sensor devices (e.g., Zeek, Tcpdump, Snort) and disk usage.</p>
+            <pre><code>
+    ---
+    - name: Sensor Health Check
+      hosts: all
+      vars_files:
+        - -path to secrets file-
+      gather_facts: no
+      vars:
+        ansible_password: "{{ sensors_pwd2 }}"
+        ansible_user: " {{ sensor_health }}"
+        ansible_become_method: sudo
+        ansible_become_user: root
+        ansible_become_password: "{{ sensors_pwd2 }}"
+        ansible_become: yes
+      tasks:
+        - name: Check Zeek service status
+          ansible.builtin.systemd:
+            name: zeek
+            state: started
+          become: yes
+          become_user: root
+          become_method: sudo
+          register: zeek_status
+          ignore_errors: yes
+          changed_when: false
 
-    - name: Check Snort service status
-      ansible.builtin.systemd:
-        name: snort
-        state: started
-      become: yes
-      become_user: root
-      become_method: sudo
-      register: snort_status
-      ignore_errors: yes
-      changed_when: false
+        - name: Display Zeek status
+          ansible.builtin.debug:
+            msg: "Zeek is {{ 'running' if zeek_status.status.ActiveState == 'active' else 'not running' }}"
+          when: zeek_status.status is defined
 
-    - name: Display Snort status
-      ansible.builtin.debug:
-        msg: "Snort is {{ 'running' if snort_status.status.ActiveState == 'active' else 'not running' }}"
-      when: snort_status.status is defined
+        - name: Check Tcpdump service status
+          ansible.builtin.systemd:
+            name: tcpdump
+            state: started
+          become: yes
+          become_user: root
+          become_method: sudo
+          register: tcpdump_status
+          ignore_errors: yes
+          changed_when: false
 
-    - name: Check disk usage
-      ansible.builtin.command: df -h
-      become: yes
-      become_user: root
-      become_method: sudo
-      register: disk_usage
-      changed_when: false
-      failed_when: false
+        - name: Display Tcpdump status
+          ansible.builtin.debug:
+            msg: "Tcpdump is {{ 'running' if tcpdump_status.status.ActiveState == 'active' else 'not running' }}"
+          when: tcpdump_status.status is defined
 
-    - name: Parse disk usage for 100% full filesystems
-      ansible.builtin.set_fact:
-        full_disks: "{{ disk_usage.stdout_lines | select('match', '.*100%.*') | list }}"
-      no_log: true
+        - name: Check Snort service status
+          ansible.builtin.systemd:
+            name: snort
+            state: started
+          become: yes
+          become_user: root
+          become_method: sudo
+          register: snort_status
+          ignore_errors: yes
+          changed_when: false
 
-    - name: Display 100% full filesystems
-      ansible.builtin.debug:
-        msg: "{{ item }}"
-      loop: "{{ full_disks }}"
-      when: full_disks | length > 0
+        - name: Display Snort status
+          ansible.builtin.debug:
+            msg: "Snort is {{ 'running' if snort_status.status.ActiveState == 'active' else 'not running' }}"
+          when: snort_status.status is defined
 
-    - name: Find large files on 100% full filesystems
-      ansible.builtin.command: find / -xdev -type f -size +100M -exec ls -lah {} + | sort -hr -k 5 | head -n 5
-      become: yes
-      become_user: root
-      become_method: sudo
-      register: large_files
-      changed_when: false
-      failed_when: false
-      when: full_disks | length > 0
+        - name: Check disk usage
+          ansible.builtin.command: df -h
+          become: yes
+          become_user: root
+          become_method: sudo
+          register: disk_usage
+          changed_when: false
+          failed_when: false
 
-    - name: Display large files
-      ansible.builtin.debug:
-        msg: "{{ item }}"
-      loop: "{{ large_files.stdout_lines }}"
-      when: large_files.stdout_lines is defined and full_disks | length > 0
-</code>
-<button class="copy-btn" onclick="copyCode(this)">Copy</button>
-</pre>
-      </details>
+        - name: Parse disk usage for 100% full filesystems
+          ansible.builtin.set_fact:
+            full_disks: "{{ disk_usage.stdout_lines | select('match', '.*100%.*') | list }}"
+          no_log: true
 
-      <!-- ================= PLAYBOOK 5 ================= -->
-      <details>
-        <summary>5. Resource Check Playbook</summary>
-        <p>Checks storage, memory, and CPU usage on Elastic nodes.</p>
-        <pre><code>
----
-- name: Check Elastic Node Stats
-  hosts: all
-  vars_files:
-    - -path to secrets file-
-  gather_facts: no
-  vars:
-    ansible_password: "{{ newelastic_pwd }}"
-    ansible_user: "{{ elastic_user }}"
-    ansible_become_method: sudo
-    ansible_become_user: root
-    ansible_become_password: "{{ newelastic_pwd }}"
-    ansible_become: yes
-  tasks:
-    - name: Check Storage amount
-      ansible.builtin.command: df -h --total
-      become: yes
-      become_user: root
-      become_method: sudo su
-      register: ES_df
-      ignore_errors: yes
-      changed_when: false
+        - name: Display 100% full filesystems
+          ansible.builtin.debug:
+            msg: "{{ item }}"
+          loop: "{{ full_disks }}"
+          when: full_disks | length > 0
 
-    - name: Display storage total
-      ansible.builtin.debug:
-        msg: "Node storage: {{ ES_df.stdout }}"
-      when: ES_df is defined and ES_df.stdout is defined
+        - name: Find large files on 100% full filesystems
+          ansible.builtin.command: find / -xdev -type f -size +100M -exec ls -lah {} + | sort -hr -k 5 | head -n 5
+          become: yes
+          become_user: root
+          become_method: sudo
+          register: large_files
+          changed_when: false
+          failed_when: false
+          when: full_disks | length > 0
 
-    - name: Check Memory amount
-      ansible.builtin.command: free -h
-      become: yes
-      become_user: root
-      become_method: sudo su
-      register: ES_free
-      ignore_errors: yes
-      changed_when: false
+        - name: Display large files
+          ansible.builtin.debug:
+            msg: "{{ item }}"
+          loop: "{{ large_files.stdout_lines }}"
+          when: large_files.stdout_lines is defined and full_disks | length > 0
+    </code>
 
-    - name: Display mem total
-      ansible.builtin.debug:
-        msg: "Node memory: {{ ES_free.stdout }}"
-      when: ES_free is defined and ES_free.stdout is defined
+    </pre>
+          </details>
 
-    - name: Check CPU amount
-      ansible.builtin.command: lscpu
-      become: yes
-      become_user: root
-      become_method: sudo su
-      register: ES_lscpu
-      ignore_errors: yes
-      changed_when: false
+          <!-- ================= PLAYBOOK 5 ================= -->
+          <details>
+            <summary>5. Resource Check Playbook</summary>
+            <p>Checks storage, memory, and CPU usage on Elastic nodes.</p>
+            <pre><code>
+    ---
+    - name: Check Elastic Node Stats
+      hosts: all
+      vars_files:
+        - -path to secrets file-
+      gather_facts: no
+      vars:
+        ansible_password: "{{ newelastic_pwd }}"
+        ansible_user: "{{ elastic_user }}"
+        ansible_become_method: sudo
+        ansible_become_user: root
+        ansible_become_password: "{{ newelastic_pwd }}"
+        ansible_become: yes
+      tasks:
+        - name: Check Storage amount
+          ansible.builtin.command: df -h --total
+          become: yes
+          become_user: root
+          become_method: sudo su
+          register: ES_df
+          ignore_errors: yes
+          changed_when: false
 
-    - name: Display CPU amount
-      ansible.builtin.debug:
-        msg: "Node CPU: {{ ES_lscpu.stdout }}"
-      when: ES_lscpu is defined and ES_lscpu.stdout is defined
-</code>
-<button class="copy-btn" onclick="copyCode(this)">Copy</button>
-</pre>
-      </details>
+        - name: Display storage total
+          ansible.builtin.debug:
+            msg: "Node storage: {{ ES_df.stdout }}"
+          when: ES_df is defined and ES_df.stdout is defined
 
-      <!-- ================= PLAYBOOK 6 ================= -->
-      <details>
-        <summary>6. SED Replace Playbook</summary>
-        <p>Uses sed to find and replace a line in a file across multiple devices (e.g., journald.conf).</p>
-        <pre><code>
----
-- name: Add persistence to journald.conf
-  hosts: all
-  vars_files:
-    - /path/to/secrets.yml
-  gather_facts: no
-  vars:
-    ansible_password: "{{ sensors_pwd2 }}"
-    ansible_user: "{{ sensor_user }}"
-    ansible_become_method: sudo
-    ansible_become_user: root
-    ansible_become_password: "{{ sensors_pwd2 }}"
-    ansible_become: yes
-  tasks:
-    - name: fix journald
-      ansible.builtin.command: sed -i 's/#Storage=auto/Storage=persistent/g' /etc/systemd/journald.conf
-      become: yes
-      become_user: root
-      become_method: sudo
-      ignore_errors: yes
-      changed_when: false
-</code>
-<button class="copy-btn" onclick="copyCode(this)">Copy</button>
-</pre>
-      </details>
+        - name: Check Memory amount
+          ansible.builtin.command: free -h
+          become: yes
+          become_user: root
+          become_method: sudo su
+          register: ES_free
+          ignore_errors: yes
+          changed_when: false
 
-    </div>
-  </div>
+        - name: Display mem total
+          ansible.builtin.debug:
+            msg: "Node memory: {{ ES_free.stdout }}"
+          when: ES_free is defined and ES_free.stdout is defined
 
-  <script>
-    function copyCode(button) {
-      const code = button.parentElement.querySelector("code").innerText;
-      navigator.clipboard.writeText(code);
-      button.textContent = "Copied!";
-      setTimeout(() => button.textContent = "Copy", 1500);
-    }
-  </script>
+        - name: Check CPU amount
+          ansible.builtin.command: lscpu
+          become: yes
+          become_user: root
+          become_method: sudo su
+          register: ES_lscpu
+          ignore_errors: yes
+          changed_when: false
 
+        - name: Display CPU amount
+          ansible.builtin.debug:
+            msg: "Node CPU: {{ ES_lscpu.stdout }}"
+          when: ES_lscpu is defined and ES_lscpu.stdout is defined
+    </code>
+
+    </pre>
+          </details>
+
+          <!-- ================= PLAYBOOK 6 ================= -->
+          <details>
+            <summary>6. SED Replace Playbook</summary>
+            <p>Uses sed to find and replace a line in a file across multiple devices (e.g., journald.conf).</p>
+            <pre><code>
+    ---
+    - name: Add persistence to journald.conf
+      hosts: all
+      vars_files:
+        - /path/to/secrets.yml
+      gather_facts: no
+      vars:
+        ansible_password: "{{ sensors_pwd2 }}"
+        ansible_user: "{{ sensor_user }}"
+        ansible_become_method: sudo
+        ansible_become_user: root
+        ansible_become_password: "{{ sensors_pwd2 }}"
+        ansible_become: yes
+      tasks:
+        - name: fix journald
+          ansible.builtin.command: sed -i 's/#Storage=auto/Storage=persistent/g' /etc/systemd/journald.conf
+          become: yes
+          become_user: root
+          become_method: sudo
+          ignore_errors: yes
+          changed_when: false
+    </code>
+
+    </pre>
+          </details>
+  </article>
+
+  <script src="/assets/js/post.js"></script>
 </body>
-
 </html>
