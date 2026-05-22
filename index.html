@@ -87,16 +87,31 @@
       </div>
     </section>
 
-    <!-- Snake Game -->
-    <section class="snake-widget">
-      <div class="snake-header">
-        <span class="snake-score-wrap">score: <span id="snakeScore">0</span></span>
+    <!-- Arcade Games -->
+    <section class="arcade-row">
+
+      <div class="snake-widget">
+        <div class="snake-header">
+          <span class="snake-score-wrap">snake &nbsp; score: <span id="snakeScore">0</span></span>
+        </div>
+        <div class="snake-container">
+          <pre id="snakeGrid" class="snake-grid"></pre>
+          <div id="snakeMsg" class="snake-msg">WASD to play</div>
+        </div>
+        <p class="snake-hint">WASD to move &nbsp;·&nbsp; swipe on mobile</p>
       </div>
-      <div class="snake-container">
-        <pre id="snakeGrid" class="snake-grid"></pre>
-        <div id="snakeMsg" class="snake-msg">press any key to play</div>
+
+      <div class="snake-widget">
+        <div class="snake-header">
+          <span class="snake-score-wrap">invaders &nbsp; score: <span id="invScore">0</span></span>
+        </div>
+        <div class="snake-container">
+          <pre id="invGrid" class="snake-grid inv-grid"></pre>
+          <div id="invMsg" class="snake-msg">← → space to play</div>
+        </div>
+        <p class="snake-hint">← → to move · space to fire &nbsp;·&nbsp; tap/swipe on mobile</p>
       </div>
-      <p class="snake-hint">WASD / arrow keys &nbsp;·&nbsp; tap to start on mobile</p>
+
     </section>
 
   </main>
@@ -189,21 +204,21 @@
     // Idle state
     state = 'idle';
     renderIdle();
-    msgEl.textContent = 'press any key to play';
+    msgEl.textContent = 'WASD to play';
     msgEl.style.display = 'flex';
 
-    // Keyboard
+    // Keyboard — WASD only (arrow keys reserved for Space Invaders)
     var DIRS = {
-      ArrowUp:    { x: 0, y: -1 }, w: { x: 0, y: -1 },
-      ArrowDown:  { x: 0, y:  1 }, s: { x: 0, y:  1 },
-      ArrowLeft:  { x: -1, y: 0 }, a: { x: -1, y: 0 },
-      ArrowRight: { x:  1, y: 0 }, d: { x:  1, y: 0 },
+      w: { x: 0, y: -1 },
+      s: { x: 0, y:  1 },
+      a: { x: -1, y: 0 },
+      d: { x:  1, y: 0 },
     };
     document.addEventListener('keydown', function (e) {
-      if (state === 'playing' && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
-        e.preventDefault();
+      if (state === 'idle' || state === 'dead') {
+        if (DIRS[e.key] || e.key === 'Enter') start();
+        return;
       }
-      if (state === 'idle' || state === 'dead') { start(); return; }
       var m = DIRS[e.key];
       if (m && !(m.x === -dir.x && m.y === -dir.y)) nextDir = m;
     });
@@ -224,6 +239,194 @@
         ? (dx > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 })
         : (dy > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 });
       if (!(m.x === -dir.x && m.y === -dir.y)) nextDir = m;
+    }, { passive: true });
+  })();
+
+  // ── Space Invaders ────────────────────────────────────────────────
+  (function () {
+    var COLS = 36, ROWS = 18, TICK = 100;
+    var BASE_ENEMY_INTERVAL = 6;
+    var state, timer, tock;
+    var player, laser, bullets, enemies, score;
+    var enemyDir, enemyInterval, enemyCounter, bulletCounter, shootCounter;
+
+    var pre     = document.getElementById('invGrid');
+    var scoreEl = document.getElementById('invScore');
+    var msgEl   = document.getElementById('invMsg');
+
+    var ENEMY_DEFS = [
+      { y: 1, ch: '◆' },
+      { y: 3, ch: '★' },
+      { y: 5, ch: '▼' },
+    ];
+    var ECOLS = 6, ESPACING = 5, ESTARTX = 3;
+
+    function makeEnemies() {
+      var list = [];
+      ENEMY_DEFS.forEach(function (row) {
+        for (var c = 0; c < ECOLS; c++) {
+          list.push({ x: ESTARTX + c * ESPACING, y: row.y, ch: row.ch, alive: true });
+        }
+      });
+      return list;
+    }
+
+    function alive() { return enemies.filter(function (e) { return e.alive; }); }
+
+    function emptyGrid() {
+      var g = [];
+      for (var y = 0; y < ROWS; y++) {
+        g.push(new Array(COLS).fill('<span class="s-dot">·</span>'));
+      }
+      return g;
+    }
+
+    function render() {
+      var g = emptyGrid();
+      enemies.forEach(function (e) {
+        if (e.alive && e.y >= 0 && e.y < ROWS && e.x >= 0 && e.x < COLS)
+          g[e.y][e.x] = '<span class="inv-enemy">' + e.ch + '</span>';
+      });
+      if (laser && laser.y >= 0 && laser.y < ROWS)
+        g[laser.y][laser.x] = '<span class="inv-laser">╎</span>';
+      bullets.forEach(function (b) {
+        if (b.y >= 0 && b.y < ROWS && b.x >= 0 && b.x < COLS)
+          g[b.y][b.x] = '<span class="inv-bullet">:</span>';
+      });
+      g[player.y][player.x] = '<span class="inv-player">▲</span>';
+      pre.innerHTML = g.map(function (r) { return r.join(''); }).join('\n');
+    }
+
+    function end(msg) {
+      state = 'dead';
+      clearInterval(timer);
+      msgEl.textContent = msg;
+      msgEl.style.display = 'flex';
+    }
+
+    function gameTick() {
+      tock++;
+
+      // Laser moves up every tick
+      if (laser) {
+        laser.y--;
+        if (laser.y < 0) {
+          laser = null;
+        } else {
+          for (var i = 0; i < enemies.length; i++) {
+            if (enemies[i].alive && enemies[i].x === laser.x && enemies[i].y === laser.y) {
+              enemies[i].alive = false;
+              laser = null;
+              score += 10;
+              scoreEl.textContent = score;
+              enemyInterval = Math.max(2, BASE_ENEMY_INTERVAL - Math.floor((18 - alive().length) / 3));
+              break;
+            }
+          }
+        }
+      }
+
+      // Enemy bullets move down every 2 ticks
+      bulletCounter++;
+      if (bulletCounter >= 2) {
+        bulletCounter = 0;
+        var next = [];
+        for (var b = 0; b < bullets.length; b++) {
+          bullets[b].y++;
+          if (bullets[b].y >= ROWS) continue;
+          if (bullets[b].x === player.x && bullets[b].y === player.y) { end('GAME OVER — press any key'); return; }
+          if (laser && bullets[b].x === laser.x && bullets[b].y === laser.y) { laser = null; continue; }
+          next.push(bullets[b]);
+        }
+        bullets = next;
+      }
+
+      // Enemies move every enemyInterval ticks
+      enemyCounter++;
+      if (enemyCounter >= enemyInterval) {
+        enemyCounter = 0;
+        var live = alive();
+        if (!live.length) { end('YOU WIN! — press any key'); return; }
+
+        var minX = live.reduce(function (m, e) { return Math.min(m, e.x); }, Infinity);
+        var maxX = live.reduce(function (m, e) { return Math.max(m, e.x); }, -Infinity);
+        var maxY = live.reduce(function (m, e) { return Math.max(m, e.y); }, -Infinity);
+
+        if ((enemyDir > 0 && maxX >= COLS - 1) || (enemyDir < 0 && minX <= 0)) {
+          enemies.forEach(function (e) { if (e.alive) e.y += 2; });
+          enemyDir *= -1;
+          if (maxY + 2 >= player.y) { end('INVADED! — press any key'); return; }
+        } else {
+          enemies.forEach(function (e) { if (e.alive) e.x += enemyDir; });
+        }
+
+        // Random enemy shoots
+        shootCounter--;
+        if (shootCounter <= 0) {
+          shootCounter = 3 + Math.floor(Math.random() * 4);
+          var shooter = live[Math.floor(Math.random() * live.length)];
+          if (shooter) bullets.push({ x: shooter.x, y: shooter.y + 1 });
+        }
+      }
+
+      render();
+    }
+
+    function start() {
+      player        = { x: Math.floor(COLS / 2), y: ROWS - 1 };
+      laser         = null;
+      bullets       = [];
+      enemies       = makeEnemies();
+      score         = 0;
+      enemyDir      = 1;
+      enemyInterval = BASE_ENEMY_INTERVAL;
+      enemyCounter  = 0;
+      bulletCounter = 0;
+      shootCounter  = 5;
+      tock          = 0;
+      scoreEl.textContent = '0';
+      state = 'playing';
+      msgEl.style.display = 'none';
+      render();
+      clearInterval(timer);
+      timer = setInterval(gameTick, TICK);
+    }
+
+    state = 'idle';
+    pre.innerHTML = emptyGrid().map(function (r) { return r.join(''); }).join('\n');
+    msgEl.textContent = '← → space to play';
+    msgEl.style.display = 'flex';
+
+    // Keyboard — arrow keys + space only (WASD reserved for Snake)
+    document.addEventListener('keydown', function (e) {
+      if (state === 'playing' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' '))
+        e.preventDefault();
+      if (state === 'idle' || state === 'dead') {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') start();
+        return;
+      }
+      if (e.key === 'ArrowLeft'  && player.x > 0)        { player.x--; render(); }
+      if (e.key === 'ArrowRight' && player.x < COLS - 1) { player.x++; render(); }
+      if (e.key === ' ' && !laser) { laser = { x: player.x, y: player.y - 1 }; render(); }
+    });
+
+    // Touch — swipe to move, tap to fire
+    var ts = null;
+    pre.addEventListener('touchstart', function (e) {
+      ts = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }, { passive: true });
+    pre.addEventListener('touchend', function (e) {
+      if (!ts) return;
+      var dx = e.changedTouches[0].clientX - ts.x;
+      var dy = e.changedTouches[0].clientY - ts.y;
+      ts = null;
+      if (state === 'idle' || state === 'dead') { start(); return; }
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+        if (!laser) { laser = { x: player.x, y: player.y - 1 }; render(); }
+      } else if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && player.x < COLS - 1) { player.x++; render(); }
+        else if (dx < 0 && player.x > 0)   { player.x--; render(); }
+      }
     }, { passive: true });
   })();
   </script>

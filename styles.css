@@ -721,6 +721,25 @@ details > *:not(summary) {
 .s-body { color: var(--accent-green); }
 .s-food { color: var(--accent-hot); }
 
+.inv-enemy  { color: var(--accent-hot); }
+.inv-player { color: var(--accent-primary); }
+.inv-laser  { color: var(--accent-yellow); }
+.inv-bullet { color: var(--accent-orange); }
+
+.inv-grid { border-left-color: var(--accent-hot); }
+
+.arcade-row {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.arcade-row .snake-widget {
+    padding-top: 0;
+}
+
 /* ----------------------------------------------------------
    Hero Section
 ---------------------------------------------------------- */
