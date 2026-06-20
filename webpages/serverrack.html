@@ -1,257 +1,371 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="How I consolidated a desk full of Pi's, switches, and a firewall into a clean 10-inch mini rack — parts list, build notes, and a Grafana monitoring stack." />
-  <title>Building a Proper Homelab Server Rack | 18gi0n</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
-  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="How I consolidated a desk full of Pi's, switches, and a firewall into a clean 10-inch mini rack — parts list, build notes, and a Grafana monitoring stack."
+    />
+    <title>Building a Proper Homelab Server Rack | 18gi0n</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+    <style>
+      .post-body img { max-width: 480px; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="/index.html" class="nav-logo">18gi0n</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/blog.html">Blog</a></li>
+          <li><a href="/projects.html">Projects</a></li>
+          <li><a href="/code.html">Code &amp; Tools</a></li>
+          <li><a href="/about.html">About</a></li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav class="navbar">
-    <div class="nav-container">
-      <a href="/index.html" class="nav-logo">18gi0n</a>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="navLinks">
-        <li><a href="/index.html">Home</a></li>
-        <li><a href="/blog.html">Blog</a></li>
-        <li><a href="/projects.html">Projects</a></li>
-        <li><a href="/code.html">Code &amp; Tools</a></li>
-        <li><a href="/about.html">About</a></li>
+    <header class="post-header">
+      <a href="/blog.html" class="back-link">&larr; All Posts</a>
+      <h1>Building a Proper Homelab Server Rack</h1>
+      <div class="post-meta">
+        <span class="badge badge-homelab">Homelab</span>
+        <span class="reading-time" id="readingTime"></span>
+      </div>
+    </header>
+
+    <nav class="toc" id="toc">
+      <div class="toc-title">// Contents</div>
+      <ol id="tocList"></ol>
+    </nav>
+
+    <article class="post-body" id="postBody">
+      <p>
+        For a long time my entire network stack lived spread across a desk — a
+        tangle of Pi's, a switch, and a firewall all wired together with
+        whatever cable was closest. It worked, but it wasn't portable, it wasn't
+        clean, and every time I wanted to make a change I was untangling cables
+        first. I finally got tired of it and decided to consolidate everything
+        into a proper 10" mini rack: something compact, plug-and-play, and easy
+        to pick up and move if I relocate.
+      </p>
+
+      <p>
+        Here's a look at the before, the after, and the parts that got me there.
+      </p>
+
+      <h2>After</h2>
+
+      <img
+        src="/assets/images/serverrack/titleimage.JPG"
+        alt="Finished rack build — title shot"
+      />
+
+      <h2>Before</h2>
+
+      <img
+        src="/assets/images/serverrack/oldrack.JPG"
+        alt="Old desk rack setup"
+      />
+
+      <p>
+        The original stack: a Target bathroom shelf doing double duty as a
+        server rack, a Netgear switch, a Netgate 1100 firewall, an OptiPlex
+        running Ubuntu for IDS/SIEM work, and a PoE injector for the Unifi AP.
+        Functional, but not exactly something I'd want to pack up and move.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/closeupnewrack.JPG"
+        alt="Close-up of new rack build"
+      />
+
+      <h2>Hardware</h2>
+
+      <h3>Compute &amp; Network Core</h3>
+
+      <p>
+        <strong>Raspberry Pi 5 (x2)</strong> —
+        <a href="https://a.co/d/03haIOkD" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Running Jellyfin and my self-hosted Matrix homeserver.
+      </p>
+
+      <img src="/assets/images/serverrack/rpi.jpg" alt="Raspberry Pi 5" />
+
+      <p>
+        <strong>Ubiquiti Cloud Gateway Max (UCG-Max)</strong> —
+        <a href="https://a.co/d/0cNUuz1c" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        I wanted dual WAN support, and honestly I've just come to really
+        appreciate how simple the UniFi ecosystem makes network management.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/UCG.jpg"
+        alt="Ubiquiti Cloud Gateway Max"
+      />
+
+      <p>
+        <strong>Ubiquiti UniFi Switch Lite 8 PoE</strong> —
+        <a href="https://a.co/d/0hpwCCm8" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Picked for its compact footprint and PoE output, which powers both my
+        access point and one of the Pis.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/poeswitch.jpg"
+        alt="UniFi Switch Lite 8 PoE"
+      />
+
+      <p>
+        <strong>Ubiquiti U6+ Access Point</strong> —
+        <a href="https://a.co/d/0gDK8mo8" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Solid performer. If I did it again, I'd probably go with a model that
+        has dedicated WiFi 6 bands and a wall-mount option instead of
+        ceiling-mount — but overall I have no complaints about performance.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/ap.jpg"
+        alt="Ubiquiti U6+ Access Point"
+      />
+
+      <h3>Monitoring &amp; Power</h3>
+
+      <p>
+        <strong>7.84" Touchscreen Rack Display</strong> —
+        <a href="https://a.co/d/01JALwvz" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        A touchscreen panel sized perfectly for the rack, used for at-a-glance
+        monitoring.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/screen.jpg"
+        alt="Rack-mounted touchscreen display"
+      />
+
+      <p>
+        <strong>Rack PDU</strong> —
+        <a href="https://a.co/d/02BDPXeR" target="_blank" rel="noopener"
+          >Amazon</a
+        >
+      </p>
+
+      <img src="/assets/images/serverrack/PDU.jpg" alt="Rack PDU" />
+
+      <p>
+        <strong>Anker SOLIX Portable Power Station</strong> —
+        <a href="https://a.co/d/0gqIk1wh" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        At roughly 65W draw for the entire stack, this gives me about 8 hours of
+        runtime with near-instant failover, which is more than enough to ride
+        out a short outage without anything dropping.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/UPS.jpg"
+        alt="Anker SOLIX Portable Power Station"
+      />
+
+      <h3>Cooling</h3>
+
+      <p>
+        <strong>Front Intake Fan</strong> —
+        <a href="https://a.co/d/0iaMVWci" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Pulls cool air in from the front of the rack.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/frontfan.jpg"
+        alt="Front intake fan"
+      />
+
+      <p>
+        <strong>Top Exhaust Fan</strong> —
+        <a href="https://a.co/d/04cfosyA" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Mounted under the top plate to push hot air up and out, completing the
+        front-to-top airflow path.
+      </p>
+
+      <img src="/assets/images/serverrack/topfan.jpg" alt="Top exhaust fan" />
+
+      <p>
+        <strong>Vented/Non-Vented Panel Covers</strong> —
+        <a href="https://a.co/d/08Jvxkbj" target="_blank" rel="noopener"
+          >link 1</a
+        >
+        |
+        <a href="https://a.co/d/051slU9d" target="_blank" rel="noopener"
+          >link 2</a
+        ><br />
+        Used to help direct airflow up and out of the rack.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/holefan.jpg"
+        alt="Vented panel cover"
+      />
+      <img
+        src="/assets/images/serverrack/fullpanel.jpg"
+        alt="Patch panel — full view"
+      />
+
+      <h3>Mounts &amp; Accessories</h3>
+
+      <p>
+        <strong>PoE HAT for Raspberry Pi</strong> —
+        <a href="https://a.co/d/0grpaa6S" target="_blank" rel="noopener"
+          >Amazon</a
+        >
+      </p>
+
+      <img
+        src="/assets/images/serverrack/rpihat.jpg"
+        alt="Raspberry Pi PoE HAT"
+      />
+
+      <p>
+        <strong>10" Rack Enclosure</strong> —
+        <a href="https://a.co/d/0dMNXiAO" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Picked for the 10" form factor — small enough to be portable, large
+        enough to fit everything I needed.
+      </p>
+
+      <img src="/assets/images/serverrack/rack.jpg" alt="Finished rack build" />
+
+      <p>
+        <strong>Switch Rack Mount</strong> —
+        <a href="https://a.co/d/02lZJNVv" target="_blank" rel="noopener"
+          >Amazon</a
+        >
+      </p>
+
+      <img
+        src="/assets/images/serverrack/switchmount.jpg"
+        alt="Switch rack mount"
+      />
+
+      <p>
+        <strong>UCG-Max Rack Mount</strong> —
+        <a href="https://a.co/d/0emkB3Jm" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        The UCG-Max runs warm with Suricata IPS enabled, so I specifically
+        wanted a mount with a built-in fan to help keep temps down.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/ucgmount.jpg"
+        alt="UCG-Max rack mount with fan"
+      />
+
+      <p>
+        <strong>Raspberry Pi Rack Mount</strong> —
+        <a href="https://a.co/d/0inmLiKs" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        Plays nicely with the PoE HATs.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/rpimount.jpg"
+        alt="Raspberry Pi rack mount"
+      />
+
+      <h3>Patch Panels</h3>
+
+      <p>
+        <strong>Full-Size Patch Panel</strong> —
+        <a href="https://a.co/d/03iHidxC" target="_blank" rel="noopener"
+          >Amazon</a
+        ><br />
+        <strong>Compact Patch Panel</strong> —
+        <a href="https://a.co/d/01JALwvz" target="_blank" rel="noopener"
+          >Amazon</a
+        >
+      </p>
+
+      <p>
+        I went with two patch panels — a full-size one on the front and a
+        smaller one on the back — connected internally with a short 1ft Ethernet
+        run. Routing everything in from the front and then back out again
+        through a single panel was a pain, so this setup means I never have to
+        touch the internal wiring again. Anything plugged into the back patch
+        panel goes straight to the switch.
+      </p>
+
+      <img
+        src="/assets/images/serverrack/largepatch.jpg"
+        alt="Full-size patch panel"
+      />
+
+      <img
+        src="/assets/images/serverrack/smllpatch.jpg"
+        alt="Compact rear patch panel"
+      />
+
+      <img
+        src="/assets/images/serverrack/backnewrack.JPG"
+        alt="Rear cabling — new rack"
+      />
+
+      <h2>Software Stack</h2>
+
+      <p>Monitoring runs entirely off one of the Raspberry Pi 5s:</p>
+
+      <ul>
+        <li>
+          <strong>Node Exporter</strong> — exports system metrics from each
+          device on the rack
+        </li>
+        <li><strong>Prometheus</strong> — collects and stores the metrics</li>
+        <li>
+          <strong>Grafana</strong> — visualizes everything on the rack-mounted
+          touchscreen
+        </li>
       </ul>
-    </div>
-  </nav>
 
-  <header class="post-header">
-    <a href="/blog.html" class="back-link">&larr; All Posts</a>
-    <h1>Building a Proper Homelab Server Rack</h1>
-    <div class="post-meta">
-      <span class="badge badge-homelab">Homelab</span>
-      <span class="reading-time" id="readingTime"></span>
-    </div>
-  </header>
+      <img
+        src="/assets/images/serverrack/grafana.png"
+        alt="Grafana dashboard on rack display"
+      />
 
-  <nav class="toc" id="toc">
-    <div class="toc-title">// Contents</div>
-    <ol id="tocList"></ol>
-  </nav>
+      <hr />
 
-  <article class="post-body" id="postBody">
+      <p>
+        Overall, this was a fun upgrade from "stuff on a desk" to something
+        self-contained, monitored, and movable. If you have questions on
+        cabling, mounts, or the monitoring stack, feel free to reach out.
+      </p>
+    </article>
 
-    <p>
-      For a long time my entire network stack lived spread across a desk — a tangle of Pi's, a switch,
-      and a firewall all wired together with whatever cable was closest. It worked, but it wasn't
-      portable, it wasn't clean, and every time I wanted to make a change I was untangling cables first.
-      I finally got tired of it and decided to consolidate everything into a proper 10" mini rack:
-      something compact, plug-and-play, and easy to pick up and move if I relocate.
-    </p>
-
-    <p>Here's a look at the before, the after, and the parts that got me there.</p>
-
-    <h2>Before</h2>
-
-    <img src="/assets/images/serverrack/oldrack.JPG" alt="Old desk rack setup" />
-
-    <p>
-      The original stack: a Target bathroom shelf doing double duty as a server rack, a Netgear switch,
-      a Netgate 1100 firewall, an OptiPlex running Ubuntu for IDS/SIEM work, and a PoE injector for the
-      Unifi AP. Functional, but not exactly something I'd want to pack up and move.
-    </p>
-
-    <h2>After</h2>
-
-    <img src="/assets/images/serverrack/titleimage.JPG" alt="Finished rack build — title shot" />
-
-    <img src="/assets/images/serverrack/rack.jpg" alt="Finished rack build" />
-
-    <img src="/assets/images/serverrack/closeupnewrack.JPG" alt="Close-up of new rack build" />
-
-    <h2>Hardware</h2>
-
-    <h3>Compute &amp; Network Core</h3>
-
-    <p>
-      <strong>Raspberry Pi 5 (x2)</strong> —
-      <a href="https://a.co/d/03haIOkD" target="_blank" rel="noopener">Amazon</a><br />
-      Running Jellyfin and my self-hosted Matrix homeserver.
-    </p>
-
-    <img src="/assets/images/serverrack/rpi.jpg" alt="Raspberry Pi 5" />
-
-    <p>
-      <strong>Ubiquiti Cloud Gateway Max (UCG-Max)</strong> —
-      <a href="https://a.co/d/0cNUuz1c" target="_blank" rel="noopener">Amazon</a><br />
-      I wanted dual WAN support, and honestly I've just come to really appreciate how simple the UniFi
-      ecosystem makes network management.
-    </p>
-
-    <img src="/assets/images/serverrack/UCG.jpg" alt="Ubiquiti Cloud Gateway Max" />
-
-    <p>
-      <strong>Ubiquiti UniFi Switch Lite 8 PoE</strong> —
-      <a href="https://a.co/d/0hpwCCm8" target="_blank" rel="noopener">Amazon</a><br />
-      Picked for its compact footprint and PoE output, which powers both my access point and one of the
-      Pis.
-    </p>
-
-    <img src="/assets/images/serverrack/poeswitch.jpg" alt="UniFi Switch Lite 8 PoE" />
-
-    <p>
-      <strong>Ubiquiti U6+ Access Point</strong> —
-      <a href="https://a.co/d/0gDK8mo8" target="_blank" rel="noopener">Amazon</a><br />
-      Solid performer. If I did it again, I'd probably go with a model that has dedicated WiFi 6 bands
-      and a wall-mount option instead of ceiling-mount — but overall I have no complaints about
-      performance.
-    </p>
-
-    <img src="/assets/images/serverrack/ap.jpg" alt="Ubiquiti U6+ Access Point" />
-
-    <h3>Monitoring &amp; Power</h3>
-
-    <p>
-      <strong>7.84" Touchscreen Rack Display</strong> —
-      <a href="https://a.co/d/01JALwvz" target="_blank" rel="noopener">Amazon</a><br />
-      A touchscreen panel sized perfectly for the rack, used for at-a-glance monitoring.
-    </p>
-
-    <img src="/assets/images/serverrack/screen.jpg" alt="Rack-mounted touchscreen display" />
-
-    <p>
-      <strong>Rack PDU</strong> —
-      <a href="https://a.co/d/02BDPXeR" target="_blank" rel="noopener">Amazon</a>
-    </p>
-
-    <img src="/assets/images/serverrack/PDU.jpg" alt="Rack PDU" />
-
-    <p>
-      <strong>Anker SOLIX Portable Power Station</strong> —
-      <a href="https://a.co/d/0gqIk1wh" target="_blank" rel="noopener">Amazon</a><br />
-      At roughly 65W draw for the entire stack, this gives me about 8 hours of runtime with
-      near-instant failover, which is more than enough to ride out a short outage without anything
-      dropping.
-    </p>
-
-    <img src="/assets/images/serverrack/UPS.jpg" alt="Anker SOLIX Portable Power Station" />
-
-    <h3>Cooling</h3>
-
-    <p>
-      <strong>Front Intake Fan</strong> —
-      <a href="https://a.co/d/0iaMVWci" target="_blank" rel="noopener">Amazon</a><br />
-      Pulls cool air in from the front of the rack.
-    </p>
-
-    <img src="/assets/images/serverrack/frontfan.jpg" alt="Front intake fan" />
-
-    <p>
-      <strong>Top Exhaust Fan</strong> —
-      <a href="https://a.co/d/04cfosyA" target="_blank" rel="noopener">Amazon</a><br />
-      Mounted under the top plate to push hot air up and out, completing the front-to-top airflow path.
-    </p>
-
-    <img src="/assets/images/serverrack/topfan.jpg" alt="Top exhaust fan" />
-
-    <p>
-      <strong>Vented Panel Covers</strong> —
-      <a href="https://a.co/d/08Jvxkbj" target="_blank" rel="noopener">link 1</a> |
-      <a href="https://a.co/d/051slU9d" target="_blank" rel="noopener">link 2</a><br />
-      Used to help direct airflow up and out of the rack.
-    </p>
-
-    <img src="/assets/images/serverrack/holefan.jpg" alt="Vented panel cover" />
-
-    <h3>Mounts &amp; Accessories</h3>
-
-    <p>
-      <strong>PoE HAT for Raspberry Pi</strong> —
-      <a href="https://a.co/d/0grpaa6S" target="_blank" rel="noopener">Amazon</a>
-    </p>
-
-    <img src="/assets/images/serverrack/rpihat.jpg" alt="Raspberry Pi PoE HAT" />
-
-    <p>
-      <strong>10" Rack Enclosure</strong> —
-      <a href="https://a.co/d/0dMNXiAO" target="_blank" rel="noopener">Amazon</a><br />
-      Picked for the 10" form factor — small enough to be portable, large enough to fit everything I
-      needed.
-    </p>
-
-    <p>
-      <strong>Switch Rack Mount</strong> —
-      <a href="https://a.co/d/02lZJNVv" target="_blank" rel="noopener">Amazon</a>
-    </p>
-
-    <img src="/assets/images/serverrack/switchmount.jpg" alt="Switch rack mount" />
-
-    <p>
-      <strong>UCG-Max Rack Mount</strong> —
-      <a href="https://a.co/d/0emkB3Jm" target="_blank" rel="noopener">Amazon</a><br />
-      The UCG-Max runs warm with Suricata IPS enabled, so I specifically wanted a mount with a
-      built-in fan to help keep temps down.
-    </p>
-
-    <img src="/assets/images/serverrack/ucgmount.jpg" alt="UCG-Max rack mount with fan" />
-
-    <p>
-      <strong>Raspberry Pi Rack Mount</strong> —
-      <a href="https://a.co/d/0inmLiKs" target="_blank" rel="noopener">Amazon</a><br />
-      Plays nicely with the PoE HATs.
-    </p>
-
-    <img src="/assets/images/serverrack/rpimount.jpg" alt="Raspberry Pi rack mount" />
-
-    <h3>Patch Panels</h3>
-
-    <p>
-      <strong>Full-Size Patch Panel</strong> —
-      <a href="https://a.co/d/03iHidxC" target="_blank" rel="noopener">Amazon</a><br />
-      <strong>Compact Patch Panel</strong> —
-      <a href="https://a.co/d/01JALwvz" target="_blank" rel="noopener">Amazon</a>
-    </p>
-
-    <p>
-      I went with two patch panels — a full-size one on the front and a smaller one on the back —
-      connected internally with a short 1ft Ethernet run. Routing everything in from the front and then
-      back out again through a single panel was a pain, so this setup means I never have to touch the
-      internal wiring again. Anything plugged into the back patch panel goes straight to the switch.
-    </p>
-
-    <img src="/assets/images/serverrack/largepatch.jpg" alt="Full-size patch panel" />
-
-    <img src="/assets/images/serverrack/smllpatch.jpg" alt="Compact rear patch panel" />
-
-    <img src="/assets/images/serverrack/fullpanel.jpg" alt="Patch panel — full view" />
-
-    <img src="/assets/images/serverrack/backnewrack.JPG" alt="Rear cabling — new rack" />
-
-    <h2>Software Stack</h2>
-
-    <p>Monitoring runs entirely off one of the Raspberry Pi 5s:</p>
-
-    <ul>
-      <li><strong>Node Exporter</strong> — exports system metrics from each device on the rack</li>
-      <li><strong>Prometheus</strong> — collects and stores the metrics</li>
-      <li><strong>Grafana</strong> — visualizes everything on the rack-mounted touchscreen</li>
-    </ul>
-
-    <img src="/assets/images/serverrack/rack.jpg" alt="Grafana dashboard on rack display" />
-
-    <hr />
-
-    <p>
-      Overall, this was a fun upgrade from "stuff on a desk" to something self-contained, monitored,
-      and movable. If you have questions on cabling, mounts, or the monitoring stack, feel free to
-      reach out.
-    </p>
-
-  </article>
-
-  <script src="/assets/js/post.js"></script>
-</body>
+    <script src="/assets/js/post.js"></script>
+  </body>
 </html>
