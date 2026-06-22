@@ -151,7 +151,8 @@ X-Powered-By[Next.js]</code></pre>
         vulnerabilities turned up
         <strong>CVE-2025-55182</strong>, an unauthenticated RCE affecting React
         Server Components, publicly nicknamed "React2Shell." A public PoC and
-        scanner were available on GitHub.
+        scanner were available on GitHub:
+        <a href="https://github.com/jensnesten/React2Shell-PoC" target="_blank" rel="noopener">React2Shell-PoC by jensnesten</a>.
       </p>
 
       <p>Ran the scanner against the target:</p>
@@ -255,7 +256,8 @@ sqlite> SELECT * FROM users;</code></pre>
       <p>
         Two password hashes recovered. Identified the format with
         <code>hashid</code> — top match: <strong>MD5</strong>. Ran the
-        <code>engineer</code> hash through CrackStation:
+        <code>engineer</code> hash through
+        <a href="https://crackstation.net/" target="_blank" rel="noopener">CrackStation</a>:
       </p>
 
       <img
@@ -407,7 +409,11 @@ root   1394   1   0 20:18 ?   00:00:01 /usr/bin/node --inspect=127.0.0.1:9229 /o
       <p>
         The V8 Inspector protocol allows arbitrary JavaScript execution in the
         context of the attached process — meaning code run through it executes
-        with that process's privileges (root, in this case).
+        with that process's privileges (root, in this case). See the
+        <a href="https://nodejs.org/learn/getting-started/debugging" target="_blank" rel="noopener">Node.js debugging docs</a>
+        and the
+        <a href="https://angelica.gitbook.io/hacktricks/linux-hardening/privilege-escalation/electron-cef-chromium-debugger-abuse" target="_blank" rel="noopener">HackTricks guide on exploiting the debug port</a>
+        for more detail on this technique.
       </p>
 
       <p>Connected to the inspector:</p>
@@ -468,6 +474,16 @@ uid=0(root) gid=0(root) groups=0(root)</code></pre>
           path here — easy to miss if you only chase group memberships.
         </li>
       </ul>
+      <h2>References &amp; Credits</h2>
+
+      <ul>
+        <li><a href="https://github.com/jensnesten/React2Shell-PoC" target="_blank" rel="noopener">React2Shell-PoC — jensnesten (GitHub)</a> — CVE-2025-55182 scanner and exploit used in this writeup</li>
+        <li><a href="https://www.revshells.com/" target="_blank" rel="noopener">revshells.com</a> — reverse shell payload generator</li>
+        <li><a href="https://crackstation.net/" target="_blank" rel="noopener">CrackStation</a> — online hash cracker used to crack the MD5 engineer hash</li>
+        <li><a href="https://nodejs.org/learn/getting-started/debugging" target="_blank" rel="noopener">Node.js Debugging Guide</a> — official docs on the V8 Inspector protocol</li>
+        <li><a href="https://angelica.gitbook.io/hacktricks/linux-hardening/privilege-escalation/electron-cef-chromium-debugger-abuse" target="_blank" rel="noopener">HackTricks — Electron/CEF/Chromium Debugger Abuse</a> — technique reference for exploiting the Node.js debug inspector port</li>
+      </ul>
+
     </article>
 
     <script src="/assets/js/post.js"></script>
